@@ -48,7 +48,7 @@ CCINC_TOINSTALL = cudd_caml.h
 #---------------------------------------
 
 # Global rules
-all: $(MLINT) $(MLOBJ) $(MLOBJx) cudd.cma cudd.cmxa libcudd_caml.a libcudd_caml_debug.a
+all: $(MLINT) $(MLOBJ) $(MLOBJx) cudd.cma cudd.cmxa libcudd_caml.a libcudd_caml_debug.a 
 
 cuddrun: cudd.cma libcudd_caml.a
 	$(OCAMLC) $(OCAMLFLAGS) -o $@ -make-runtime -cc "$(CC)" -ccopt -L. cudd.cma
