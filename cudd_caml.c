@@ -31,10 +31,10 @@ value camlidl_cudd_set_gc(value _v_heap, value _v_gc, value _v_reordering)
 
   heap = Int_val(_v_heap);
   camlidl_cudd_heap = heap;
-  if (camlidl_cudd_gc_fun == Val_unit){
+  if (camlidl_cudd_gc_fun == Val_unit)
     caml_register_global_root(&camlidl_cudd_gc_fun);
+  if (camlidl_cudd_reordering_fun == Val_unit)
     caml_register_global_root(&camlidl_cudd_reordering_fun);
-  }
   camlidl_cudd_gc_fun = _v_gc;
   camlidl_cudd_reordering_fun = _v_reordering;
   CAMLreturn(Val_unit);
@@ -49,6 +49,7 @@ int camlidl_cudd_garbage(DdManager* dd, const char* s, void* data)
       abort();
     }
     camlidl_cudd_gc_fun = *p;
+    caml_register_global_root(p);
   }
   callback(camlidl_cudd_gc_fun,Val_unit);
   return 1;
@@ -63,6 +64,7 @@ int camlidl_cudd_reordering(DdManager* dd, const char* s, void* data)
       abort();
      }
      camlidl_cudd_reordering_fun = *p;
+     caml_register_global_root(p);
   }
   callback(camlidl_cudd_reordering_fun,Val_unit);
   return 1;
