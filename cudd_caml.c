@@ -49,7 +49,7 @@ int camlidl_cudd_garbage(DdManager* dd, const char* s, void* data)
       abort();
     }
     camlidl_cudd_gc_fun = *p;
-    caml_register_global_root(p);
+    caml_register_global_root(&camlidl_cudd_gc_fun);
   }
   callback(camlidl_cudd_gc_fun,Val_unit);
   return 1;
@@ -64,7 +64,7 @@ int camlidl_cudd_reordering(DdManager* dd, const char* s, void* data)
       abort();
      }
      camlidl_cudd_reordering_fun = *p;
-     caml_register_global_root(p);
+     caml_register_global_root(&camlidl_cudd_reordering_fun);
   }
   callback(camlidl_cudd_reordering_fun,Val_unit);
   return 1;
