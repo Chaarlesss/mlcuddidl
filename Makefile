@@ -74,6 +74,14 @@ example.opt2: example.ml cudd.cmxa libcudd_caml.a
 	-ccopt -L$(CUDDAUX_INSTALL)/lib -cclib -lcuddaux \
 	-ccopt -L$(CUDD_INSTALL)/lib -cclib "-lcudd -lmtr -lst -lutil -lepd"
 
+essai.opt: essai.ml cudd.cmxa libcudd_caml.a
+	$(OCAMLOPT) $(OCAMLOPTFLAGS) -o $@ -cc "$(CC)" -noautolink \
+	cudd.cmxa essai.ml \
+	-ccopt -L$(MLCUDDIDL_INSTALL)/lib -cclib -lcudd_caml_debug \
+	-ccopt -L$(CAMLIDL_INSTALL)/lib/ocaml -cclib -lcamlidl \
+	-ccopt -L$(CUDDAUX_INSTALL)/lib -cclib -lcuddaux_debug \
+	-ccopt -L$(CUDD_INSTALL)/lib -cclib "-lcudd_debug -lmtr -lst -lutil -lepd"
+
 install:
 	mkdir -p $(INCDIR) $(LIBDIR) $(BINDIR)
 	cp -f $(MLLIB_TOINSTALL) $(MLLIB_TOINSTALLx) $(LIBDIR)
@@ -92,7 +100,7 @@ mostlyclean: clean
 
 clean:
 	/bin/rm -f cuddrun cuddtop
-	/bin/rm -f *.[ao] *.cm[ioxa] *.cmxa
+	/bin/rm -f *.[ao] *.cm[ioxa] *.cmxa *.opt *.opt2
 	/bin/rm -f cmttb*
 	/bin/rm -fr html
 

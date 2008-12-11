@@ -85,6 +85,7 @@ void manager_free(struct manager__t* man)
 {
   assert(man->count>=1);
   if (man->count<=1){
+    assert(Cudd_CheckZeroRef(man->man)==0);
     Cudd_Quit(man->man);
     free(man);
   }
@@ -214,7 +215,6 @@ int bdd_compteur=0;
 #define FREQ_node 500
 #define FREQ_bdd 5000
 #endif
-
 value camlidl_cudd_node_c2ml(struct node__t* no)
 {
   value val;
