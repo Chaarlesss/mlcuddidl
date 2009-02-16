@@ -1,0 +1,51 @@
+(** MTBDDs using a weak hashtable for unique constants *)
+
+open Format
+
+
+type 'a table = 'a Weakke.Custom.t
+
+type 'a unique = 'a
+
+let print_table = Weakke.Custom.print
+
+let make_table
+  ~(hash : 'leaf -> int)
+  ~(equal : 'leaf -> 'leaf -> bool)
+  :
+  'leaf table
+  =
+  Weakke.Custom.create hash equal 23
+
+let (unique :'a table -> 'a -> 'a unique) = Weakke.Custom.merge
+let get (leaf:'a unique) : 'a = leaf
+
+type 'a mtbdd =
+  'a Vdd.vdd =
+  | Leaf of 'a
+  | Ite of int * 'a Vdd.t * 'a Vdd.t
+
+include Mapleaf
+include Vdd
+
+let dval_u = dval
+let inspect_u = inspect
+let is_eval_cst_u = is_eval_cst
+let is_ite_cst_u = is_ite_cst
+let iter_cube_u = iter_cube
+let guard_of_leaf_u = guard_of_leaf
+let leaves_u = leaves
+let pick_leaf_u = pick_leaf
+let guardleafs_u = guardleafs
+
+let cst_u = cst
+let cst cudd table v = cst cudd (unique table v)
+
+type 'a fexist = 'a Ddcustom.fexist = {
+  op : 'a unique -> 'a unique -> 'a unique;
+  absorbant : ('a -> bool) option;
+  neutral : ('a -> bool) option;
+}
+type ('a, 'b) mexist = ('a,'b) Ddcustom.mexist
+type ('a, 'b, 'c) mop1 = ('a, 'b, 'c) Ddcustom.mop1
+

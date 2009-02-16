@@ -1,0 +1,55 @@
+
+
+Rdd/Idd/Mtbdd:
+API extended: nodes_below_level, mapbinop
+New functions: pick_leaf, mapcmpop, mapexistop, mapexistandop,
+               mapexistandapplyop
+
+-------------
+MLCuddIDL 1.4:
+-------------
+General:
+  New management of objects of type Manager.t, which are automatically (and
+  safely) garbage collected.
+
+cudd_caml.c:
+  Bugs related to (unsufficient) memory protection corrected.
+
+-------------
+MLCuddIDL 1.3b:
+-------------
+bdd.idl:
+  Type of is_var_essential changed.
+  New functions: pick_minterm, pick_cube(s)_on_support, 
+  
+-------------
+MLCuddIDL 1.3a:
+-------------
+Distribution slightly modified (makefile.config)
+
+-------------
+MLCuddIDL 1.3:
+-------------
+
+LGPL license explicitly mentioned.
+Distribution slightly modified
+
+-------------
+MLCuddIDL 1.2:
+-------------
+
+Call to Manager.set_varmap prior to call to Bdd.varmap or Rdd.varmap is
+checked. Last version working with OCaml-3.07 and older (problem with OCaml
+runtime C function gc_full_major() renamed as caml_gc_full_major()).
+
+-------------
+MLCuddIDL 1.1:
+-------------
+
+Function Bdd.is_complement added.
+
+MLCuddIDL 1.0:
+-------------
+
+Starting point of Changes file.
+
