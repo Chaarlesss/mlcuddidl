@@ -5,7 +5,7 @@ Then, type on shour shell the command:
 "cuddtop" if in source directory, after compilation
 *)
 
-let man = Manager.make_d ~numVars:10 ();;
+let man = Man.make_d ~numVars:10 ();;
 #install_printer Bdd.print__minterm;;
 #install_printer Idd.print__minterm;;
 let x = (Bdd.dnot (Bdd.ithvar man 1));;

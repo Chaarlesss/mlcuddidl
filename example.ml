@@ -7,7 +7,7 @@ and then
 "cuddtop" if in source directory, after compilation
 *)
 
-let man = Manager.make_v ~numVars:10 ();;
+let man = Man.make_v ~numVars:10 ();;
 
 (* Identifiers of variables printed as "x", "y,", .... *)
 let idx = 0;;

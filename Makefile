@@ -106,7 +106,7 @@ install:
 
 distclean: mostlyclean
 	(cd $(INCDIR); /bin/rm -f $(CCINC_TOINSTALL))
-	(cd $(LIBDIR); /bin/rm -f $(LIB_TOINSTALL) $(LIB_TOINSTALLx))
+	(cd $(LIBDIR); /bin/rm -f $(CCLIB_TOINSTALL) $(LIB_TOINSTALLx) $(MLLIB_TOINSTALL) $(MLLIB_TOINSTALLx))
 	(cd $(BINDIR); /bin/rm -f $(CCBIN_TOINSTALL))
 
 mostlyclean: clean
