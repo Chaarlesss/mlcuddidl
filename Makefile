@@ -37,9 +37,9 @@ MLLIB_TOINSTALL = $(MLMODULES:%=%.mli) $(MLMODULES:%=%.cmi) cudd.cma
 MLLIB_TOINSTALLx = $(MLMODULES:%=%.cmx) cudd.cmxa cudd.a
 
 CCMODULES = \
-	$(IDLMODULES:%=%_caml) ddcustom_caml cudd_caml \
 	cuddauxAddCamlTable cuddauxAddIte cuddauxBridge cuddauxCompose \
-	cuddauxGenCof cuddauxMisc cuddauxTDGenCof cuddauxAddApply 
+	cuddauxGenCof cuddauxMisc cuddauxTDGenCof cuddauxAddApply \
+	$(IDLMODULES:%=%_caml) ddcustom_caml cudd_caml
 
 CCSRC = cuddaux.h cuddauxInt.h cudd_caml.h $(CCMODULES:%=%.c)
 
@@ -116,7 +116,7 @@ mostlyclean: clean
 clean:
 	/bin/rm -f cuddrun cuddtop
 	/bin/rm -f cuddaux.?? cuddaux.??? cuddaux.info
-	/bin/rm -f *.[ao] *.cm[ioxa] *.cmxa *.opt *.opt2
+	/bin/rm -f *.[ao] *.cm[ioxa] *.cmxa *.opt *.opt2 *.annot
 	/bin/rm -f cmttb*
 	/bin/rm -fr html
 

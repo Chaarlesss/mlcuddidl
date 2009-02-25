@@ -26,7 +26,7 @@ type ('a,'b) exist
 type ('a,'b,'c,'d) existop1
   (** Type of quantification and op1 operation.  The leaf
       operation [op:'b -> 'b -> 'b]] is assumed to be commutative
-      and idempotent ([op f f=f]). 
+      and idempotent ([op f f=f]).
       [existop1 op op1 supp bdd] is equivalent to
       [exist supp (op1 f)].
   *)
@@ -90,12 +90,22 @@ type 'a cache = int
 (** {3 Type of registered operations} *)
 (*  ---------------------------------------------------------------------- *)
 
-type ('a,'b) op = int
+type ('a,'b) op
   (** ['a] indicates the type and arity of the corresponding operation on leaves
       (one of [('a,'b) op1, ('a,'b,'c) op2, ...])
 
       ['b] indicates the caching policy.
   **)
+
+type ('a, 'add, 'b) mexist = [
+  | `Fun of ('add -> 'add -> 'add option) option * ('a -> 'a -> 'a)
+  | `Op of (('a, 'a, 'a) op2, 'b) op
+]
+
+type ('a, 'b, 'c) mop1 = [ 
+  | `Fun of 'a -> 'b 
+  | `Op of (('a, 'b) op1, 'c) op 
+]
 
 (*  ********************************************************************** *)
 (** {2 Registering and applying operations} *)
@@ -105,19 +115,11 @@ let global = 0
 let auto = 1
 let user = 2
 
-external _internal_register_op : ddtyp:int -> cachetyp:int -> optyp:int -> commutative:bool -> idempotent:bool -> op1:int -> op:int -> 
-  ((('a -> 'c) option) *
-   (('b -> 'c) option) *
-   (('a -> bool) option) *
-   (('b -> bool) option)) ->
-  ('d -> 'e) ->
-  int = "camlidl_cudd_rivdd_register_op_byte" "camlidl_cudd_rivdd_register_op"
+external _internal_register_op : ddtyp:int -> cachetyp:int -> optyp:int -> commutative:bool -> idempotent:bool -> op2:((('a,'b,'c) op2, 'd) op) -> op1:(('e,'f) op1, 'g) op -> special:('h -> 'i) ->
+  ('j -> 'k) ->
+  ('l,'m) op = "camlidl_cudd_rivdd_register_op_byte" "camlidl_cudd_rivdd_register_op"
 
-external _internal_remove_op : int -> unit = "camlidl_cudd_rivdd_remove_op"
-external _internal_map_op : int -> 'a array -> 'b = "camlidl_cudd_rivdd_map_op"
-external _internal_flush_op : int -> unit = "camlidl_cudd_rivdd_flush_op"
-
-let none4 = (None, None, None, None)
+external _internal_map_op : ('a,'b) op -> 'c array -> 'd = "camlidl_cudd_rivdd_map_op"
 
 let register_op1
     ~(ddtyp:int)
@@ -128,100 +130,105 @@ let register_op1
     =
   _internal_register_op
     ~ddtyp ~cachetyp ~optyp:0 ~commutative:false ~idempotent:false
-     ~op1:(-1) ~op:(-1)
-    none4 op
+    ~op2:(Obj.magic ()) ~op1:(Obj.magic ())
+    ~special:(Obj.magic ())
+    op
 
 let register_op2
     ~(ddtyp:int)
     ~(cachetyp:'d cache)
     ?(commutative=false)
     ?(idempotent=false)
-    ?(absorbant1:('a -> 'c option) option)
-    ?(absorbant2:('b -> 'c option) option)
-    ?(neutral1:('a -> bool) option)
-    ?(neutral2:('b -> bool) option)
+    ?(special:('add -> 'bdd -> 'cdd option) option)
     (op : 'a -> 'b -> 'c)
     :
     (('a,'b,'c) op2, 'd) op
     =
   _internal_register_op ~ddtyp ~cachetyp ~optyp:1 ~commutative ~idempotent
-    ~op1:(-1) ~op:(-1) 
-    (absorbant1, absorbant2, neutral1, neutral2) op
+    ~op2:(Obj.magic ()) ~op1:(Obj.magic ())
+    ~special:(match special with None -> Obj.magic () | Some f -> f)
+    op
 
 let register_test2
     ~(ddtyp:int)
     ~(cachetyp:'c cache)
     ?(commutative=false)
     ?(reflexive=false)
-    ?(bottom1:('a -> bool) option)
-    ?(top2:('b -> bool) option)
+    ?(special:('add -> 'bdd -> bool option) option)
     (op : 'a -> 'b -> bool)
     :
     (('a,'b) test2, 'c) op
     =
   _internal_register_op ~ddtyp ~cachetyp ~optyp:2
     ~commutative ~idempotent:reflexive
-    ~op1:(-1) ~op:(-1) 
-    (None, None, bottom1, top2) op
+    ~op2:(Obj.magic ()) ~op1:(Obj.magic ())
+    ~special:(match special with None -> Obj.magic () | Some f -> f)
+    op
 
 let register_op3
     ~(ddtyp:int)
     ~(cachetyp:'e local cache)
+    ?(special:('add -> 'bdd -> 'cdd -> 'ddd option) option)
     (op : 'a -> 'b -> 'c -> 'd)
     :
     (('a,'b,'c,'d) op3, 'e local) op
     =
   _internal_register_op ~ddtyp ~cachetyp ~optyp:3 ~commutative:false ~idempotent:false
-    ~op1:(-1) ~op:(-1) 
-    none4 op
+    ~op2:(Obj.magic ()) ~op1:(Obj.magic ())
+    ~special:(match special with None -> Obj.magic () | Some f -> f)
+    op
 
 let register_exist
     ~(ddtyp:int)
     ~(cachetyp:'c cache)
-    (op : (('a,'a,'a) op2,'b) op)
+    (op2 : (('a,'a,'a) op2,'b) op)
     :
     (('a,'b) exist, 'c) op
     =
   _internal_register_op ~ddtyp ~cachetyp ~optyp:4 ~commutative:false ~idempotent:false
-    ~op1:(-1) ~op:op
-    none4 (Obj.magic 1)
+    ~op2:op2 ~op1:(Obj.magic ())
+    ~special:(Obj.magic ())
+    (Obj.magic ())
 
 let register_existop1
     ~(ddtyp:int)
     ~(cachetyp:'e cache)
     (op1 : (('a,'b) op1,'c) op)
-    (op : (('b,'b,'b) op2,'d) op)
+    (op2 : (('b,'b,'b) op2,'d) op)
     :
     (('a,'b,'c,'d) existop1, 'e) op
     =
   _internal_register_op ~ddtyp ~cachetyp ~optyp:5 ~commutative:false ~idempotent:false
-    ~op1:op1 ~op:op
-    none4 (Obj.magic 1)
+    ~op2:op2 ~op1:op1
+    ~special:(Obj.magic ())
+    (Obj.magic ())
 
 let register_existand
     ~(ddtyp:int)
     ~(cachetyp:'c local cache)
     ~(bottom:'a)
-    (op : (('a,'a,'a) op2,'b) op)
+    (op2 : (('a,'a,'a) op2,'b) op)
     :
     (('a,'b) existand, 'c local) op
     =
   _internal_register_op ~ddtyp ~cachetyp ~optyp:6 ~commutative:false ~idempotent:false
-    ~op1:(-1) ~op:op
-    none4 (Obj.magic bottom)
+    ~op2:op2 ~op1:(Obj.magic ())
+    ~special:(Obj.magic ())
+    (Obj.magic bottom)
 
 let register_existandop1
     ~(ddtyp:int)
     ~(cachetyp:'c local cache)
     ~(bottom:'b)
     (op1 : (('a,'b) op1,'c) op)
-    (op : (('b,'b,'b) op2,'d) op)
+    (op2 : (('b,'b,'b) op2,'d) op)
     :
     (('a,'b,'c,'d) existandop1, 'e local) op
     =
   _internal_register_op ~ddtyp ~cachetyp ~optyp:7 ~commutative:false ~idempotent:false
-    ~op1:op1 ~op:op 
-    none4 (Obj.magic bottom)
+    ~op2:op2 ~op1:op1
+    ~special:(Obj.magic ())
+    (Obj.magic bottom)
 
 external op2_of_exist : (('a,'b) exist, 'c) op -> (('a,'a,'a) op2, 'b) op = "camlidl_cudd_rivdd_op2_of_exist"
 external op2_of_existop1 : (('a,'b,'c,'d) existop1, 'e) op -> (('b,'b,'b) op2, 'd) op = "camlidl_cudd_rivdd_op2_of_exist"
@@ -231,41 +238,31 @@ external op2_of_existandop1 : (('a,'b,'c,'d) existandop1, 'e local) op -> (('b,'
 external op1_of_existop1 : (('a,'b,'c,'d) existop1, 'e) op -> (('a,'b) op1, 'c) op = "camlidl_cudd_rivdd_op1_of_existop1"
 external op1_of_existandop1 : (('a,'b,'c,'d) existandop1, 'e local) op -> (('a,'b) op1, 'c) op = "camlidl_cudd_rivdd_op1_of_existop1"
 
-let flush_op (op:('a,user local) op) : unit
-    =
-  _internal_flush_op op
-
+external flush_op : ('a,user local) op -> unit = "camlidl_cudd_rivdd_flush_op"
 external flush_allop : unit -> unit = "camlidl_cudd_rivdd_flush_allop"
 
-let remove_localop (op:('a, 'b local) op) : unit
-    =
-    _internal_remove_op op
-
-let remove_globalop (op:('a, global) op) : unit
-    =
-    _internal_remove_op op
-
-let apply_op1 (op:(('a,'b) op1, 'c) op) (dd:'d) : 'e =
+let apply_op1 (op:(('a,'b) op1, 'c) op) (dd:'add) : 'bdd =
   _internal_map_op op [|dd|]
 
-let apply_op2 (op:(('a,'b,'c) op2, 'd) op) (dd1:'e) (dd2:'f) : 'g =
+let apply_op2 (op:(('a,'b,'c) op2, 'd) op) (dd1:'add) (dd2:'bdd) : 'cdd =
   _internal_map_op op [|dd1; Obj.magic dd2|]
 
-let (apply_test2 : (('a,'b) test2, 'c) op -> 'd -> 'e -> bool) = apply_op2
+let apply_test2 (op:(('a,'b) test2, 'c) op) (dd1:'add) (dd2:'bdd) : bool =
+  _internal_map_op op [|dd1; Obj.magic dd2|]
 
-let apply_op3 (op:(('a,'b,'c,'d) op3, 'e local) op) (dd1:'f) (dd2:'g) (dd3:'h) : 'i =
+let apply_op3 (op:(('a,'b,'c,'d) op3, 'e local) op) (dd1:'add) (dd2:'bdd) (dd3:'cdd) : 'ddd =
   _internal_map_op op [|dd1;Obj.magic dd2;Obj.magic dd3|]
 
-let apply_exist (op:(('a,'b) exist, 'c) op) ~(supp:Man.v Bdd.t) (dd:'d) : 'd =
+let apply_exist (op:(('a,'b) exist, 'c) op) ~(supp:Man.v Bdd.t) (dd:'add) : 'add =
   _internal_map_op op [|Obj.magic supp; dd|]
 
-let apply_existop1 (op:(('a,'b,'c,'d) existop1, 'e) op) ~(supp:Man.v Bdd.t) (dd:'f) : 'g =
+let apply_existop1 (op:(('a,'b,'c,'d) existop1, 'e) op) ~(supp:Man.v Bdd.t) (dd:'add) : 'bdd =
   _internal_map_op op [|Obj.magic supp; dd|]
 
-let apply_existand (op:(('a,'b) existand, 'c local) op) ~(supp:Man.v Bdd.t) (bdd:Man.v Bdd.t) (dd:'d) : 'd =
+let apply_existand (op:(('a,'b) existand, 'c local) op) ~(supp:Man.v Bdd.t) (bdd:Man.v Bdd.t) (dd:'add) : 'add =
   _internal_map_op op [|Obj.magic supp; Obj.magic bdd; dd|]
 
-let apply_existandop1 (op:(('a,'b,'c,'d) existandop1, 'e local) op) ~(supp:Man.v Bdd.t) (bdd:Man.v Bdd.t) (dd:'f) : 'g =
+let apply_existandop1 (op:(('a,'b,'c,'d) existandop1, 'e local) op) ~(supp:Man.v Bdd.t) (bdd:Man.v Bdd.t) (dd:'add) : 'bdd =
   _internal_map_op op [|Obj.magic supp; Obj.magic bdd; dd|]
 
 (*  ********************************************************************** *)
@@ -275,188 +272,93 @@ let apply_existandop1 (op:(('a,'b,'c,'d) existandop1, 'e local) op) ~(supp:Man.v
 let map_op1 ~ddtyp op dd
     =
   let op = register_op1 ~ddtyp ~cachetyp:auto op in
-  let res =
-    try apply_op1 op dd
-    with _ as exn ->
-      remove_localop op;
-      raise exn
-  in
-  remove_localop op; res
-
+  apply_op1 op dd
 
 let map_op2
     ~ddtyp
     ?(commutative=false)
     ?(idempotent=false)
-    ?absorbant1 ?absorbant2 ?neutral1 ?neutral2
+    ?special
     op dd1 dd2
     =
-  let op = register_op2 ~ddtyp ~cachetyp:auto ~commutative ~idempotent ?absorbant1 ?absorbant2 ?neutral1 ?neutral2 op in
-  let res =
-    try apply_op2 op dd1 dd2
-    with _ as exn ->
-      remove_localop op;
-      raise exn
-  in
-  remove_localop op; res
+  let op = register_op2 ~ddtyp ~cachetyp:auto ~commutative ~idempotent ?special op in
+  apply_op2 op dd1 dd2
 
 let map_test2
     ~ddtyp
     ?(commutative=false)
     ?(reflexive=false)
-    ?bottom1 ?top2
+    ?special
     op dd1 dd2
     =
-  let op = register_test2 ~ddtyp ~cachetyp:auto ~commutative ~reflexive ?bottom1 ?top2 op in
-  let res =
-    try apply_test2 op dd1 dd2
-    with _ as exn ->
-      remove_localop op;
-      raise exn
-  in
-  remove_localop op; res
+  let op = register_test2 ~ddtyp ~cachetyp:auto ~commutative ~reflexive ?special op in
+  apply_test2 op dd1 dd2
 
-let map_op3 ~ddtyp op dd1 dd2 dd3
+let map_op3 ~ddtyp ?special op dd1 dd2 dd3
     =
-  let op = register_op3 ~ddtyp ~cachetyp:auto op in
-  let res =
-    try apply_op3 op dd1 dd2 dd3
-    with _ as exn ->
-      remove_localop op;
-      raise exn
-  in
-  remove_localop op; res
-
-type ('a,'b) mexist = [
-  | `Op of (('a,'a,'a) op2, 'b) op
-  | `Fun of 'a fexist
-]
-and 'a fexist = {
-  op : 'a -> 'a -> 'a;
-  absorbant : ('a -> bool) option;
-  neutral: ('a -> bool) option
-}
-
-type ('a,'b,'c) mop1 = [
-  | `Op of (('a,'b) op1, 'c) op
-  | `Fun of 'a -> 'b
-]
-
-type ('a,'b) sum2 = Res of 'a | Exn of 'b
+  let op = register_op3 ~ddtyp ~cachetyp:auto ?special op in
+  apply_op3 op dd1 dd2 dd3
 
 let map_exist
     ~ddtyp
-    (mexist:('a,'b) mexist) 
+    (mexist:('a,'add,'b) mexist)
     ~supp dd
     =
   let (op2:(('a,'a,'a) op2,'b) op) = match mexist with
     | `Op op -> op
-    | `Fun fexist ->
-	let funabsorbant = match fexist.absorbant with
-	  | None -> None
-	  | Some f -> Some (fun leaf -> if f leaf then Some leaf else None)
-	in
-	register_op2 ~ddtyp ~cachetyp:auto ~commutative:true ~idempotent:true ?absorbant1:funabsorbant ?absorbant2:funabsorbant ?neutral1:fexist.neutral ?neutral2:fexist.neutral fexist.op
+    | `Fun(special,op) ->
+	register_op2 ~ddtyp ~cachetyp:auto ~commutative:true ~idempotent:true ?special op
   in
   let exist = register_exist ~ddtyp ~cachetyp:auto op2 in
-  let res =
-    try Res(apply_exist exist ~supp dd)
-    with _ as exn -> Exn(exn)
-  in
-  remove_localop exist;
-  begin match mexist with `Fun _ -> remove_localop op2 | _ -> () end;
-  match res with
-  | Res res -> res
-  | Exn exn -> raise exn
+  apply_exist exist ~supp dd
 
 let map_existop1
     ~ddtyp
-    (mop1:('a,'b,'c) mop1) 
-    (mexist:('b,'d) mexist) 
+    (mop1:('a,'b,'c) mop1)
+    (mexist:('b,'bdd,'d) mexist)
     ~supp dd
     =
   let (op2:(('b,'b,'b) op2,'d) op) = match mexist with
     | `Op op -> op
-    | `Fun fexist ->
-	let funabsorbant = match fexist.absorbant with
-	  | None -> None
-	  | Some f -> Some (fun leaf -> if f leaf then Some leaf else None)
-	in
-	register_op2 ~ddtyp ~cachetyp:auto ~commutative:true ~idempotent:true ?absorbant1:funabsorbant ?absorbant2:funabsorbant ?neutral1:fexist.neutral ?neutral2:fexist.neutral fexist.op
+    | `Fun(special,op) ->
+	register_op2 ~ddtyp ~cachetyp:auto ~commutative:true ~idempotent:true ?special op
   in
   let op1 = match mop1 with
     | `Op op -> op
     | `Fun op -> register_op1 ~ddtyp ~cachetyp:auto op
   in
-  let existop1 = register_existop1 ~ddtyp ~cachetyp:auto op2 op1 in
-  let res =
-    try Res(apply_existop1 existop1 ~supp dd)
-    with _ as exn -> Exn(exn)
-  in
-  remove_localop existop1;
-  begin match mop1 with `Fun _ -> remove_localop op1 | _ -> () end;
-  begin match mexist with `Fun _ -> remove_localop op2 | _ -> () end;
-  match res with
-  | Res res -> res
-  | Exn exn -> raise exn
+  let existop1 = register_existop1 ~ddtyp ~cachetyp:auto op1 op2 in
+  apply_existop1 existop1 ~supp dd
 
 let map_existand
     ~ddtyp
     ~(bottom:'a)
-    (mexist:('a,'b) mexist) 
+    (mexist:('a,'add,'b) mexist)
     ~supp bdd dd
     =
   let (op2:(('a,'a,'a) op2,'b) op) = match mexist with
     | `Op op -> op
-    | `Fun fexist ->
-	assert(match fexist.neutral with Some (f) -> f bottom | None -> false);
-	let funabsorbant = match fexist.absorbant with
-	  | None -> None
-	  | Some f -> Some (fun leaf -> if f leaf then Some leaf else None)
-	in
-	register_op2 ~ddtyp ~cachetyp:auto ~commutative:true ~idempotent:true ?absorbant1:funabsorbant ?absorbant2:funabsorbant ?neutral1:fexist.neutral ?neutral2:fexist.neutral fexist.op
+    | `Fun(special,op) ->
+	register_op2 ~ddtyp ~cachetyp:auto ~commutative:true ~idempotent:true ?special op
   in
   let existand = register_existand ~ddtyp ~cachetyp:auto ~bottom op2 in
-  let res =
-    try Res(apply_existand existand ~supp bdd dd)
-    with _ as exn -> Exn(exn)
-  in
-  remove_localop existand;
-  begin match mexist with `Fun _ -> remove_localop op2 | _ -> () end;
-  match res with
-  | Res res -> res
-  | Exn exn -> raise exn
+  apply_existand existand ~supp bdd dd
 
 let map_existandop1
     ~ddtyp
     ~(bottom:'b)
-    (mop1:('a,'b,'c) mop1) 
-    (mexist:('b,'d) mexist) 
+    (mop1:('a,'b,'c) mop1)
+    (mexist:('b,'bdd,'d) mexist)
     ~supp bdd dd
     =
   let (op2:(('b,'b,'b) op2,'d) op) = match mexist with
     | `Op op -> op
-    | `Fun fexist ->
-	assert(match fexist.neutral with Some (f) -> f bottom | None -> false);
-	let funabsorbant = match fexist.absorbant with
-	  | None -> None
-	  | Some f -> Some (fun leaf -> if f leaf then Some leaf else None)
-	in
-	register_op2 ~ddtyp ~cachetyp:auto ~commutative:true ~idempotent:true ?absorbant1:funabsorbant ?absorbant2:funabsorbant ?neutral1:fexist.neutral ?neutral2:fexist.neutral fexist.op
+    | `Fun(special,op) ->
+	register_op2 ~ddtyp ~cachetyp:auto ~commutative:true ~idempotent:true ?special op
   in
   let op1 = match mop1 with
     | `Op op -> op
     | `Fun op -> register_op1 ~ddtyp ~cachetyp:auto op
   in
-  let existandop1 = register_existandop1 ~ddtyp ~cachetyp:auto ~bottom op2 op1 in
-  let res =
-    try Res(apply_existandop1 existandop1 ~supp bdd dd)
-    with _ as exn -> Exn(exn)
-  in
-  remove_localop existandop1;
-  begin match mop1 with `Fun _ -> remove_localop op1 | _ -> () end;
-  begin match mexist with `Fun _ -> remove_localop op2 | _ -> () end;
-  match res with
-  | Res res -> res
-  | Exn exn -> raise exn
-
+  let existandop1 = register_existandop1 ~ddtyp ~cachetyp:auto ~bottom op1 op2 in
+  apply_existandop1 existandop1 ~supp bdd dd

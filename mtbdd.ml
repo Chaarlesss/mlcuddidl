@@ -40,12 +40,3 @@ let guardleafs_u = guardleafs
 
 let cst_u = cst
 let cst cudd table v = cst cudd (unique table v)
-
-type 'a fexist = 'a Ddcustom.fexist = {
-  op : 'a unique -> 'a unique -> 'a unique;
-  absorbant : ('a -> bool) option;
-  neutral : ('a -> bool) option;
-}
-type ('a, 'b) mexist = ('a,'b) Ddcustom.mexist
-type ('a, 'b, 'c) mop1 = ('a, 'b, 'c) Ddcustom.mop1
-

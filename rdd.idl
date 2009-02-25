@@ -634,7 +634,28 @@ quote(MLMLI,"(* ====================================================== *)")
 quote(MLMLI,"(** {3 By using CUDD cache} *)")
 quote(MLMLI,"(* ====================================================== *)")
 
-quote(MLMLI,"
+quote(MLI,"
+(** {4 Type of operations} *)
+
+type op1 
+type op2 
+type test2
+type op3
+type 'a exist
+
+type auto = Ddcustom.auto
+type user = Ddcustom.user
+type 'a local = 'a Ddcustom.local
+type global = Ddcustom.global
+type 'a cache = 'a Ddcustom.cache
+
+type ('a,'b) op
+
+val global : global cache
+val auto : auto local cache
+val user : user local cache
+")
+quote(ML,"
 (** {4 Type of operations} *)
 
 type op1 = (float, float) Ddcustom.op1
@@ -642,49 +663,66 @@ type op2 = (float, float, float) Ddcustom.op2
 type test2 = (float, float) Ddcustom.test2
 type op3 = (float, float, float, float) Ddcustom.op3
 type 'a exist = (float,'a) Ddcustom.exist
+
+type auto = Ddcustom.auto
+type user = Ddcustom.user
+type 'a local = 'a Ddcustom.local
+type global = Ddcustom.global
+type 'a cache = 'a Ddcustom.cache
+
+type ('a,'b) op = ('a,'b) Ddcustom.op
+
+let global = Ddcustom.global
+let auto = Ddcustom.auto
+let user = Ddcustom.user
+")
+
+quote(MLMLI,"
+type 'a mexist = [
+  | `Fun of (t -> t -> t option) option * (float -> float -> float)
+  | `Op of (op2, 'a) op
+]
 ")
 
 quote(MLI,"
 (** {4 Registering operations} *)
 
 val register_op1 :
-  cachetyp:'a Ddcustom.cache -> (float -> float) -> (op1, 'a) Ddcustom.op
+  cachetyp:'a cache -> (float -> float) -> (op1, 'a) op
 val register_op2 :
-  cachetyp:'a Ddcustom.cache ->
+  cachetyp:'a cache ->
   ?commutative:bool ->
   ?idempotent:bool ->
-  ?absorbant1:(float -> float option) ->
-  ?absorbant2:(float -> float option) ->
-  ?neutral1:(float -> bool) ->
-  ?neutral2:(float -> bool) ->
-  (float -> float -> float) -> (op2, 'a) Ddcustom.op
+  ?special:(t -> t -> t option) ->
+  (float -> float -> float) -> (op2, 'a) op
 val register_test2 :
-  cachetyp:'a Ddcustom.cache ->
+  cachetyp:'a cache ->
   ?commutative:bool ->
   ?reflexive:bool ->
-  ?bottom1:(float -> bool) ->
-  ?top2:(float -> bool) -> (float -> float -> bool) -> (test2, 'a) Ddcustom.op
+  ?special:(t -> t -> bool option) ->
+  (float -> float -> bool) -> (test2, 'a) op
 val register_op3 :
-  cachetyp:'a  Ddcustom.local Ddcustom.cache ->
-  (float -> float -> float -> float) -> (op3, 'a Ddcustom.local) Ddcustom.op
+  cachetyp:'a  local cache ->
+  ?special:(t -> t -> t -> t option) ->
+  (float -> float -> float -> float) -> 
+  (op3, 'a local) op
 val register_exist :
-  cachetyp:'b Ddcustom.cache -> (op2,'a) Ddcustom.op -> ('a exist, 'b) Ddcustom.op
+  cachetyp:'b cache -> (op2,'a) op -> ('a exist, 'b) op
 
 (** {4 Flushing cache and removing user operations based on local caches} *)
 
-val flush_op : ('a, Ddcustom.user Ddcustom.local) Ddcustom.op -> unit
-val remove_localop : ('a, 'b Ddcustom.local) Ddcustom.op -> unit
-val remove_globalop : ('a, Ddcustom.global) Ddcustom.op -> unit
+val flush_op : ('a, user local) op -> unit
+val flush_allop : unit -> unit
 
 (** {4 Applying operations} *)
 
-val apply_op1 : (op1, 'a) Ddcustom.op -> t -> t
-val apply_op2 : (op2, 'a) Ddcustom.op -> t -> t -> t
-val apply_test2 : (test2, 'a) Ddcustom.op -> t -> t -> bool
+val apply_op1 : (op1, 'a) op -> t -> t
+val apply_op2 : (op2, 'a) op -> t -> t -> t
+val apply_test2 : (test2, 'a) op -> t -> t -> bool
 val apply_op3 :
-  (op3, 'a Ddcustom.local) Ddcustom.op ->
+  (op3, 'a local) op ->
   t -> t -> t -> t
-val apply_exist : ('a exist, 'b) Ddcustom.op -> supp:(Man.v Bdd.t) -> t -> t
+val apply_exist : ('a exist, 'b) op -> supp:(Man.v Bdd.t) -> t -> t
 
 (** {4 Map functions (based on automatic user caches)} *)
 
@@ -693,24 +731,21 @@ val map_op1 :
 val map_op2 :
   ?commutative:bool ->
   ?idempotent:bool ->
-  ?absorbant1:(float -> float option) ->
-  ?absorbant2:(float -> float option) ->
-  ?neutral1:(float -> bool) ->
-  ?neutral2:(float -> bool) ->
+  ?special:(t -> t -> t option) ->
   (float -> float -> float) -> 
   t -> t -> t
 val map_test2 :
   ?commutative:bool ->
   ?reflexive:bool ->
-  ?bottom1:(float -> bool) ->
-  ?top2:(float -> bool) -> 
+  ?special:(t -> t -> bool option) ->
   (float -> float -> bool) -> 
   t -> t -> bool
 val map_op3 :
+  ?special:(t -> t -> t -> t option) ->
   (float -> float -> float -> float) -> 
   t -> t -> t -> t
 val map_exist :
-  (float, 'a) Ddcustom.mexist ->
+  'a mexist ->
   supp:(Man.v Bdd.t) -> t -> t
 \n
 ")
@@ -722,8 +757,7 @@ let register_test2  ~cachetyp = Ddcustom.register_test2 ~ddtyp:_internal_ddtype 
 let register_op3 ~cachetyp = Ddcustom.register_op3 ~ddtyp:_internal_ddtype ~cachetyp
 let register_exist ~cachetyp (op:(op2,'a) Ddcustom.op) = Ddcustom.register_exist ~ddtyp:_internal_ddtype ~cachetyp op
 let flush_op = Ddcustom.flush_op
-let remove_localop = Ddcustom.remove_localop
-let remove_globalop = Ddcustom.remove_globalop
+let flush_allop = Ddcustom.flush_allop
 let (apply_op1 : (op1,'a) Ddcustom.op -> t -> t) = Ddcustom.apply_op1 
 let (apply_op2 : (op2,'a) Ddcustom.op -> t -> t -> t) = Ddcustom.apply_op2
 let (apply_test2 : (test2,'a) Ddcustom.op -> t -> t -> bool) = Ddcustom.apply_test2 

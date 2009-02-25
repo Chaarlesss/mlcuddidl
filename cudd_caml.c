@@ -72,7 +72,7 @@ int camlidl_cudd_reordering(DdManager* dd, const char* s, void* data)
 
 /* \subsubsection{Managers} */
 
-void man_free(struct man__t* man)
+void camlidl_cudd_man_free(struct man__t* man)
 {
   assert(man->count>=1);
   if (man->count<=1){
@@ -87,7 +87,7 @@ void man_free(struct man__t* man)
 void camlidl_custom_man_finalize(value val)
 {
   struct man__t* man = man_of_vmanager(val);
-  man_free(man);
+  camlidl_cudd_man_free(man);
 }
 int camlidl_custom_man_compare(value val1, value val2)
 {
@@ -123,7 +123,7 @@ void camlidl_custom_node_finalize(value val)
   DdNode* node = no->node;
   assert (Cudd_Regular(node)->ref >= 1);
   Cudd_RecursiveDeref(no->man->man,node);
-  man_free(no->man);
+  camlidl_cudd_man_free(no->man);
 }
 int camlidl_custom_node_compare(value val1, value val2)
 {
@@ -164,7 +164,7 @@ void camlidl_custom_bdd_finalize(value val)
   DdNode* node = no->node;
   assert((Cudd_Regular(node))->ref >= 1);
   Cudd_IterDerefBdd(no->man->man,node);
-  man_free(no->man);
+  camlidl_cudd_man_free(no->man);
 }
 
 struct custom_operations camlidl_custom_bdd = {

@@ -216,64 +216,93 @@ val combineleaf2_array :
 (** {3 By using CUDD cache} *)
 (* ====================================================== *)
 
+(** {4 Types} *)
+
+type ('a, 'b) op1 = ('a unique, 'b unique) Vdd.op1
+type ('a, 'b, 'c) op2 = ('a unique, 'b unique, 'c unique) Vdd.op2
+type ('a, 'b) test2 = ('a unique, 'b unique) Vdd.test2
+type ('a, 'b, 'c, 'd) op3 = ('a unique, 'b unique, 'c unique, 'd unique) Vdd.op3
+type ('a, 'b) exist = ('a unique, 'b) Vdd.exist
+type ('a, 'b, 'c, 'd) existop1 = ('a unique, 'b unique, 'c, 'd) Vdd.existop1
+type ('a, 'b) existand = ('a unique, 'b) Vdd.existand
+type ('a, 'b, 'c, 'd) existandop1 = ('a unique, 'b unique, 'c, 'd) Vdd.existandop1
+type ('a, 'b) vectorcomposeop1 = ('a unique, 'b) Vdd.vectorcomposeop1
+type auto = Vdd.auto
+type user = Vdd.user
+type 'a local = 'a Vdd.local
+type global = Vdd.global
+type 'a cache = 'a Vdd.cache
+type ('a, 'b) op = ('a, 'b) Vdd.op
+type ('a, 'b) mexist =
+    [ `Fun of ('a t -> 'a t -> 'a t option) option * ('a unique -> 'a unique -> 'a unique)
+    | `Op of (('a, 'a, 'a) op2, 'b) op ]
+type ('a, 'b, 'c) mop1 = [ `Fun of 'a unique -> 'b unique | `Op of (('a, 'b) op1, 'c) op ]
+val global : global cache
+val auto : auto local cache
+val user : user local cache
+
 (** {4 Registering operations} *)
 
 val register_op1 :
-  cachetyp:'c Ddcustom.cache -> ('a unique -> 'b unique) -> (('a,'b) Ddcustom.op1, 'c) Ddcustom.op
+  cachetyp:'c cache -> ('a unique -> 'b unique) -> (('a,'b) op1, 'c) op
 val register_op2 :
-  cachetyp:'d Ddcustom.cache ->
+  cachetyp:'d cache ->
   ?commutative:bool ->
   ?idempotent:bool ->
-  ?absorbant1:('a unique -> 'c unique option) ->
-  ?absorbant2:('b unique -> 'c unique option) ->
-  ?neutral1:('a -> bool) ->
-  ?neutral2:('b -> bool) ->
-  ('a unique -> 'b unique -> 'c unique) -> (('a,'b,'c) Ddcustom.op2, 'd) Ddcustom.op
+  ?special:('a t -> 'b t -> 'c t option) ->
+  ('a unique -> 'b unique -> 'c unique) -> (('a,'b,'c) op2, 'd) op
 val register_test2 :
-  cachetyp:'c Ddcustom.cache ->
+  cachetyp:'c cache ->
   ?commutative:bool ->
   ?reflexive:bool ->
-  ?bottom1:('a -> bool) ->
-  ?top2:('b -> bool) -> ('a unique -> 'b unique -> bool) -> (('a,'b) Ddcustom.test2, 'c) Ddcustom.op
+  ?special:('a t -> 'b t -> bool option) ->
+ ('a unique -> 'b unique -> bool) -> (('a,'b) test2, 'c) op
 val register_op3 :
-  cachetyp:'e  Ddcustom.local Ddcustom.cache ->
-  ('a unique -> 'b unique -> 'c unique -> 'd unique) -> (('a,'b,'c,'d) Ddcustom.op3, 'e Ddcustom.local) Ddcustom.op
+  cachetyp:'e  local cache ->
+  ?special:('a t -> 'b t -> 'c t -> 'd t option) ->
+  ('a unique -> 'b unique -> 'c unique -> 'd unique) -> (('a,'b,'c,'d) op3, 'e local) op
 val register_exist :
-  cachetyp:'c Ddcustom.cache -> (('a,'a,'a) Ddcustom.op2,'b) Ddcustom.op -> (('a,'b) Ddcustom.exist, 'c) Ddcustom.op
+  cachetyp:'c cache -> (('a,'a,'a) op2,'b) op -> (('a,'b) exist, 'c) op
 val register_existop1 :
-  cachetyp:'e Ddcustom.cache ->
-  (('a, 'b) Ddcustom.op1, 'd) Ddcustom.op ->
-  (('b, 'b, 'b) Ddcustom.op2, 'c) Ddcustom.op ->
-  (('a,'b,'d,'c) Ddcustom.existop1, 'e) Ddcustom.op
+  cachetyp:'e cache ->
+  (('a, 'b) op1, 'd) op ->
+  (('b, 'b, 'b) op2, 'c) op ->
+  (('a,'b,'d,'c) existop1, 'e) op
 val register_existand :
-  cachetyp:'c Ddcustom.local Ddcustom.cache ->
-  bottom:'a ->
-  (('a, 'a, 'a) Ddcustom.op2, 'b) Ddcustom.op -> (('a,'b) Ddcustom.existand, 'c Ddcustom.local) Ddcustom.op
+  cachetyp:'c local cache ->
+  bottom:'a unique ->
+  (('a, 'a, 'a) op2, 'b) op -> (('a,'b) existand, 'c local) op
 val register_existandop1 :
-  cachetyp:'e Ddcustom.local Ddcustom.cache ->
-  bottom:'b ->
-  (('a, 'b) Ddcustom.op1, 'd) Ddcustom.op ->
-  (('b, 'b, 'b) Ddcustom.op2, 'c) Ddcustom.op ->
-  (('a,'b,'d,'c) Ddcustom.existandop1, 'e Ddcustom.local) Ddcustom.op
+  cachetyp:'e local cache ->
+  bottom:'b unique ->
+  (('a, 'b) op1, 'd) op ->
+  (('b, 'b, 'b) op2, 'c) op ->
+  (('a,'b,'d,'c) existandop1, 'e local) op
 
-(** {4 Flushing cache and removing user operations based on local caches} *)
+(** {4 Flushing cache} *)
 
-val flush_op : ('a, Ddcustom.user Ddcustom.local) Ddcustom.op -> unit
-val remove_localop : ('a, 'b Ddcustom.local) Ddcustom.op -> unit
-val remove_globalop : ('a, Ddcustom.global) Ddcustom.op -> unit
+val op2_of_exist : (('a,'b) exist, 'c) op -> (('a,'a,'a) op2, 'b) op
+val op2_of_existop1 : (('a,'b,'c,'d) existop1, 'e) op -> (('b,'b,'b) op2, 'd) op
+val op2_of_existand : (('a,'b) existand, 'c local) op -> (('a,'a,'a) op2, 'b) op
+val op2_of_existandop1 : (('a,'b,'c,'d) existandop1, 'e local) op -> (('b,'b,'b) op2, 'd) op
+val op1_of_existop1 : (('a,'b,'c,'d) existop1, 'e) op -> (('a,'b) op1, 'c) op
+val op1_of_existandop1 : (('a,'b,'c,'d) existandop1, 'e local) op -> (('a,'b) op1, 'c) op
+
+val flush_op : ('a, user local) op -> unit
+val flush_allop : unit -> unit
 
 (** {4 Applying operations} *)
 
-val apply_op1 : (('a,'b) Ddcustom.op1, 'c) Ddcustom.op -> 'a t -> 'b t
-val apply_op2 : (('a,'b,'c) Ddcustom.op2, 'd) Ddcustom.op -> 'a t -> 'b t -> 'c t
-val apply_test2 : (('a,'b) Ddcustom.test2, 'c) Ddcustom.op -> 'a t -> 'b t -> bool
+val apply_op1 : (('a,'b) op1, 'c) op -> 'a t -> 'b t
+val apply_op2 : (('a,'b,'c) op2, 'd) op -> 'a t -> 'b t -> 'c t
+val apply_test2 : (('a,'b) test2, 'c) op -> 'a t -> 'b t -> bool
 val apply_op3 :
-  (('a,'b,'c,'d) Ddcustom.op3, 'e Ddcustom.local) Ddcustom.op ->
+  (('a,'b,'c,'d) op3, 'e local) op ->
   'a t -> 'b t -> 'c t -> 'd t
-val apply_exist : (('a,'b) Ddcustom.exist, 'c) Ddcustom.op -> supp:(Man.v Bdd.t) -> 'a t -> 'a t
-val apply_existop1 : (('a,'b,'c,'d) Ddcustom.existop1, 'e) Ddcustom.op -> supp:(Man.v Bdd.t) -> 'a t -> 'b t
-val apply_existand : (('a,'b) Ddcustom.existand, 'c Ddcustom.local) Ddcustom.op -> supp:(Man.v Bdd.t) -> Man.v Bdd.t -> 'a t -> 'a t
-val apply_existandop1 : (('a,'b,'c,'d) Ddcustom.existandop1, 'e Ddcustom.local) Ddcustom.op -> supp:(Man.v Bdd.t) -> Man.v Bdd.t -> 'a t -> 'b t
+val apply_exist : (('a,'b) exist, 'c) op -> supp:(Man.v Bdd.t) -> 'a t -> 'a t
+val apply_existop1 : (('a,'b,'c,'d) existop1, 'e) op -> supp:(Man.v Bdd.t) -> 'a t -> 'b t
+val apply_existand : (('a,'b) existand, 'c local) op -> supp:(Man.v Bdd.t) -> Man.v Bdd.t -> 'a t -> 'a t
+val apply_existandop1 : (('a,'b,'c,'d) existandop1, 'e local) op -> supp:(Man.v Bdd.t) -> Man.v Bdd.t -> 'a t -> 'b t
 
 (** {4 Map functions (based on automatic user caches)} *)
 
@@ -282,37 +311,19 @@ val map_op1 :
 val map_op2 :
   ?commutative:bool ->
   ?idempotent:bool ->
-  ?absorbant1:('a unique -> 'c unique option) ->
-  ?absorbant2:('b unique -> 'c unique option) ->
-  ?neutral1:('a -> bool) ->
-  ?neutral2:('b -> bool) ->
+  ?special:('a t -> 'b t -> 'c t option) ->
   ('a unique -> 'b unique -> 'c unique) ->
   'a t -> 'b t -> 'c t
 val map_test2 :
   ?commutative:bool ->
   ?reflexive:bool ->
-  ?bottom1:('a -> bool) ->
-  ?top2:('b -> bool) ->
+  ?special:('a t -> 'b t -> bool option) ->
   ('a unique -> 'b unique -> bool) ->
   'a t -> 'b t -> bool
 val map_op3 :
+  ?special:('a t -> 'b t -> 'c t -> 'd t option) ->
   ('a unique -> 'b unique -> 'c unique -> 'd unique) ->
   'a t -> 'b t -> 'c t -> 'd t
-
-type ('a, 'b) mexist = [
-  | `Fun of 'a fexist 
-  | `Op of (('a, 'a, 'a) Ddcustom.op2, 'b) Ddcustom.op 
-]
-and 'a fexist = {
-  op : 'a unique -> 'a unique -> 'a unique;
-  absorbant : ('a -> bool) option;
-  neutral : ('a -> bool) option;
-}
-
-type ('a, 'b, 'c) mop1 = [ 
-  | `Fun of 'a unique -> 'b unique 
-  | `Op of (('a, 'b) Ddcustom.op1, 'c) Ddcustom.op 
-]
 
 val map_exist :
   ('a, 'b) mexist ->
@@ -321,11 +332,11 @@ val map_existop1 :
   ('a,'b,'c) mop1 -> ('b,'d) mexist ->
   supp:(Man.v Bdd.t) -> 'a t -> 'b t
 val map_existand :
-  bottom:'a ->
+  bottom:'a unique ->
   ('a, 'b) mexist ->
   supp:(Man.v Bdd.t) -> Man.v Bdd.t -> 'a t -> 'a t
 val map_existandop1 :
-  bottom:'b ->
+  bottom:'b unique ->
   ('a,'b,'c) mop1 -> ('b,'d) mexist ->
   supp:(Man.v Bdd.t) -> Man.v Bdd.t -> 'a t -> 'b t
 
