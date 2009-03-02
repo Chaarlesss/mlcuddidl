@@ -10,18 +10,20 @@
 
   Description [Miscellaneous operations..]
 
-            External procedures included in this module:
+	    External procedures included in this module:
 		<ul>
+		<li> Cuddaux_Support()
+		<li> Cuddaux_SupportSize()
+		<li> Cuddaux_ClassifySupport()
 		<li> Cuddaux_IsVarIn()
-		<li> Cuddaux_bddCubeUnion()
 		<li> Cuddaux_NodesBelowLevel()
 		<li> list_free()
 		<li> Cuddaux_addGuardOfNode()
 		</ul>
 	    Internal procedures included in this module:
 		<ul>
+		<li> cuddauxSupportRecur()
 		<li> cuddauxIsVarInRecur()
-		<li> cuddauxBddCubeUnionRecur()
 		<li> cuddauxAddGuardOfNodeRecur()
 		</ul>
 	    Static procedures included in this module:
@@ -60,6 +62,122 @@ static int cuddauxNodesBelowLevelRecur(DdManager* manager, DdNode* F, int level,
 
 /**Function********************************************************************
 
+  Synopsis    [Finds the variables on which a DD depends.]
+
+  Description [Finds the variables on which a DD depends.  Returns a BDD
+  consisting of the product of the variables if successful; NULL otherwise.
+  Variant of [Cudd_Support] using global cache.]
+
+  SideEffects [None]
+
+  SeeAlso     [Cudd_Support]
+
+******************************************************************************/
+DdNode* Cuddaux_Support(DdManager* dd, DdNode* f)
+{
+  DdNode* res;
+  do {
+    dd->reordered = 0;
+    res = cuddauxSupportRecur(dd, Cudd_Regular(f));
+  } while (dd->reordered == 1);
+  return res;
+}
+
+/**Function********************************************************************
+
+  Synopsis    [Finds the number of variables on which a DD depends, using Cuddaux_Support.]
+
+  Description []
+
+  SideEffects [None]
+
+  SeeAlso     [Cudd_SupportSize]
+
+******************************************************************************/
+int Cuddaux_SupportSize(DdManager* dd, DdNode* f)
+{
+  DdNode* res;
+  int size;
+  res = Cuddaux_Support(dd,f);
+  size = Cudd_DagSize(f) - 1;
+  assert(size>=0);
+  return size;
+}
+
+/**Function********************************************************************
+
+  Synopsis    [Classifies the variables in the support of two DDs.]
+
+  Description [Classifies the variables in the support of two DDs
+  <code>f</code> and <code>g</code>, depending on whther they appear
+  in both DDs, only in <code>f</code>, or only in <code>g</code>.
+  Returns 1 if successful; 0 otherwise.]
+
+  SideEffects [The cubes of the three classes of variables are
+  returned as side effects.]
+
+  SeeAlso     []
+
+******************************************************************************/
+int
+Cuddaux_ClassifySupport(
+			DdManager * dd /* manager */,
+			DdNode * f /* first DD */,
+			DdNode * g /* second DD */,
+			DdNode ** common /* cube of shared variables */,
+			DdNode ** onlyF /* cube of variables only in f */,
+			DdNode ** onlyG /* cube of variables only in g */)
+{
+  DdNode *suppF, *suppG;
+
+  suppF = suppG = *common = *onlyF = *onlyG = NULL;
+
+  suppF = Cuddaux_Support(dd,f);
+  if (suppF == NULL) goto Cuddaux_ClassifySupport_error;
+  cuddRef(suppF);
+
+  suppG = Cuddaux_Support(dd,g);
+  if (suppG == NULL) goto Cuddaux_ClassifySupport_error;
+  cuddRef(suppG);
+
+  *common = Cudd_bddLiteralSetIntersection(dd,suppF,suppG);
+  if (*common == NULL) goto Cuddaux_ClassifySupport_error;
+  cuddRef(*common);
+
+  *onlyF = Cudd_Cofactor(dd,suppF,*common);
+  if (*onlyF == NULL) goto Cuddaux_ClassifySupport_error;
+  cuddRef(*onlyF);
+
+  *onlyG = Cudd_Cofactor(dd,suppG,*common);
+  if (*onlyG == NULL) goto Cuddaux_ClassifySupport_error;
+  cuddRef(*onlyG);
+  Cudd_IterDerefBdd(dd,suppF);
+  Cudd_IterDerefBdd(dd,suppG);
+  cuddDeref(*common);
+  cuddDeref(*onlyF);
+  cuddDeref(*onlyG);
+  return 1;
+ Cuddaux_ClassifySupport_error:
+  if (suppF) Cudd_IterDerefBdd(dd,suppF);
+  if (suppG) Cudd_IterDerefBdd(dd,suppG);
+  if (*common){
+    Cudd_IterDerefBdd(dd,*common);
+    *common = NULL;
+  }
+  if (*onlyF){
+    Cudd_IterDerefBdd(dd,*onlyF);
+    *onlyF = NULL;
+  }
+  if (*onlyG){
+    Cudd_IterDerefBdd(dd,*onlyG);
+    *onlyG = NULL;
+  }
+  dd->errorCode = CUDD_MEMORY_OUT;
+  return(0);
+} /* end of Cuddaux_ClassifySupport */
+
+/**Function********************************************************************
+
   Synopsis    [Membership of a variable to the support of a BDD/ADD]
 
   Description [Tells wether a variable appear in the decision diagram
@@ -70,34 +188,11 @@ static int cuddauxNodesBelowLevelRecur(DdManager* manager, DdNode* F, int level,
   SeeAlso     []
 
 ******************************************************************************/
-int 
+int
 Cuddaux_IsVarIn(DdManager* dd, DdNode* f, DdNode* var)
-{ 
+{
   assert(Cudd_Regular(var));
   return (cuddauxIsVarInRecur(dd,f,var) == DD_ONE(dd));
-}
-
-/**Function********************************************************************
-
-  Synopsis    [Smallest cube implied by the cubes f and g]
-
-  Description ["Or" function within the set of cubes]
-
-  SideEffects [None]
-
-  SeeAlso     []
-
-******************************************************************************/
-DdNode*
-Cuddaux_bddCubeUnion(DdManager* dd, DdNode* f, DdNode* g)
-{ 
-  DdNode *res;
-
-  do {
-    dd->reordered = 0;
-    res = cuddauxBddCubeUnionRecur(dd,f,g);
-  } while (dd->reordered == 1);
-  return(res);
 }
 
 /* Given a \textsc{Bdd} or a \textsc{Add} $f$, and a variable level
@@ -130,12 +225,12 @@ Cuddaux_bddCubeUnion(DdManager* dd, DdNode* f, DdNode* g)
   SeeAlso     []
 
 ******************************************************************************/
-list_t* 
+list_t*
 Cuddaux_NodesBelowLevel(DdManager* manager, DdNode* f, int level, size_t max, size_t* psize, int take_background)
 {
   list_t* res = 0;
   st_table* visited;
-  
+
   visited = st_init_table(st_ptrcmp,st_ptrhash);
   if (visited==NULL) return NULL;
   *psize = 0;
@@ -197,6 +292,67 @@ DdNode* Cuddaux_addGuardOfNode(DdManager* manager, DdNode* f, DdNode* h)
 
 /**Function********************************************************************
 
+  Synopsis    [Performs the recursive step of Cuddaux_Support.]
+
+  Description [Performs the recursive step of Cuddaux_Support.]
+
+  SideEffects [None]
+
+  SeeAlso     []
+
+******************************************************************************/
+DdNode*
+cuddauxSupportRecur(DdManager* dd,
+		    DdNode * f)
+{
+  DdNode *one, *fv, *fvn, *T,*E, *res, *res1;
+
+  one = DD_ONE(dd);
+  if (cuddIsConstant(f)) {
+    return one;
+  }
+  fv = cuddT(f);
+  fvn = Cudd_Regular(cuddE(f));
+  if (cuddIsConstant(fv) && cuddIsConstant(fvn)){
+    return dd->vars[f->index];
+  }
+  /* Look in the cache */
+  res = cuddCacheLookup1(dd,Cuddaux_Support,f);
+  if (res != NULL)
+    return(res);
+
+  T = cuddIsConstant(fv) ? one : cuddauxSupportRecur(dd,fv);
+  if (T == NULL)
+    return(NULL);
+  cuddRef(T);
+  E = cuddIsConstant(fvn) ? one : cuddauxSupportRecur(dd,fvn);
+  if (E == NULL){
+    Cudd_IterDerefBdd(dd,T);
+    return(NULL);
+  }
+  cuddRef(E);
+  res1 = (T==E) ? T : cuddBddAndRecur(dd,T,E);
+  if (res1 == NULL){
+    Cudd_IterDerefBdd(dd,T);
+    Cudd_IterDerefBdd(dd,E);
+    return(NULL);
+  }
+  cuddRef(res1);
+  res = cuddUniqueInter(dd,f->index,res1,Cudd_Not(one));
+  if (res == NULL){
+    Cudd_IterDerefBdd(dd,T);
+    Cudd_IterDerefBdd(dd,E);
+    Cudd_IterDerefBdd(dd,res1);
+    return(NULL);
+  }
+  cuddDeref(res1);
+  cuddCacheInsert1(dd,Cuddaux_Support,f,res);
+  return(res);
+} /* end of cuddauxSupportRecur */
+
+
+/**Function********************************************************************
+
   Synopsis    [Performs the recursive step of Cuddaux_IsVarIn.]
 
   Description [Performs the recursive step of Cuddaux_IsVarIn. var is
@@ -208,7 +364,7 @@ DdNode* Cuddaux_addGuardOfNode(DdManager* manager, DdNode* f, DdNode* h)
   SeeAlso     []
 
 ******************************************************************************/
-DdNode* 
+DdNode*
 cuddauxIsVarInRecur(DdManager* manager, DdNode* f, DdNode* Var)
 {
   DdNode *zero,*one, *F, *res;
@@ -217,7 +373,7 @@ cuddauxIsVarInRecur(DdManager* manager, DdNode* f, DdNode* Var)
   one = DD_ONE(manager);
   zero = Cudd_Not(one);
   F = Cudd_Regular(f);
-  
+
   if (cuddIsConstant(F)) return zero;
   if (Var==F) return(one);
 
@@ -225,7 +381,7 @@ cuddauxIsVarInRecur(DdManager* manager, DdNode* f, DdNode* Var)
   topF = F->index;
   if (topF == topV) return(one);
   if (cuddI(manager,topV) < cuddI(manager,topF)) return(zero);
-  
+
   res = cuddCacheLookup2(manager,cuddauxIsVarInRecur, F, Var);
   if (res != NULL) return(res);
   res = cuddauxIsVarInRecur(manager,cuddT(F),Var);
@@ -248,7 +404,7 @@ cuddauxIsVarInRecur(DdManager* manager, DdNode* f, DdNode* Var)
 
 ******************************************************************************/
 
-DdNode* 
+DdNode*
 cuddauxAddGuardOfNodeRecur(DdManager* manager, DdNode* f, DdNode* h)
 {
   DdNode *one, *res, *T, *E;
@@ -256,7 +412,7 @@ cuddauxAddGuardOfNodeRecur(DdManager* manager, DdNode* f, DdNode* h)
 
   /* Handle terminal cases */
   one = DD_ONE(manager);
-  if (f==h){ 
+  if (f==h){
     return(one);
   }
   topf = cuddI(manager,f->index);
@@ -264,10 +420,10 @@ cuddauxAddGuardOfNodeRecur(DdManager* manager, DdNode* f, DdNode* h)
   if (topf >= toph){
     return Cudd_Not(one);
   }
-  
+
   /* Look in the cache */
   res = cuddCacheLookup2(manager,Cuddaux_addGuardOfNode,f,h);
-  if (res != NULL) 
+  if (res != NULL)
     return(res);
 
   T = cuddauxAddGuardOfNodeRecur(manager,cuddT(f),h);
@@ -292,7 +448,7 @@ cuddauxAddGuardOfNodeRecur(DdManager* manager, DdNode* f, DdNode* h)
 	return(NULL);
       }
       res = Cudd_Not(res);
-    } 
+    }
     else {
       res = cuddUniqueInter(manager,f->index,T,E);
       if (res == NULL) {
@@ -314,160 +470,11 @@ cuddauxAddGuardOfNodeRecur(DdManager* manager, DdNode* f, DdNode* h)
 
 /**Function********************************************************************
 
-  Synopsis    [Performs the recursive step of Cuddaux_bddCubeUnion.]
-
-  Description [Performs the recursive step of
-  Cuddaux_bddCubeUnion. Returns the node if successfull, NULL otherwise.]
-
-
-  SideEffects [None]
-
-  SeeAlso     []
-
-******************************************************************************/
-
-DdNode *
-cuddauxBddCubeUnionRecur(DdManager * manager,
-		      DdNode * f,
-		      DdNode * g)
-{
-  DdNode *F, *fv, *fnv, *G, *gv, *gnv;
-  DdNode *one, *zero, *res1, *res;
-  unsigned int topf, topg, index;
-
-  one = DD_ONE(manager);
-  zero = Cudd_Not(one);
-
-  while (1){
-    /* Terminal cases. */
-    F = Cudd_Regular(f);
-    G = Cudd_Regular(g);
-    if (F == G) {
-      if (f == g) return(f);
-      else return(one);
-    }
-    if (F == one) {
-      if (f == one) return(one);
-      else return(g);
-    }
-    if (G == one) {
-      if (g == one) return(one);
-      else return(f);
-    }
-    /* At this point f and g are not constant. */
-    
-    /* Here we can skip the use of cuddI, because the operands are known
-    ** to be non-constant.
-    */
-    topf = manager->perm[F->index];
-    topg = manager->perm[G->index];
-    
-    /* Compute cofactors. */
-    if (topf < topg){
-      index = F->index;
-      fv = cuddT(F);
-      fnv = cuddE(F);
-      if (Cudd_IsComplement(f)) {
-	fv = Cudd_Not(fv);
-	fnv = Cudd_Not(fnv);
-      }
-      if (fv == zero) f = fnv;
-      else if (fnv == zero) f = fv;
-      else {
-	manager->errorCode = CUDD_INVALID_ARG;
-	return NULL;
-      }
-    }
-    else if (topg < topf){
-      index = G->index;
-      gv = cuddT(G);
-      gnv = cuddE(G);
-      if (Cudd_IsComplement(g)) {
-	gv = Cudd_Not(gv);
-	gnv = Cudd_Not(gnv);
-      }
-      if (gv == zero) g = gnv;
-      else if (gnv == zero) g = gv;
-      else {
-	manager->errorCode = CUDD_INVALID_ARG;
-	return NULL;
-      }
-    }
-    else {
-      index = F->index;
-      fv = cuddT(F);
-      fnv = cuddE(F);
-      if (Cudd_IsComplement(f)) {
-	fv = Cudd_Not(fv);
-	fnv = Cudd_Not(fnv);
-      }
-      gv = cuddT(G);
-      gnv = cuddE(G);
-      if (Cudd_IsComplement(g)) {
-	gv = Cudd_Not(gv);
-	gnv = Cudd_Not(gnv);
-      }
-      if (fv==zero && gv==zero){
-	res1 = cuddauxBddCubeUnionRecur(manager,fnv,gnv);
-	if (res1==NULL) return(NULL);
-	cuddRef(res1);
-	res = cuddUniqueInter(manager,index,one,Cudd_Not(res1));
-	if (res==NULL){
-	  Cudd_IterDerefBdd(manager,res1);
-	  return(NULL);
-	}
-	res = Cudd_Not(res);
-	cuddDeref(res1);
-	return(res);
-      }
-      else if (fnv==zero && gnv==zero){
-	res1 = cuddauxBddCubeUnionRecur(manager,fv,gv);
-	if (res1==NULL) return(NULL);
-	cuddRef(res1);
-	if (Cudd_IsComplement(res1)){
-	  res = cuddUniqueInter(manager,index,Cudd_Not(res1),one);
-	  if (res==NULL){
-	    Cudd_IterDerefBdd(manager,res1);
-	    return(NULL);
-	  }
-	  res = Cudd_Not(res);
-	}
-	else {
-	  res = cuddUniqueInter(manager,index,res1,zero);
-	  if (res==NULL){
-	    Cudd_IterDerefBdd(manager,res1);
-	    return(NULL);
-	  }
-	}
-	cuddDeref(res1);
-	return(res);
-      }
-      else {
-	if (fv==zero) f = fnv;
-	else if (fnv==zero) f = fv;
-	else {
-	  manager->errorCode = CUDD_INVALID_ARG;
-	  return NULL;
-	}
-	if (gv == zero) g = gnv;
-	else if (gnv == zero) g = gv;
-	else {
-	  manager->errorCode = CUDD_INVALID_ARG;
-	  return NULL;
-	}
-      }
-    }
-  }
-}
-
-
-/**Function********************************************************************
-
   Synopsis    [Performs the recursive step of Cuddaux_NodesBelowLevelRecur.]
 
   Description [Performs the recursive step of
   Cuddaux_NodesBelowLevelRecur.  F is supposed to be a regular
-  node. Returns 1 if successful, NULL otherwise. 
+  node. Returns 1 if successful, NULL otherwise.
   The background node is not put in the list if take_background==0 ]
 
   SideEffects [None]
@@ -475,9 +482,9 @@ cuddauxBddCubeUnionRecur(DdManager * manager,
   SeeAlso     []
 
 ******************************************************************************/
-static int 
-cuddauxNodesBelowLevelRecur(DdManager* manager, DdNode* F, int level, 
-			    list_t** plist, st_table* visited, 
+static int
+cuddauxNodesBelowLevelRecur(DdManager* manager, DdNode* F, int level,
+			    list_t** plist, st_table* visited,
 			    size_t max, size_t* psize,
 			    int take_background)
 {
@@ -520,7 +527,7 @@ cuddauxNodesBelowLevelRecur(DdManager* manager, DdNode* F, int level,
   SeeAlso     []
 
 ******************************************************************************/
-static int 
+static int
 list_add(list_t** const plist, DdNode* node)
 {
   list_t* nlist = (list_t*)malloc(sizeof(list_t));

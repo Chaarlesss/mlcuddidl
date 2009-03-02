@@ -73,6 +73,8 @@ DdNode* cuddauxAddApplyVectorComposeRecur(
 
 /* File cuddauxAddApply.c */
 /* f, g and h are ADDs */
+
+void cuddauxHashTableQuit(DdHashTable * hash);
 DdNode* cuddauxAddApply1Recur(DdManager* dd, DdHashTable* table, DDAUX_IDOP pid, DDAUX_AOP1 op, DdNode* f);
 DdNode* cuddauxAddApply2Recur(DdManager* dd, DdHashTable* table, DDAUX_IDOP pid, int commutative, DDAUX_AOP2 op, DdNode* f, DdNode* g);
 DdNode* cuddauxAddTest2Recur(DdManager* dd, DdHashTable* table, DDAUX_IDOP pid, int commutative, DDAUX_AOP2 op, DdNode* f, DdNode* g);
@@ -121,10 +123,10 @@ cuddauxAddApplyBddAndAbstractRecur(DdManager * dd,
 				   DdNode * background /* CST ADD */);
 
 /* File cuddauxMisc.c */
+/* f is a BDD/ADD node */
+DdNode* cuddauxSupportRecur(DdManager* dd, DdNode* f);
 /* f is a BDD/ADD node and index the index of a variable.*/
 DdNode* cuddauxIsVarInRecur(DdManager* manager, DdNode* Var, DdNode* f);
-/* f and g are BDD cubes */
-DdNode* cuddauxBddCubeUnionRecur(DdManager* dd, DdNode* f, DdNode* g);
 /* f and h are ADDs */
 DdNode* cuddauxAddGuardOfNodeRecur(DdManager* manager, DdNode* f, DdNode* h);
 

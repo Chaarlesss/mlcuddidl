@@ -60,20 +60,22 @@ DdNode* Cuddaux_addApplyVectorCompose(DdManager* dd, DD_MAOP op, DdNode* f, DdNo
 
 /* File cuddauxAddApply.c */
 /* f, g and h are ADDs */
-DdNode* Cuddaux_addApply1(DdManager* dd, DdHashTable* table, DDAUX_IDOP pid, DDAUX_AOP1 op, DdNode* f);
-DdNode* Cuddaux_addApply2(DdManager* dd, DdHashTable* table, DDAUX_IDOP pid, int commutative, DDAUX_AOP2 op, DdNode* f, DdNode* g);
-int Cuddaux_addTest2(DdManager* dd, DdHashTable* table, DDAUX_IDOP pid, int commutative, DDAUX_AOP2 op, DdNode* f, DdNode* g);
-DdNode* Cuddaux_addApply3(DdManager* dd, DdHashTable* table, DDAUX_IDOP pid, DDAUX_AOP3 op, DdNode* f, DdNode* g, DdNode* h);
-DdNode* Cuddaux_addAbstract(DdManager* dd, DdHashTable* table, DdHashTable* tableop, DDAUX_IDOP pid, DDAUX_AOP2 op, DdNode* f, DdNode* cube);
-DdNode* Cuddaux_addApplyAbstract(DdManager* dd, DdHashTable* table, DdHashTable* tableop, DdHashTable* tableop1, DDAUX_IDOP pid, DDAUX_IDOP pid1, DDAUX_AOP2 op, DDAUX_AOP1 op1, DdNode* f, DdNode* cube);
-DdNode* Cuddaux_addBddAndAbstract(DdManager* dd, DdHashTable* table, DdHashTable* tableop, DDAUX_IDOP pid, DDAUX_AOP2 op, DdNode* f, DdNode* g, DdNode* cube, DdNode* background);
-DdNode* Cuddaux_addApplyBddAndAbstract(DdManager* dd, DdHashTable* table, DdHashTable* tableop, DdHashTable* tableop1, DDAUX_IDOP pid, DDAUX_IDOP pid1, DDAUX_AOP2 op, DDAUX_AOP1 op1, DdNode* f, DdNode* g, DdNode* cube, DdNode* background);
+DdNode* Cuddaux_addApply1(DdManager* dd, DdHashTable** table, DDAUX_IDOP pid, DDAUX_AOP1 op, DdNode* f);
+DdNode* Cuddaux_addApply2(DdManager* dd, DdHashTable** table, DDAUX_IDOP pid, int commutative, DDAUX_AOP2 op, DdNode* f, DdNode* g);
+int Cuddaux_addTest2(DdManager* dd, DdHashTable** table, DDAUX_IDOP pid, int commutative, DDAUX_AOP2 op, DdNode* f, DdNode* g);
+DdNode* Cuddaux_addApply3(DdManager* dd, DdHashTable** table, DDAUX_IDOP pid, DDAUX_AOP3 op, DdNode* f, DdNode* g, DdNode* h);
+DdNode* Cuddaux_addAbstract(DdManager* dd, DdHashTable** table, DdHashTable** tableop, DDAUX_IDOP pid, DDAUX_AOP2 op, DdNode* f, DdNode* cube);
+DdNode* Cuddaux_addApplyAbstract(DdManager* dd, DdHashTable** table, DdHashTable** tableop, DdHashTable** tableop1, DDAUX_IDOP pid, DDAUX_IDOP pid1, DDAUX_AOP2 op, DDAUX_AOP1 op1, DdNode* f, DdNode* cube);
+DdNode* Cuddaux_addBddAndAbstract(DdManager* dd, DdHashTable** table, DdHashTable** tableop, DDAUX_IDOP pid, DDAUX_AOP2 op, DdNode* f, DdNode* g, DdNode* cube, DdNode* background);
+DdNode* Cuddaux_addApplyBddAndAbstract(DdManager* dd, DdHashTable** table, DdHashTable** tableop, DdHashTable** tableop1, DDAUX_IDOP pid, DDAUX_IDOP pid1, DDAUX_AOP2 op, DDAUX_AOP1 op1, DdNode* f, DdNode* g, DdNode* cube, DdNode* background);
 
 /* File cuddauxMisc.c */
+/* f is a BDD/ADD node */
+DdNode* Cuddaux_Support(DdManager* dd, DdNode* f);
+int Cuddaux_SupportSize(DdManager* dd, DdNode* f);
+int Cuddaux_ClassifySupport(DdManager* dd, DdNode* f, DdNode* g, DdNode** common, DdNode** onlyF, DdNode** onlyG);
 /* f is a BDD/ADD node and var a projection function */
 int Cuddaux_IsVarIn(DdManager* dd, DdNode* f, DdNode* var);
-/* f and g are BDD cubes */
-DdNode* Cuddaux_bddCubeUnion(DdManager* dd, DdNode* f, DdNode* g);
 /* f is a BDD/ADD node and level a level. */
 list_t* Cuddaux_NodesBelowLevel(DdManager* dd, DdNode* f, int level, size_t max, size_t* psize, int take_background);
 void list_free(list_t* l);

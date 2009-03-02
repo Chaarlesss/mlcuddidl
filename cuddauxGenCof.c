@@ -63,7 +63,7 @@ DdNode*
 Cuddaux_bddRestrict(DdManager * dd, DdNode * f, DdNode * c)
 {
   DdNode *one,*zero;
-  DdNode *suppF, *suppC, *commonSupport;
+  DdNode *suppF, *suppC, *commonSupp, *onlyC;
   DdNode *cplus, *res;
   int retval;
   
@@ -82,26 +82,48 @@ Cuddaux_bddRestrict(DdManager * dd, DdNode * f, DdNode * c)
   if (f == Cudd_Not(c)) return(zero);
   
   /* Check if supports intersect. */
-  retval = Cudd_ClassifySupport(dd,f,c,&commonSupport,&suppF,&suppC);
-  if (retval == 0) {
+  suppF = Cuddaux_Support(dd,f);
+  if (suppF==NULL) return(NULL);
+  cuddRef(suppF);
+
+  suppC = Cuddaux_Support(dd,c);
+  if (suppC==NULL){
+    Cudd_IterDerefBdd(dd,suppF);
     return(NULL);
   }
-  cuddRef(commonSupport); cuddRef(suppF); cuddRef(suppC);
-  Cudd_IterDerefBdd(dd,suppF);
-  if (commonSupport == one) {
-    Cudd_IterDerefBdd(dd,commonSupport); 
+  cuddRef(suppC);
+
+  commonSupp = Cudd_bddLiteralSetIntersection(dd,suppF,suppC);
+  if (commonSupp==NULL){
+    Cudd_IterDerefBdd(dd,suppF);
+    Cudd_IterDerefBdd(dd,suppC); 
+    return(NULL);
+  }
+  if (commonSupp == one) {
+    Cudd_IterDerefBdd(dd,suppF);
     Cudd_IterDerefBdd(dd,suppC); 
     return(f);
   }
-  Cudd_IterDerefBdd(dd,commonSupport); 
+  cuddRef(commonSupp);
+
+  Cudd_IterDerefBdd(dd,suppF);
   /* Abstract from c the variables that do not appear in f. */
-  cplus = Cudd_bddExistAbstract(dd, c, suppC);
+  onlyC = Cudd_Cofactor(dd,suppC,commonSupp);
+  if (onlyC == NULL) {
+    Cudd_IterDerefBdd(dd,suppC); 
+    Cudd_IterDerefBdd(dd,commonSupp); 
+    return(NULL);
+  }
+  cuddRef(onlyC);
+  Cudd_IterDerefBdd(dd,suppC); 
+  Cudd_IterDerefBdd(dd,commonSupp); 
+  cplus = Cudd_bddExistAbstract(dd, c, onlyC);
   if (cplus == NULL) {
-    Cudd_IterDerefBdd(dd,suppC);
+    Cudd_IterDerefBdd(dd,onlyC); 
     return(NULL);
   }
   cuddRef(cplus);
-  Cudd_IterDerefBdd(dd,suppC);
+  Cudd_IterDerefBdd(dd,onlyC);
   
   do {
     dd->reordered = 0;
@@ -135,7 +157,7 @@ DdNode*
 Cuddaux_addRestrict(DdManager* dd, DdNode* f, DdNode* c)
 {
   DdNode *one,*zero;
-  DdNode *suppF, *suppC, *commonSupport;
+  DdNode *suppF, *suppC, *commonSupp, *onlyC;
   DdNode *cplus, *res;
   int retval;
   
@@ -152,27 +174,46 @@ Cuddaux_addRestrict(DdManager* dd, DdNode* f, DdNode* c)
   if (Cudd_IsConstant(f)) return(f);
   
   /* Check if supports intersect. */
-  retval = Cudd_ClassifySupport(dd,f,c,&commonSupport,&suppF,&suppC);
-  if (retval == 0) {
+  suppF = Cuddaux_Support(dd,f);
+  if (suppF==NULL) return(NULL);
+  cuddRef(suppF);
+  suppC = Cuddaux_Support(dd,c);
+  if (suppC==NULL){
+    Cudd_IterDerefBdd(dd,suppF);
     return(NULL);
   }
-  cuddRef(commonSupport); cuddRef(suppF); cuddRef(suppC);
-  Cudd_IterDerefBdd(dd,suppF);
-  if (commonSupport == one) {
-    Cudd_IterDerefBdd(dd,commonSupport); 
+  cuddRef(suppC);
+  commonSupp = Cudd_bddLiteralSetIntersection(dd,suppF,suppC);
+  if (commonSupp==NULL){
+    Cudd_IterDerefBdd(dd,suppF);
+    Cudd_IterDerefBdd(dd,suppC); 
+    return(NULL);
+  }
+  if (commonSupp == one) {
+    Cudd_IterDerefBdd(dd,suppF);
     Cudd_IterDerefBdd(dd,suppC); 
     return(f);
   }
-  Cudd_IterDerefBdd(dd,commonSupport); 
+  cuddRef(commonSupp);
+  Cudd_IterDerefBdd(dd,suppF);
   /* Abstract from c the variables that do not appear in f. */
-  cplus = Cudd_bddExistAbstract(dd, c, suppC);
+  onlyC = Cudd_Cofactor(dd,suppC,commonSupp);
+  if (onlyC == NULL) {
+    Cudd_IterDerefBdd(dd,suppC); 
+    Cudd_IterDerefBdd(dd,commonSupp); 
+    return(NULL);
+  }
+  cuddRef(onlyC);
+  Cudd_IterDerefBdd(dd,suppC); 
+  Cudd_IterDerefBdd(dd,commonSupp); 
+  cplus = Cudd_bddExistAbstract(dd, c, onlyC);
   if (cplus == NULL) {
-    Cudd_IterDerefBdd(dd,suppC);
+    Cudd_IterDerefBdd(dd,onlyC); 
     return(NULL);
   }
   cuddRef(cplus);
-  Cudd_IterDerefBdd(dd,suppC);
-
+  Cudd_IterDerefBdd(dd,onlyC);
+  
   do {
     dd->reordered = 0;
     res = cuddauxAddRestrictRecur(dd, f, cplus);

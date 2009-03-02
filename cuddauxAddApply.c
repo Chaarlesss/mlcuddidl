@@ -55,7 +55,6 @@
 /*---------------------------------------------------------------------------*/
 static int bddCheckPositiveCube (DdManager *manager, DdNode *cube);
 
-
 /**AutomaticEnd***************************************************************/
 
 /*---------------------------------------------------------------------------*/
@@ -79,16 +78,24 @@ static int bddCheckPositiveCube (DdManager *manager, DdNode *cube);
 ******************************************************************************/
 DdNode *
 Cuddaux_addApply1(DdManager * dd,
-		  DdHashTable* table,
+		  DdHashTable** table,
 		  DDAUX_IDOP pid,
 		  DDAUX_AOP1 op,
 		  DdNode * f)
 {
   DdNode *res;
+  int tableNULL=(*table==NULL);
 
+  assert(dd->reordered == 0);
   do {
+    /* Reinitialize local cache after garbage collection  */
+    if (dd->reordered == 1 && !tableNULL){
+      assert(*table==NULL);
+      *table = cuddHashTableInit(dd,1,2);
+      if (*table == NULL) return(NULL);
+    }
     dd->reordered = 0;
-    res = cuddauxAddApply1Recur(dd,table,pid,op,f);
+    res = cuddauxAddApply1Recur(dd,*table,pid,op,f);
   } while (dd->reordered == 1);
   return(res);
 
@@ -111,7 +118,7 @@ Cuddaux_addApply1(DdManager * dd,
 ******************************************************************************/
 DdNode *
 Cuddaux_addApply2(DdManager * dd,
-		  DdHashTable* table,
+		  DdHashTable** table,
 		  DDAUX_IDOP pid,
 		  int commutative,
 		  DDAUX_AOP2 op,
@@ -119,13 +126,20 @@ Cuddaux_addApply2(DdManager * dd,
 		  DdNode * g)
 {
   DdNode *res;
+  int tableNULL=(*table==NULL);
 
+  assert(dd->reordered == 0);
   do {
+    /* Reinitialize local cache after garbage collection  */
+    if (dd->reordered == 1 && !tableNULL){
+      assert(*table==NULL);
+      *table = cuddHashTableInit(dd,2,2);
+      if (*table == NULL) return(NULL);
+    }
     dd->reordered = 0;
-    res = cuddauxAddApply2Recur(dd,table,pid,commutative,op,f,g);
+    res = cuddauxAddApply2Recur(dd,*table,pid,commutative,op,f,g);
   } while (dd->reordered == 1);
   return(res);
-
 } /* end of Cuddaux_addApply2 */
 
 /**Function********************************************************************
@@ -145,7 +159,7 @@ Cuddaux_addApply2(DdManager * dd,
 ******************************************************************************/
 int
 Cuddaux_addTest2(DdManager * dd,
-		 DdHashTable* table,
+		 DdHashTable** table,
 		 DDAUX_IDOP pid,
 		 int commutative,
 		 DDAUX_AOP2 op,
@@ -154,9 +168,18 @@ Cuddaux_addTest2(DdManager * dd,
 {
   DdNode *res;
   int ret;
+  int tableNULL=(*table==NULL);
+
+  assert(dd->reordered == 0);
   do {
+    /* Reinitialize local cache after garbage collection  */
+    if (dd->reordered == 1 && !tableNULL){
+      assert(*table==NULL);
+      *table = cuddHashTableInit(dd,2,2);
+      if (*table == NULL) return(-1);
+    }
     dd->reordered = 0;
-    res = cuddauxAddTest2Recur(dd,table,pid,commutative,op,f,g);
+    res = cuddauxAddTest2Recur(dd,*table,pid,commutative,op,f,g);
   } while (dd->reordered == 1);
   ret = res==NULL ? (-1) : (res==DD_ONE(dd));
   return ret;
@@ -180,7 +203,7 @@ Cuddaux_addTest2(DdManager * dd,
 
 DdNode*
 Cuddaux_addApply3(DdManager * dd,
-		  DdHashTable* table,
+		  DdHashTable** table,
 		  DDAUX_IDOP pid,
 		  DDAUX_AOP3 op,
 		  DdNode * f,
@@ -188,10 +211,18 @@ Cuddaux_addApply3(DdManager * dd,
 		  DdNode * h)
 {
   DdNode *res;
+  int tableNULL=(*table==NULL);
 
+  assert(dd->reordered == 0);
   do {
+    /* Reinitialize local cache after garbage collection  */
+    if (dd->reordered == 1 && !tableNULL){
+      assert(*table==NULL);
+      *table = cuddHashTableInit(dd,3,2);
+      if (*table == NULL) return(NULL);
+    }
     dd->reordered = 0;
-    res = cuddauxAddApply3Recur(dd,table,pid,op,f,g,h);
+    res = cuddauxAddApply3Recur(dd,*table,pid,op,f,g,h);
   } while (dd->reordered == 1);
   return(res);
 } /* end of Cuddaux_addApply3 */
@@ -211,8 +242,8 @@ Cuddaux_addApply3(DdManager * dd,
 ******************************************************************************/
 DdNode *
 Cuddaux_addAbstract(DdManager * dd,
-		    DdHashTable* table,
-		    DdHashTable* tableop,
+		    DdHashTable** table,
+		    DdHashTable** tableop,
 		    DDAUX_IDOP pid,
 		    DDAUX_AOP2 op,
 		    DdNode * f,
@@ -220,16 +251,36 @@ Cuddaux_addAbstract(DdManager * dd,
 
 {
   DdNode *res;
-  
+  int tableNULL=(*table==NULL);
+  int tableopNULL=(*tableop==NULL);
+
   if (bddCheckPositiveCube(dd, cube) == 0) {
     (void) fprintf(dd->err,
 		   "Error: Can only abstract positive cubes\n");
     dd->errorCode = CUDD_INVALID_ARG;
     return(NULL);
   }
+  assert(dd->reordered == 0);
   do {
+    /* Reinitialize local cache(s) after garbage collection  */
+    if (dd->reordered == 1){
+      if (!tableNULL){
+	assert(*table==NULL);
+	*table = cuddHashTableInit(dd,2,2);
+	if (*table == NULL) return(NULL);
+      }
+      if (!tableopNULL){
+	assert(*tableop==NULL);
+	*tableop = cuddHashTableInit(dd,2,2);
+	if (*tableop == NULL){
+	  cuddauxHashTableQuit(*table);
+	  *table = NULL;
+	  return(NULL);
+	}
+      }
+    }
     dd->reordered = 0;
-    res = cuddauxAddAbstractRecur(dd, table, tableop, pid, op, f, cube);
+    res = cuddauxAddAbstractRecur(dd, *table, *tableop, pid, op, f, cube);
   } while (dd->reordered == 1);
   return(res);
 } /* end of Cuddaux_addAbstract */
@@ -249,9 +300,9 @@ Cuddaux_addAbstract(DdManager * dd,
 ******************************************************************************/
 DdNode *
 Cuddaux_addApplyAbstract(DdManager * dd,
-			 DdHashTable* table,
-			 DdHashTable* tableop,
-			 DdHashTable* tableop1,
+			 DdHashTable** table,
+			 DdHashTable** tableop,
+			 DdHashTable** tableop1,
 			 DDAUX_IDOP pid,
 			 DDAUX_IDOP pid1,
 			 DDAUX_AOP2 op,
@@ -260,16 +311,48 @@ Cuddaux_addApplyAbstract(DdManager * dd,
 			 DdNode * cube)
 {
   DdNode *res;
-  
+  int tableNULL=(*table==NULL);
+  int tableopNULL=(*tableop==NULL);
+  int tableop1NULL=(*tableop1==NULL);
+
   if (bddCheckPositiveCube(dd, cube) == 0) {
     (void) fprintf(dd->err,
 		   "Error: Can only abstract positive cubes\n");
     dd->errorCode = CUDD_INVALID_ARG;
     return(NULL);
   }
+  assert(dd->reordered == 0);
   do {
+    /* Reinitialize local cache(s) after garbage collection  */
+    if (dd->reordered == 1){
+      if (!tableNULL){
+	assert(*table==NULL);
+	*table = cuddHashTableInit(dd,2,2);
+	if (*table == NULL) return(NULL);
+      }
+      if (!tableopNULL){
+	assert(*tableop==NULL);
+	*tableop = cuddHashTableInit(dd,2,2);
+	if (*tableop == NULL){
+	  cuddauxHashTableQuit(*table);
+	  *table = NULL;
+	  return(NULL);
+	}
+      }
+      if (!tableop1NULL){
+	assert(*tableop1==NULL);
+	*tableop1 = cuddHashTableInit(dd,1,2);
+	if (*tableop1 == NULL){
+	  cuddauxHashTableQuit(*table);
+	  *table = NULL;
+	  cuddauxHashTableQuit(*tableop);
+	  *tableop = NULL;
+	  return(NULL);
+	}
+      }
+    }
     dd->reordered = 0;
-    res = cuddauxAddApplyAbstractRecur(dd, table, tableop, tableop1, pid, pid1, op, op1, f, cube);
+    res = cuddauxAddApplyAbstractRecur(dd, *table, *tableop, *tableop1, pid, pid1, op, op1, f, cube);
   } while (dd->reordered == 1);
   return(res);
 } /* end of Cuddaux_addAbstract */
@@ -288,8 +371,8 @@ Cuddaux_addApplyAbstract(DdManager * dd,
 ******************************************************************************/
 DdNode *
 Cuddaux_addBddAndAbstract(DdManager * dd,
-			  DdHashTable* table,
-			  DdHashTable* tableop,
+			  DdHashTable** table,
+			  DdHashTable** tableop,
 			  DDAUX_IDOP pid,
 			  DDAUX_AOP2 op,
 			  DdNode * f, /* BDD */
@@ -298,6 +381,8 @@ Cuddaux_addBddAndAbstract(DdManager * dd,
 			  DdNode * background /* CST ADD */)
 {
   DdNode *res;
+  int tableNULL=(*table==NULL);
+  int tableopNULL=(*tableop==NULL);
 
   if (bddCheckPositiveCube(dd, cube) == 0) {
     (void) fprintf(dd->err,
@@ -305,9 +390,27 @@ Cuddaux_addBddAndAbstract(DdManager * dd,
     dd->errorCode = CUDD_INVALID_ARG;
     return(NULL);
   }
+  assert(dd->reordered == 0);
   do {
+    /* Reinitialize local cache(s) after garbage collection  */
+    if (dd->reordered == 1){
+      if (!tableNULL){
+	assert(*table==NULL);
+	*table = cuddHashTableInit(dd,2,2);
+	if (*table == NULL) return(NULL);
+      }
+      if (!tableopNULL){
+	assert(*tableop==NULL);
+	*tableop = cuddHashTableInit(dd,2,2);
+	if (*tableop == NULL){
+	  cuddauxHashTableQuit(*table);
+	  *table = NULL;
+	  return(NULL);
+	}
+      }
+    }
     dd->reordered = 0;
-    res = cuddauxAddBddAndAbstractRecur(dd, table, tableop, pid, op, f, g, cube, background);
+    res = cuddauxAddBddAndAbstractRecur(dd, *table, *tableop, pid, op, f, g, cube, background);
   } while (dd->reordered == 1);
   return(res);
 } /* end of Cuddaux_addApplyBddAndAbstract */
@@ -326,9 +429,9 @@ Cuddaux_addBddAndAbstract(DdManager * dd,
 ******************************************************************************/
 DdNode *
 Cuddaux_addApplyBddAndAbstract(DdManager * dd,
-			       DdHashTable* table,
-			       DdHashTable* tableop,
-			       DdHashTable* tableop1,
+			       DdHashTable** table,
+			       DdHashTable** tableop,
+			       DdHashTable** tableop1,
 			       DDAUX_IDOP pid,
 			       DDAUX_IDOP pid1,
 			       DDAUX_AOP2 op,
@@ -339,6 +442,9 @@ Cuddaux_addApplyBddAndAbstract(DdManager * dd,
 			       DdNode * background /* CST ADD */)
 {
   DdNode *res;
+  int tableNULL=(*table==NULL);
+  int tableopNULL=(*tableop==NULL);
+  int tableop1NULL=(*tableop==NULL);
 
   if (bddCheckPositiveCube(dd, cube) == 0) {
     (void) fprintf(dd->err,
@@ -346,9 +452,37 @@ Cuddaux_addApplyBddAndAbstract(DdManager * dd,
     dd->errorCode = CUDD_INVALID_ARG;
     return(NULL);
   }
+  assert(dd->reordered == 0);
   do {
+    if (dd->reordered == 1){
+      if (!tableNULL){
+	assert(*table==NULL);
+	*table = cuddHashTableInit(dd,2,2);
+	if (*table == NULL) return(NULL);
+      }
+      if (!tableopNULL){
+	assert(*tableop==NULL);
+	*tableop = cuddHashTableInit(dd,2,2);
+	if (*tableop == NULL){
+	  cuddauxHashTableQuit(*table);
+	  *table = NULL;
+	  return(NULL);
+	}
+      }
+      if (!tableop1NULL){
+	assert(*tableop1==NULL);
+	*tableop1 = cuddHashTableInit(dd,1,2);
+	if (*tableop1 == NULL){
+	  cuddauxHashTableQuit(*table);
+	  *table = NULL;
+	  cuddauxHashTableQuit(*tableop);
+	  *tableop = NULL;
+	  return(NULL);
+	}
+      }
+    }
     dd->reordered = 0;
-    res = cuddauxAddApplyBddAndAbstractRecur(dd, table, tableop, tableop1, pid, pid1, op, op1, f, G, cube, background);
+    res = cuddauxAddApplyBddAndAbstractRecur(dd, *table, *tableop, *tableop1, pid, pid1, op, op1, f, G, cube, background);
   } while (dd->reordered == 1);
   return(res);
 } /* end of Cuddaux_addApplyBddAndAbstract */
@@ -356,6 +490,59 @@ Cuddaux_addApplyBddAndAbstract(DdManager * dd,
 /*---------------------------------------------------------------------------*/
 /* Definition of internal functions                                          */
 /*---------------------------------------------------------------------------*/
+
+/**Function********************************************************************
+
+  Synopsis    [Shuts down a hash table, but performing cuddDeref instead of Cudd_RecursiveDeref]
+
+  Description [Shuts down a hash table, dereferencing all the values.  It
+  assumes that the values have been created recursively by cuddUniqueInter,
+  so that cuddDeref should be used instead of Cudd_RecursiveDeref]
+
+  SideEffects [None]
+
+  SeeAlso     [cuddHashTableQuit]
+
+******************************************************************************/
+
+void
+cuddauxHashTableQuit(
+  DdHashTable * hash)
+{
+#ifdef __osf__
+#pragma pointer_size save
+#pragma pointer_size short
+#endif
+    unsigned int i;
+    DdManager *dd = hash->manager;
+    DdHashItem *bucket;
+    DdHashItem **memlist, **nextmem;
+    unsigned int numBuckets = hash->numBuckets;
+
+    for (i = 0; i < numBuckets; i++) {
+	bucket = hash->bucket[i];
+	while (bucket != NULL) {
+	    cuddDeref(bucket->value);
+	    bucket = bucket->next;
+	}
+    }
+
+    memlist = hash->memoryList;
+    while (memlist != NULL) {
+	nextmem = (DdHashItem **) memlist[0];
+	FREE(memlist);
+	memlist = nextmem;
+    }
+
+    FREE(hash->bucket);
+    FREE(hash);
+#ifdef __osf__
+#pragma pointer_size restore
+#endif
+
+    return;
+
+} /* end of cuddauxHashTableQuit */
 
 /**Function********************************************************************
 
@@ -845,7 +1032,7 @@ cuddauxAddAbstractRecur(DdManager * dd,
     res = T;
     cuddDeref(T);
   }
-  else { 
+  else {
     cuddRef(E);
     if (topcube == top) { /* quantify */
       res = cuddauxAddApply2Recur(dd,tableop,pid,1,op,T,E);
@@ -975,7 +1162,7 @@ cuddauxAddApplyAbstractRecur(DdManager * dd,
     res = T;
     cuddDeref(T);
   }
-  else { 
+  else {
     cuddRef(E);
     if (topcube == top) { /* quantify */
       res = cuddauxAddApply2Recur(dd,tableop,pid,1,op,T,E);
@@ -1352,9 +1539,8 @@ bddCheckPositiveCube(
     if (cube == DD_ONE(dd)) return(1);
     if (cuddIsConstant(cube)) return(0);
     if (cuddE(cube) == Cudd_Not(DD_ONE(dd))) {
-        return(bddCheckPositiveCube(dd, cuddT(cube)));
+	return(bddCheckPositiveCube(dd, cuddT(cube)));
     }
     return(0);
 
 } /* end of bddCheckPositiveCube */
-

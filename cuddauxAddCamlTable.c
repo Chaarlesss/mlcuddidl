@@ -40,7 +40,6 @@ extern intnat caml_stat_compactions;
 static intnat old_compactions = -1;
 
 typedef union myhack {
-    CUDD_VALUE_TYPE dbl;
     value value;
     unsigned int bits[2];
 } myhack;
@@ -65,75 +64,82 @@ typedef union myhack {
 ***************************************************************************/
 
 DdNode *
-Cuddaux_addCamlConst(
-  DdManager * unique,
-  value value)
+Cuddaux_addCamlConst(DdManager * unique,
+		     value value)
 {
-    int pos;
-    DdNodePtr *nodelist;
-    DdNode *looking;
-    myhack split;
+  CAMLparam1(value);
+  int pos;
+  DdNodePtr *nodelist;
+  DdNode *looking;
+  myhack split;
 
-    if (
-	value==((struct cuddauxDdNode*)unique->one)->type.value ||
-	value==((struct cuddauxDdNode*)unique->zero)->type.value ||
-	value==((struct cuddauxDdNode*)unique->plusinfinity)->type.value ||
-	value==((struct cuddauxDdNode*)unique->minusinfinity)->type.value
-	){
-      fprintf(stderr,"\ncuddaux/mlcuddidl: big problem: CAML value assimilated to ZERO, ONE, PLUS_INFINITY or MINUS_INFINITY double value\nContact Bertrand Jeannet\n");
-      abort();
-    }
+  if (
+      value==((struct cuddauxDdNode*)unique->one)->type.value ||
+      value==((struct cuddauxDdNode*)unique->zero)->type.value ||
+      value==((struct cuddauxDdNode*)unique->plusinfinity)->type.value ||
+      value==((struct cuddauxDdNode*)unique->minusinfinity)->type.value
+      ){
+    fprintf(stderr,"\ncuddaux/mlcuddidl: big problem: CAML value assimilated to ZERO, ONE, PLUS_INFINITY or MINUS_INFINITY double value\nContact Bertrand Jeannet\n");
+    abort();
+  }
 
 #ifdef DD_UNIQUE_PROFILE
-    unique->uniqueLookUps++;
+  unique->uniqueLookUps++;
 #endif
 
-    if (unique->constants.keys > unique->constants.maxKeys) {
-      if (unique->gcEnabled && ((unique->dead > unique->minDead) ||
-				(10 * unique->constants.dead > 9 * unique->constants.keys))) {	/* too many dead */
-	(void) cuddGarbageCollect(unique,1);
-      } else {
-	cuddauxAddCamlConstRehash(unique,1);
-	old_compactions = caml_stat_compactions;
+  if (unique->constants.keys > unique->constants.maxKeys) {
+    if (unique->gcEnabled && ((unique->dead > unique->minDead) ||
+			      (10 * unique->constants.dead > 9 * unique->constants.keys))) {	/* too many dead */
+      (void) cuddGarbageCollect(unique,1);
+    } else {
+      cuddauxAddCamlConstRehash(unique,1);
+      old_compactions = caml_stat_compactions;
+    }
+  }
+    
+  if (0<=old_compactions && old_compactions < caml_stat_compactions){
+    cuddauxAddCamlConstRehash(unique,0);
+  }
+  old_compactions = caml_stat_compactions;
+    
+  split.bits[0] = split.bits[1] = 0;
+  split.value = value >> 2;
+  pos = ddHash(split.bits[0], split.bits[1], unique->constants.shift);
+  nodelist = unique->constants.nodelist;
+  looking = nodelist[pos];
+
+  while (looking != NULL) {
+    if ( ((struct cuddauxDdNode*)looking)->type.value == value) {
+      if (looking->ref == 0) {
+	cuddReclaim(unique,looking);
       }
+      goto Cuddaux_addCamlConst_exit;
     }
-    
-    if (0<=old_compactions && old_compactions < caml_stat_compactions){
-      cuddauxAddCamlConstRehash(unique,0);
-    }
-    old_compactions = caml_stat_compactions;
-    
-    split.value = value >> 2;
-    pos = ddHash(split.bits[0], split.bits[1], unique->constants.shift);
-    nodelist = unique->constants.nodelist;
-    looking = nodelist[pos];
-
-    while (looking != NULL) {
-      if ( ((struct cuddauxDdNode*)looking)->type.value == value) {
-	    if (looking->ref == 0) {
-		cuddReclaim(unique,looking);
-	    }
-	    return(looking);
-	}
-	looking = looking->next;
+    looking = looking->next;
 #ifdef DD_UNIQUE_PROFILE
-	unique->uniqueLinks++;
+    unique->uniqueLinks++;
 #endif
-    }
+  }
 
-    unique->keys++;
-    unique->constants.keys++;
+  unique->keys++;
+  unique->constants.keys++;
 
-    looking = cuddAllocNode(unique);
-    if (looking == NULL) return(NULL);
-    looking->index = CUDD_CONST_INDEX;
-    ((struct cuddauxDdNode*)looking)->type.value = value;
-    if (Is_block(value))
-      caml_register_generational_global_root(&((struct cuddauxDdNode*)looking)->type.value);
-    looking->next = nodelist[pos];
-    nodelist[pos] = looking;
+  looking = cuddAllocNode(unique);
+  if (looking == NULL) goto Cuddaux_addCamlConst_exit;
+  looking->index = CUDD_CONST_INDEX;
+  ((struct cuddauxDdNode*)looking)->type.value = value;
+  if (Is_block(value))
+    caml_register_global_root(&((struct cuddauxDdNode*)looking)->type.value);
+  looking->next = nodelist[pos];
+  nodelist[pos] = looking;
 
-    return(looking);
+ Cuddaux_addCamlConst_exit:
+  if (0){
+    printf("Adding value %d, %f, pos=%d, node=%x\n",
+	   value, Double_val(value),pos,looking
+	   );
+  }
+  CAMLreturnT(DdNode*,looking);
 
 } /* end of cuddaux_addCamlConst */
 
@@ -166,8 +172,29 @@ int Cuddaux_addCamlPreGC(DdManager* unique, const char* s, void* data)
     while (node != NULL) {
       if (node->ref == 0) {
 	value value = ((struct cuddauxDdNode *)node)->type.value;
+	if (0){
+	  printf("Removing value %d, %f, pos=%d, node=%x\n",
+		 value, Double_val(value),j,node
+		 );
+	}
+	if (value==((struct cuddauxDdNode*)unique->one)->type.value){
+	  fprintf(stderr,"\ncuddaux/mlcuddidl: big problem: CAML value assimilated to ONE double value\nContact Bertrand Jeannet\n");
+	  abort();
+	}
+	if (value==((struct cuddauxDdNode*)unique->zero)->type.value){
+	  fprintf(stderr,"\ncuddaux/mlcuddidl: big problem: CAML value assimilated to ZERO double value\nContact Bertrand Jeannet\n");
+	  abort();
+	}
+	if (value==((struct cuddauxDdNode*)unique->plusinfinity)->type.value){
+	  fprintf(stderr,"\ncuddaux/mlcuddidl: big problem: CAML value assimilated to PLUS_INFINITY double value\nContact Bertrand Jeannet\n");
+	  abort();
+	}
+	if (value==((struct cuddauxDdNode*)unique->minusinfinity)->type.value){
+	  fprintf(stderr,"\ncuddaux/mlcuddidl: big problem: CAML value assimilated to MINUS_INFINITY double value\nContact Bertrand Jeannet\n");
+	  abort();
+	}
 	if (Is_block(value))
-	  caml_remove_generational_global_root(&((struct cuddauxDdNode *)node)->type.value);
+	  caml_remove_global_root(&((struct cuddauxDdNode *)node)->type.value);
       }
       node = node->next;
     }
@@ -236,6 +263,7 @@ void cuddauxAddCamlConstRehash(DdManager* unique, int offset)
     node = oldnodelist[j];
     while (node != NULL) {
       next = node->next;
+      split.bits[0] = split.bits[1] = 0;
       split.value = cuddauxCamlV(node) >> 2;
       pos = ddHash(split.bits[0], split.bits[1], shift);
       node->next = nodelist[pos];
