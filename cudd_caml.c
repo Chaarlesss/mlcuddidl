@@ -56,7 +56,7 @@ int camlidl_cudd_reordering(DdManager* dd, const char* s, void* data)
     fprintf(stderr,"mlcuddidl: cudd_caml.o: internal error: the \"let _ = set_gc ...\" line in manager.ml has not been executed\n");
     abort();
   }
-  camlidl_cudd_ddcustom_hook(dd,s,data);
+  camlidl_cudd_custom_hook(dd,s,data);
   caml_callback(camlidl_cudd_reordering_fun,Val_unit);
   return 1;
 }
@@ -347,6 +347,70 @@ value camlidl_cudd_bdd_inspect(value vno)
     Field(vres,1) = vthen;
     Field(vres,2) = velse;
   }
+  CAMLreturn(vres);
+}
+
+value camlidl_cudd_bdd_cofactors(value v_var, value v_no)
+{
+  CAMLparam2(v_var,v_no); CAMLlocal3(vthen,velse,vres);
+  int var;
+  bdd__t no;
+  bdd__t nothen,noelse;
+
+  var = Int_val(v_var);
+  camlidl_cudd_node_ml2c(v_no, &no);
+  
+  nothen.man = noelse.man = no.man;
+  nothen.node = Cudd_Cofactor(no.man->man,no.node,no.man->man->vars[var]);
+  if (nothen.node==NULL){
+    vres = camlidl_cudd_bdd_c2ml(&nothen);
+    CAMLreturn(vres);
+  }
+  cuddRef(nothen.node);
+  noelse.node = Cudd_Cofactor(no.man->man,no.node,Cudd_Not(no.man->man->vars[var]));
+  if (noelse.node==NULL){
+    Cudd_IterDerefBdd(no.man->man,nothen.node);
+    vres = camlidl_cudd_bdd_c2ml(&noelse);
+    CAMLreturn(vres);
+  }
+  velse = camlidl_cudd_bdd_c2ml(&noelse);
+  cuddDeref(nothen.node);
+  vthen = camlidl_cudd_bdd_c2ml(&nothen);
+  vres = caml_alloc_small(2,0);
+  Field(vres,0) = vthen;
+  Field(vres,1) = velse;
+  CAMLreturn(vres);
+}
+
+value camlidl_cudd_rdd_cofactors(value v_var, value v_no)
+{
+  CAMLparam2(v_var,v_no); CAMLlocal3(vthen,velse,vres);
+  int var;
+  rdd__t no;
+  rdd__t nothen,noelse;
+
+  var = Int_val(v_var);
+  camlidl_cudd_node_ml2c(v_no, &no);
+  
+  nothen.man = noelse.man = no.man;
+  nothen.node = Cudd_Cofactor(no.man->man,no.node,no.man->man->vars[var]);
+  if (nothen.node==NULL){
+    vres = camlidl_cudd_node_c2ml(&nothen);
+    CAMLreturn(vres);
+  }
+  cuddRef(nothen.node);
+  noelse.node = Cudd_Cofactor(no.man->man,no.node,Cudd_Not(no.man->man->vars[var]));
+  if (noelse.node==NULL){
+    Cudd_RecursiveDeref(no.man->man,nothen.node);
+    vres = camlidl_cudd_node_c2ml(&noelse);
+    CAMLreturn(vres);
+  }
+  velse = camlidl_cudd_node_c2ml(&noelse);
+  cuddDeref(nothen.node);
+  vthen = camlidl_cudd_node_c2ml(&nothen);
+  vres = caml_alloc_small(2,0);
+  Field(vres,0) = vthen;
+  Field(vres,1) = velse;
   CAMLreturn(vres);
 }
 
@@ -1146,9 +1210,9 @@ value camlidl_cudd_rivdd_guard_of_leaf(value _v_ddtype, value _v_no, value _v_le
 }
 
 /* List of nodes below a optional level */
-value camlidl_cudd_rivdd_nodes_below_level(value _v_ddtype, value _v_no, value _v_olevel, value _v_max)
+value camlidl_cudd_rivdd_nodes_below_level(value _v_ddtype, value _v_no, value _v_olevel, value _v_omax)
 {
-  CAMLparam4(_v_ddtype,_v_no,_v_olevel, _v_max);
+  CAMLparam4(_v_ddtype,_v_no,_v_olevel,_v_omax);
   CAMLlocal2(res,v);
   node__t no;
   int ddtype,i,level;
@@ -1163,7 +1227,12 @@ value camlidl_cudd_rivdd_nodes_below_level(value _v_ddtype, value _v_no, value _
     value _v_level = Field(_v_olevel,0);
     level = Int_val(_v_level);
   }
-  max = Int_val(_v_max);
+  if (Is_long(_v_omax))
+    max = 0;
+  else {
+    value _v_max = Field(_v_omax,0);
+    max = Int_val(_v_max);
+  }
   list = Cuddaux_NodesBelowLevel(no.man->man,no.node,level,max,&size,ddtype<2);
 
   /* Create and fill the array */

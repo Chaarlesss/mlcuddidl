@@ -119,11 +119,11 @@ external iter_node: ('a t -> unit) -> 'a t -> unit = "camlidl_cudd_iter_node"
 
 external guard_of_node : 'a t -> 'a t -> Man.v Bdd.t = "camlidl_cudd_rdd_guard_of_node"
 external guard_of_nonbackground : 'a t -> Man.v Bdd.t = "camlidl_cudd_rdd_guard_of_nonbackground"
-val nodes_below_level: 'a t -> int option -> int -> 'a t array 
+val nodes_below_level: ?max:int -> 'a t -> int option -> 'a t array 
 
 (** Guard of the given leaf *)
 val guard_of_leaf_u : 'a t -> 'a unique -> Man.v Bdd.t
-val guard_of_leaf : 'a t -> 'a -> Man.v Bdd.t
+val guard_of_leaf : 'a table -> 'a t -> 'a -> Man.v Bdd.t
 
 (** Returns the set of leaf values (excluding the background value) *)
 val leaves_u: 'a t -> 'a unique array

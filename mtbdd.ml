@@ -17,7 +17,11 @@ let make_table
   =
   Weakke.Custom.create hash equal 23
 
-let (unique :'a table -> 'a -> 'a unique) = Weakke.Custom.merge
+external copy_shr : 'a -> 'a = "camlidl_cudd_custom_copy_shr"
+
+let unique (table:'a table) (elt:'a) : 'a unique =
+  Weakke.Custom.merge_map table elt copy_shr
+
 let get (leaf:'a unique) : 'a = leaf
 
 type 'a mtbdd =
@@ -34,6 +38,7 @@ let is_eval_cst_u = is_eval_cst
 let is_ite_cst_u = is_ite_cst
 let iter_cube_u = iter_cube
 let guard_of_leaf_u = guard_of_leaf
+let guard_of_leaf table dd leaf = guard_of_leaf_u dd (unique table leaf)
 let leaves_u = leaves
 let pick_leaf_u = pick_leaf
 let guardleafs_u = guardleafs

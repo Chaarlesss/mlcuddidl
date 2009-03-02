@@ -1,3 +1,5 @@
+open Cudd;;
+
 (*
 For interactive session:
 type on shour shell the command:

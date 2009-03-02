@@ -97,18 +97,10 @@ val dval : t -> float
 ")
 quote(ML,"let dval dd = _internal_dval _internal_ddtype dd")
 
-quote(MLI,"(** Returns the positive and negative cofactor of the RDD wrt the variable *)")
-void cofactors(int var, rdd__t no, [out] rdd__t noa, [out] rdd__t nob)
-  quote(call," {
-  DdNode* cof;
-  noa.man = nob.man = no.man;
-  Begin_roots1(_v_no);
-  cof = Cudd_bddIthVar(no.man->man, var);
-  noa.node = Cudd_Cofactor(no.man->man,no.node,cof);
-  nob.node = Cudd_Cofactor(no.man->man,no.node,Cudd_Not(cof));
-  End_roots();
-  }
-");
+quote(MLMLI,"
+(** Returns the positive and negative cofactor of the RDD wrt the variable *)
+external cofactors : int -> t -> t*t = \"camlidl_cudd_rdd_cofactors\"
+")
 
 quote(MLI,"(** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_Cofactor}[Cudd_Cofactor]}. [cofactor rdd cube] evaluates [rdd] on the cube [cube] *)")
 rdd__t cofactor(rdd__t no1, bdd__tf no2) NO_OF_MAN_NO12(Cudd_Cofactor);
@@ -643,11 +635,11 @@ type test2
 type op3
 type 'a exist
 
-type auto = Ddcustom.auto
-type user = Ddcustom.user
-type 'a local = 'a Ddcustom.local
-type global = Ddcustom.global
-type 'a cache = 'a Ddcustom.cache
+type auto = Custom.auto
+type user = Custom.user
+type 'a local = 'a Custom.local
+type global = Custom.global
+type 'a cache = 'a Custom.cache
 
 type ('a,'b) op
 
@@ -658,23 +650,23 @@ val user : user local cache
 quote(ML,"
 (** {4 Type of operations} *)
 
-type op1 = (float, float) Ddcustom.op1
-type op2 = (float, float, float) Ddcustom.op2
-type test2 = (float, float) Ddcustom.test2
-type op3 = (float, float, float, float) Ddcustom.op3
-type 'a exist = (float,'a) Ddcustom.exist
+type op1 = (float, float) Custom.op1
+type op2 = (float, float, float) Custom.op2
+type test2 = (float, float) Custom.test2
+type op3 = (float, float, float, float) Custom.op3
+type 'a exist = (float,'a) Custom.exist
 
-type auto = Ddcustom.auto
-type user = Ddcustom.user
-type 'a local = 'a Ddcustom.local
-type global = Ddcustom.global
-type 'a cache = 'a Ddcustom.cache
+type auto = Custom.auto
+type user = Custom.user
+type 'a local = 'a Custom.local
+type global = Custom.global
+type 'a cache = 'a Custom.cache
 
-type ('a,'b) op = ('a,'b) Ddcustom.op
+type ('a,'b) op = ('a,'b) Custom.op
 
-let global = Ddcustom.global
-let auto = Ddcustom.auto
-let user = Ddcustom.user
+let global = Custom.global
+let auto = Custom.auto
+let user = Custom.user
 ")
 
 quote(MLMLI,"
@@ -751,23 +743,23 @@ val map_exist :
 ")
 
 quote(ML,"
-let register_op1 ~cachetyp = Ddcustom.register_op1 ~ddtyp:_internal_ddtype ~cachetyp
-let register_op2 ~cachetyp = Ddcustom.register_op2 ~ddtyp:_internal_ddtype ~cachetyp
-let register_test2  ~cachetyp = Ddcustom.register_test2 ~ddtyp:_internal_ddtype ~cachetyp
-let register_op3 ~cachetyp = Ddcustom.register_op3 ~ddtyp:_internal_ddtype ~cachetyp
-let register_exist ~cachetyp (op:(op2,'a) Ddcustom.op) = Ddcustom.register_exist ~ddtyp:_internal_ddtype ~cachetyp op
-let flush_op = Ddcustom.flush_op
-let flush_allop = Ddcustom.flush_allop
-let (apply_op1 : (op1,'a) Ddcustom.op -> t -> t) = Ddcustom.apply_op1 
-let (apply_op2 : (op2,'a) Ddcustom.op -> t -> t -> t) = Ddcustom.apply_op2
-let (apply_test2 : (test2,'a) Ddcustom.op -> t -> t -> bool) = Ddcustom.apply_test2 
-let (apply_op3 : (op3,'a Ddcustom.local) Ddcustom.op -> t -> t -> t -> t) = Ddcustom.apply_op3
-let (apply_exist : ('a exist,'b) Ddcustom.op -> supp:(Man.v Bdd.t) -> t -> t) = Ddcustom.apply_exist
-let map_op1 = Ddcustom.map_op1 ~ddtyp:_internal_ddtype
-let map_op2 = Ddcustom.map_op2 ~ddtyp:_internal_ddtype
-let map_test2 = Ddcustom.map_test2 ~ddtyp:_internal_ddtype
-let map_op3 = Ddcustom.map_op3 ~ddtyp:_internal_ddtype
-let map_exist m = Ddcustom.map_exist ~ddtyp:_internal_ddtype m
+let register_op1 ~cachetyp = Custom.register_op1 ~ddtyp:_internal_ddtype ~cachetyp
+let register_op2 ~cachetyp = Custom.register_op2 ~ddtyp:_internal_ddtype ~cachetyp
+let register_test2  ~cachetyp = Custom.register_test2 ~ddtyp:_internal_ddtype ~cachetyp
+let register_op3 ~cachetyp = Custom.register_op3 ~ddtyp:_internal_ddtype ~cachetyp
+let register_exist ~cachetyp (op:(op2,'a) Custom.op) = Custom.register_exist ~ddtyp:_internal_ddtype ~cachetyp op
+let flush_op = Custom.flush_op
+let flush_allop = Custom.flush_allop
+let (apply_op1 : (op1,'a) Custom.op -> t -> t) = Custom.apply_op1 
+let (apply_op2 : (op2,'a) Custom.op -> t -> t -> t) = Custom.apply_op2
+let (apply_test2 : (test2,'a) Custom.op -> t -> t -> bool) = Custom.apply_test2 
+let (apply_op3 : (op3,'a Custom.local) Custom.op -> t -> t -> t -> t) = Custom.apply_op3
+let (apply_exist : ('a exist,'b) Custom.op -> supp:(Man.v Bdd.t) -> t -> t) = Custom.apply_exist
+let map_op1 = Custom.map_op1 ~ddtyp:_internal_ddtype
+let map_op2 = Custom.map_op2 ~ddtyp:_internal_ddtype
+let map_test2 = Custom.map_test2 ~ddtyp:_internal_ddtype
+let map_op3 = Custom.map_op3 ~ddtyp:_internal_ddtype
+let map_exist m = Custom.map_exist ~ddtyp:_internal_ddtype m
 ")
 
 /* ====================================================================== */

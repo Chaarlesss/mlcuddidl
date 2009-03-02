@@ -14,7 +14,7 @@
 
 #include "caml/mlvalues.h"
 
-extern int camlidl_cudd_ddcustom_hook(DdManager* dd, const char* s, void* data);
+extern int camlidl_cudd_custom_hook(DdManager* dd, const char* s, void* data);
 extern int camlidl_cudd_garbage(DdManager* dd, const char* s, void* data);
 extern int camlidl_cudd_reordering(DdManager* dd, const char* s, void* data);
 value camlidl_cudd_set_gc(value _v_heap, value _v_gc, value _v_reordering);

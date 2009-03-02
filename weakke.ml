@@ -237,6 +237,12 @@ module Compare = struct
     find_or compare t d (fun h index -> add_aux t Weak.set (Some d) h index; d)
   ;;
 
+  let merge_map compare t d map =
+    find_or compare t d (fun h index ->
+      let d = map d in
+      add_aux t Weak.set (Some d) h index; d)
+  ;;
+
   let find compare t d = find_or compare t d (fun h index -> raise Not_found);;
 
   let find_shadow compare t d iffound ifnotfound =
@@ -290,6 +296,7 @@ module type S = sig
   val create : int -> t
   val clear : t -> unit
   val merge : t -> data -> data
+  val merge_map : t -> data -> (data -> data) -> data
   val add : t -> data -> unit
   val remove : t -> data -> unit
   val find : t -> data -> data
@@ -322,6 +329,7 @@ struct
   let count = count
   let add = Compare.add compare
   let merge = Compare.merge compare
+  let merge_map = Compare.merge_map compare
   let find = Compare.find compare
   let remove = Compare.remove compare
   let mem = Compare.mem compare
@@ -350,6 +358,7 @@ module Custom = struct
   let count t = count t.hashtbl
   let add t data = Compare.add t.compare t.hashtbl data
   let merge t data = Compare.merge t.compare t.hashtbl data
+  let merge_map t data map = Compare.merge_map t.compare t.hashtbl data map
   let find t data = Compare.find t.compare t.hashtbl data
   let remove t data = Compare.remove t.compare t.hashtbl data
   let mem t data = Compare.mem t.compare t.hashtbl data
@@ -368,6 +377,7 @@ let compare = {
 
 let add t data = Compare.add compare t data
 let merge t data = Compare.merge compare t data
+let merge_map t data map = Compare.merge_map compare t data map
 let find t data = Compare.find compare t data
 let remove t data = Compare.remove compare t data
 let mem t data = Compare.mem compare t data

@@ -1,3 +1,5 @@
+(** Lifting operation on leaves to operations on MTBDDs *)
+
 let restrict = ref false
 
 let combineretractive (guard,leaf) res =

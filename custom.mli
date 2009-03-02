@@ -23,26 +23,26 @@ type ('a,'b,'c,'d) op3
   (** Type of ternary operations ['a -> 'b -> 'c -> 'd] *)
 type ('a,'b) exist
   (** Type of quantification operation [supp -> 'a -> 'a].  The leaf
-      operation [op:'a -> 'a -> 'a]] is assumed to be commutative
+      operation [op:'a -> 'a -> 'a] is assumed to be commutative
       and idempotent ([op f f=f]).  When a Boolean variable in [supp] is
       quantified out, [op:'a -> 'a -> 'a] is used to combine the two branch of the diagram.
   *)
 type ('a,'b,'c,'d) existop1
   (** Type of quantification and op1 operation.  The leaf
-      operation [op:'b -> 'b -> 'b]] is assumed to be commutative
+      operation [op:'b -> 'b -> 'b] is assumed to be commutative
       and idempotent ([op f f=f]).
       [existop1 op op1 supp bdd] is equivalent to
       [exist supp (op1 f)].
   *)
 type ('a,'b) existand
   (** Type of combined quantification and and operation. The leaf
-      operation [op:'a -> 'a -> 'a]] is assumed to be commutative, idempotent ([op f f=f]).
+      operation [op:'a -> 'a -> 'a] is assumed to be commutative, idempotent ([op f f=f]).
       and also [op f bottom = f].
       [existand ~bottom op supp bdd f] is equivalent to [exist supp (ite bdd f bottom)].
   *)
 type ('a,'b,'c,'d) existandop1
   (** Type of combined quantification, and and op1 operation. The leaf
-      operation [op:'b -> 'b -> 'b]] is assumed to be commutative, idempotent ([op f f=f]), and
+      operation [op:'b -> 'b -> 'b] is assumed to be commutative, idempotent ([op f f=f]), and
       also [op f bottom = f].
       [existandop1 ~bottom op op1 supp bdd f] is equivalent to
       [exist supp (ite bdd (op1 f) bottom))]. *)

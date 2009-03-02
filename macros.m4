@@ -108,7 +108,7 @@ dnl ===========================================================================
 dnl
 define([[DECOMP]],[[
 quote(MLI,"(** [$2]. *)")
-quote(MLMLI,"external $1: 'aa t -> ('a t * 'a t) option = \"camlidl_bdd_$1\"")
+quote(MLMLI,"external $1: 'a t -> ('a t * 'a t) option = \"camlidl_bdd_$1\"")
 quote(C,"
 value camlidl_bdd_$1(value _v_no)
 {

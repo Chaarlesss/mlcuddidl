@@ -37,3 +37,4 @@ s/external rdd_/external /g;
 s/external vdd_/external /g;  
 s/CUDD_//g;  
 s/camlidl_\(ml2c\|c2ml\|transl\|man\|bdd\|rdd\|zdd\|vdd\)/camlidl_cudd_\1/g;  
+s/transfer : 'a t -> 'a Man.t -> 'a t/transfer : 'a t -> 'b Man.t -> 'b t/g;

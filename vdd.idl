@@ -28,9 +28,16 @@ type 'a vdd = \n\
 ")
 
 quote(MLI,"\n
-(** We refer to the module {!Idd} for the description of the interface, as
-it is nearly identical to {!Idd}, except that int leaves are replaced by
-any OCaml leaves. *)
+(** We refer to the module {!Rdd} for the description of the interface, as
+it is nearly identical to {!Rdd}, except that real leaves are replaced by
+OCaml leaves. 
+
+IMPORTANT NOTE: this is an internal module, which assumes that leaves are
+either immediate values (booleans, integers, constant sums), 
+or values allocated with caml_alloc_shr (that can 
+be moved only during a memory compaction.
+
+Use module {!Mtbdd} to be safe *)
 ")
 
 /* ====================================================================== */
@@ -51,7 +58,7 @@ external _internal_is_eval_cst : _internal_ddtype -> 'a t -> Man.v Bdd.t -> 'a o
 external _internal_is_ite_cst : _internal_ddtype -> Man.v Bdd.t -> 'a t -> 'a t -> 'a option = \"camlidl_cudd_rivdd_is_ite_cst\"
 
 external _internal_iter_cube: _internal_ddtype -> (Man.tbool array -> 'a -> unit) -> 'a t -> unit = \"camlidl_cudd_rivdd_iter_cube\"
-external _internal_nodes_below_level: _internal_ddtype -> 'a t -> int option -> int -> 'a t array = \"camlidl_cudd_rivdd_nodes_below_level\"
+external _internal_nodes_below_level: _internal_ddtype -> 'a t -> int option -> int option -> 'a t array = \"camlidl_cudd_rivdd_nodes_below_level\"
 external _internal_guard_of_leaf : _internal_ddtype -> 'a t -> 'a -> Man.v Bdd.t = \"camlidl_cudd_rivdd_guard_of_leaf\"
 external _internal_leaves: _internal_ddtype -> 'a t -> 'a array = \"camlidl_cudd_rivdd_leaves\"
 external _internal_pick_leaf : _internal_ddtype -> 'a t -> 'a = \"camlidl_cudd_rivdd_pick_leaf\"
@@ -71,7 +78,7 @@ external is_cst : 'a t -> bool = \"camlidl_bdd_is_cst\"
 external topvar : 'a t -> int = \"camlidl_bdd_topvar\"
 external dthen : 'a t -> 'a t = \"camlidl_rdd_dthen\"
 external delse : 'a t -> 'a t = \"camlidl_rdd_delse\"
-external cofactors : int -> 'a t -> 'a t * 'a t = \"camlidl_rdd_cofactors\"
+external cofactors : int -> 'a t -> 'a t * 'a t = \"camlidl_cudd_rdd_cofactors\"
 external cofactor : 'a t -> Man.v Bdd.t -> 'a t = \"camlidl_rdd_cofactor\"
 ")
 quote(MLI,"
@@ -199,8 +206,8 @@ external guard_of_nonbackground : 'a t -> Man.v Bdd.t = \"camlidl_rdd_guard_of_n
 ")
 
 quote(MLI,"
-(** [Cuddaux_NodesBelowLevel]. [nodes_below_level f olevel max] returns all (if [max<=0]), otherwise at most [max] nodes pointed by the RDD, indexed by a variable of level greater or equal than [level], and encountered first in the top-down exploration (i.e., whenever a node is collected, its sons are not collected). If [olevel=None], then only constant nodes are collected. *)
-val nodes_below_level: 'a t -> int option -> int -> 'a t array
+(** [Cuddaux_NodesBelowLevel]. [nodes_below_level ?max f olevel] returns all (if [max=None]), otherwise at most [Some max] nodes pointed by the RDD, indexed by a variable of level greater or equal than [level], and encountered first in the top-down exploration (i.e., whenever a node is collected, its sons are not collected). If [olevel=None], then only constant nodes are collected. *)
+val nodes_below_level: ?max:int -> 'a t -> int option -> 'a t array
 
 (** Guard of the given leaf *)
 val guard_of_leaf : 'a t -> 'a -> Man.v Bdd.t
@@ -215,7 +222,7 @@ val pick_leaf : 'a t -> 'a
 val guardleafs : 'a t -> (Man.v Bdd.t * 'a) array
 ")
 quote(ML,"
-let nodes_below_level vdd olevel max =
+let nodes_below_level ?max vdd olevel =
   _internal_nodes_below_level _internal_ddtype vdd olevel max
 let guard_of_leaf dd leaf = _internal_guard_of_leaf _internal_ddtype dd leaf
 let leaves dd = _internal_leaves _internal_ddtype dd
@@ -264,12 +271,12 @@ type ('a, 'b) existand
 type ('a, 'b, 'c, 'd) existandop1
 type ('a, 'b) vectorcomposeop1
 
-type auto = Ddcustom.auto
-type user = Ddcustom.user
-type 'a local = 'a Ddcustom.local
-type global = Ddcustom.global
+type auto = Custom.auto
+type user = Custom.user
+type 'a local = 'a Custom.local
+type global = Custom.global
 
-type 'a cache = 'a Ddcustom.cache
+type 'a cache = 'a Custom.cache
 type ('a, 'b) op
 
 val global : global cache
@@ -279,26 +286,26 @@ val user : user local cache
 quote(ML,"
 (** {3 Types} *)
 
-type ('a, 'b) op1 = ('a, 'b) Ddcustom.op1
-type ('a, 'b, 'c) op2 = ('a, 'b, 'c) Ddcustom.op2
-type ('a, 'b) test2 = ('a, 'b) Ddcustom.test2
-type ('a, 'b, 'c, 'd) op3 = ('a, 'b, 'c, 'd) Ddcustom.op3
-type ('a, 'b) exist = ('a, 'b) Ddcustom.exist
-type ('a, 'b, 'c, 'd) existop1 = ('a, 'b, 'c, 'd) Ddcustom.existop1
-type ('a, 'b) existand = ('a, 'b) Ddcustom.existand
-type ('a, 'b, 'c, 'd) existandop1 = ('a, 'b, 'c, 'd) Ddcustom.existandop1
-type ('a, 'b) vectorcomposeop1 = ('a, 'b) Ddcustom.vectorcomposeop1
+type ('a, 'b) op1 = ('a, 'b) Custom.op1
+type ('a, 'b, 'c) op2 = ('a, 'b, 'c) Custom.op2
+type ('a, 'b) test2 = ('a, 'b) Custom.test2
+type ('a, 'b, 'c, 'd) op3 = ('a, 'b, 'c, 'd) Custom.op3
+type ('a, 'b) exist = ('a, 'b) Custom.exist
+type ('a, 'b, 'c, 'd) existop1 = ('a, 'b, 'c, 'd) Custom.existop1
+type ('a, 'b) existand = ('a, 'b) Custom.existand
+type ('a, 'b, 'c, 'd) existandop1 = ('a, 'b, 'c, 'd) Custom.existandop1
+type ('a, 'b) vectorcomposeop1 = ('a, 'b) Custom.vectorcomposeop1
 
-type auto = Ddcustom.auto
-type user = Ddcustom.user
-type 'a local = 'a Ddcustom.local
-type global = Ddcustom.global
+type auto = Custom.auto
+type user = Custom.user
+type 'a local = 'a Custom.local
+type global = Custom.global
 
-type 'a cache = 'a Ddcustom.cache
-type ('a, 'b) op = ('a, 'b) Ddcustom.op
-let global = Ddcustom.global
-let auto = Ddcustom.auto
-let user = Ddcustom.user
+type 'a cache = 'a Custom.cache
+type ('a, 'b) op = ('a, 'b) Custom.op
+let global = Custom.global
+let auto = Custom.auto
+let user = Custom.user
 ")
 quote(MLMLI,"
 type ('a, 'b) mexist = [
@@ -413,41 +420,41 @@ val map_existandop1 :
 ")
 
 quote(ML,"
-let register_op1 ~cachetyp = Ddcustom.register_op1 ~ddtyp:_internal_ddtype ~cachetyp
-let register_op2 ~cachetyp = Ddcustom.register_op2 ~ddtyp:_internal_ddtype ~cachetyp
-let register_test2  ~cachetyp = Ddcustom.register_test2 ~ddtyp:_internal_ddtype ~cachetyp
-let register_op3 ~cachetyp = Ddcustom.register_op3 ~ddtyp:_internal_ddtype ~cachetyp
-let register_exist ~cachetyp (op:(('a,'a,'a) Ddcustom.op2,'b) Ddcustom.op) = Ddcustom.register_exist ~ddtyp:_internal_ddtype ~cachetyp op
-let register_existop1 ~cachetyp (op1:(('a,'b) Ddcustom.op1,'d) Ddcustom.op) (op:(('b,'b,'b) Ddcustom.op2,'c) Ddcustom.op) = Ddcustom.register_existop1 ~ddtyp:_internal_ddtype ~cachetyp op1 op
-let register_existand ~cachetyp ~(bottom:'a) (op:(('a,'a,'a) Ddcustom.op2,'b) Ddcustom.op) = Ddcustom.register_existand ~ddtyp:_internal_ddtype ~cachetyp ~bottom op
-let register_existandop1 ~cachetyp ~(bottom:'b) (op1:(('a,'b) Ddcustom.op1,'d) Ddcustom.op) (op:(('b,'b,'b) Ddcustom.op2,'c) Ddcustom.op) = Ddcustom.register_existandop1 ~ddtyp:_internal_ddtype ~cachetyp ~bottom op1 op
+let register_op1 ~cachetyp = Custom.register_op1 ~ddtyp:_internal_ddtype ~cachetyp
+let register_op2 ~cachetyp = Custom.register_op2 ~ddtyp:_internal_ddtype ~cachetyp
+let register_test2  ~cachetyp = Custom.register_test2 ~ddtyp:_internal_ddtype ~cachetyp
+let register_op3 ~cachetyp = Custom.register_op3 ~ddtyp:_internal_ddtype ~cachetyp
+let register_exist ~cachetyp (op:(('a,'a,'a) Custom.op2,'b) Custom.op) = Custom.register_exist ~ddtyp:_internal_ddtype ~cachetyp op
+let register_existop1 ~cachetyp (op1:(('a,'b) Custom.op1,'d) Custom.op) (op:(('b,'b,'b) Custom.op2,'c) Custom.op) = Custom.register_existop1 ~ddtyp:_internal_ddtype ~cachetyp op1 op
+let register_existand ~cachetyp ~(bottom:'a) (op:(('a,'a,'a) Custom.op2,'b) Custom.op) = Custom.register_existand ~ddtyp:_internal_ddtype ~cachetyp ~bottom op
+let register_existandop1 ~cachetyp ~(bottom:'b) (op1:(('a,'b) Custom.op1,'d) Custom.op) (op:(('b,'b,'b) Custom.op2,'c) Custom.op) = Custom.register_existandop1 ~ddtyp:_internal_ddtype ~cachetyp ~bottom op1 op
 
-let op2_of_exist = Ddcustom.op2_of_exist
-let op2_of_existop1 = Ddcustom.op2_of_existop1
-let op2_of_existand = Ddcustom.op2_of_existand
-let op2_of_existandop1 = Ddcustom.op2_of_existandop1
-let op1_of_existop1 = Ddcustom.op1_of_existop1
-let op1_of_existandop1 = Ddcustom.op1_of_existandop1
+let op2_of_exist = Custom.op2_of_exist
+let op2_of_existop1 = Custom.op2_of_existop1
+let op2_of_existand = Custom.op2_of_existand
+let op2_of_existandop1 = Custom.op2_of_existandop1
+let op1_of_existop1 = Custom.op1_of_existop1
+let op1_of_existandop1 = Custom.op1_of_existandop1
 
-let flush_op = Ddcustom.flush_op
-let flush_allop = Ddcustom.flush_allop
+let flush_op = Custom.flush_op
+let flush_allop = Custom.flush_allop
 
-let (apply_op1 : (('a,'b) Ddcustom.op1,'c) Ddcustom.op -> 'a t -> 'b t) = Ddcustom.apply_op1
-let (apply_op2 : (('a,'b,'c) Ddcustom.op2,'d) Ddcustom.op -> 'a t -> 'b t -> 'c t) = Ddcustom.apply_op2
-let (apply_test2 : (('a,'b) Ddcustom.test2,'c) Ddcustom.op -> 'a t -> 'b t -> bool) = Ddcustom.apply_test2
-let (apply_op3 : (('a,'b,'c,'d) Ddcustom.op3,'e Ddcustom.local) Ddcustom.op -> 'a t -> 'b t -> 'c t -> 'd t) = Ddcustom.apply_op3
-let (apply_exist : (('a,'b) Ddcustom.exist,'c) Ddcustom.op -> supp:(Man.v Bdd.t) -> 'a t -> 'a t) = Ddcustom.apply_exist
-let (apply_existop1 : (('a,'b,'c,'d) Ddcustom.existop1,'e) Ddcustom.op -> supp:(Man.v Bdd.t) -> 'a t -> 'b t) = Ddcustom.apply_existop1
-let (apply_existand : (('a,'b) Ddcustom.existand,'c Ddcustom.local) Ddcustom.op -> supp:(Man.v Bdd.t) -> Man.v Bdd.t -> 'a t -> 'a t) = Ddcustom.apply_existand
-let (apply_existandop1 : (('a,'b,'c,'d) Ddcustom.existandop1,'e Ddcustom.local) Ddcustom.op -> supp:(Man.v Bdd.t) -> Man.v Bdd.t -> 'a t -> 'b t) = Ddcustom.apply_existandop1
-let map_op1 f dd = Ddcustom.map_op1 ~ddtyp:_internal_ddtype f dd
-let map_op2 ?commutative ?idempotent ?special f dd1 dd2 = Ddcustom.map_op2 ~ddtyp:_internal_ddtype ?commutative ?idempotent ?special f dd1 dd2
-let map_test2 ?commutative ?reflexive ?special f dd1 dd2 = Ddcustom.map_test2 ~ddtyp:_internal_ddtype ?commutative ?reflexive ?special f dd1 dd2
-let map_op3 ?special f dd1 dd2 dd3 = Ddcustom.map_op3 ~ddtyp:_internal_ddtype ?special f dd1 dd2 dd3
-let map_exist mexist ~supp dd = Ddcustom.map_exist ~ddtyp:_internal_ddtype mexist ~supp dd
-let map_existop1 mop1 mexist ~supp dd = Ddcustom.map_existop1 ~ddtyp:_internal_ddtype mop1 mexist ~supp dd
-let map_existand ~bottom mexist ~supp bdd dd = Ddcustom.map_existand ~ddtyp:_internal_ddtype ~bottom mexist ~supp bdd dd
-let map_existandop1 ~bottom mop1 mexist ~supp bdd dd = Ddcustom.map_existandop1 ~ddtyp:_internal_ddtype ~bottom mop1 mexist ~supp bdd dd
+let (apply_op1 : (('a,'b) Custom.op1,'c) Custom.op -> 'a t -> 'b t) = Custom.apply_op1
+let (apply_op2 : (('a,'b,'c) Custom.op2,'d) Custom.op -> 'a t -> 'b t -> 'c t) = Custom.apply_op2
+let (apply_test2 : (('a,'b) Custom.test2,'c) Custom.op -> 'a t -> 'b t -> bool) = Custom.apply_test2
+let (apply_op3 : (('a,'b,'c,'d) Custom.op3,'e Custom.local) Custom.op -> 'a t -> 'b t -> 'c t -> 'd t) = Custom.apply_op3
+let (apply_exist : (('a,'b) Custom.exist,'c) Custom.op -> supp:(Man.v Bdd.t) -> 'a t -> 'a t) = Custom.apply_exist
+let (apply_existop1 : (('a,'b,'c,'d) Custom.existop1,'e) Custom.op -> supp:(Man.v Bdd.t) -> 'a t -> 'b t) = Custom.apply_existop1
+let (apply_existand : (('a,'b) Custom.existand,'c Custom.local) Custom.op -> supp:(Man.v Bdd.t) -> Man.v Bdd.t -> 'a t -> 'a t) = Custom.apply_existand
+let (apply_existandop1 : (('a,'b,'c,'d) Custom.existandop1,'e Custom.local) Custom.op -> supp:(Man.v Bdd.t) -> Man.v Bdd.t -> 'a t -> 'b t) = Custom.apply_existandop1
+let map_op1 f dd = Custom.map_op1 ~ddtyp:_internal_ddtype f dd
+let map_op2 ?commutative ?idempotent ?special f dd1 dd2 = Custom.map_op2 ~ddtyp:_internal_ddtype ?commutative ?idempotent ?special f dd1 dd2
+let map_test2 ?commutative ?reflexive ?special f dd1 dd2 = Custom.map_test2 ~ddtyp:_internal_ddtype ?commutative ?reflexive ?special f dd1 dd2
+let map_op3 ?special f dd1 dd2 dd3 = Custom.map_op3 ~ddtyp:_internal_ddtype ?special f dd1 dd2 dd3
+let map_exist mexist ~supp dd = Custom.map_exist ~ddtyp:_internal_ddtype mexist ~supp dd
+let map_existop1 mop1 mexist ~supp dd = Custom.map_existop1 ~ddtyp:_internal_ddtype mop1 mexist ~supp dd
+let map_existand ~bottom mexist ~supp bdd dd = Custom.map_existand ~ddtyp:_internal_ddtype ~bottom mexist ~supp bdd dd
+let map_existandop1 ~bottom mop1 mexist ~supp bdd dd = Custom.map_existandop1 ~ddtyp:_internal_ddtype ~bottom mop1 mexist ~supp bdd dd
 ")
 
 /* ********************************************************************** */

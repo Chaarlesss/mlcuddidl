@@ -563,7 +563,7 @@ void print_info(man__t man)
 quote(ML,"
 let _ = set_gc 1000000 Gc.full_major (fun () -> ())
 
-let dummy =
+let (dummy:d t) =
   let res = make_d ~numVars:0 ~numVarsZ:0 ~numSlots:1 ~cacheSize:1 () in
   set_max_mem res 1;
   set_max_live res 4;

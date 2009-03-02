@@ -13,6 +13,100 @@
 #include "caml/callback.h"
 #include "caml/camlidlruntime.h"
 #include "cudd_caml.h"
+#include <string.h>
+
+value camlidl_cudd_custom_copy_shr(value arg)
+{
+  CAMLparam1(arg);
+  CAMLlocal1(res);
+  mlsize_t sz, i;
+  tag_t tg;
+
+  sz = Wosize_val(arg);
+  if (sz == 0) CAMLreturn (arg);
+  tg = Tag_val(arg);
+  res = caml_alloc_shr(sz, tg);
+  if (tg >= No_scan_tag) {
+    memcpy(Bp_val(res), Bp_val(arg), sz * sizeof(value));
+  }
+  else {
+    for (i = 0; i < sz; i++) caml_initialize(&Field(res, i), Field(arg, i));
+  }
+  CAMLreturn (res);
+}
+
+/* pour debugger test_mtbdd.ml */
+value camlidl_string_of_value(value arg)
+{
+  CAMLparam1(arg);
+  CAMLlocal1(res);
+  char str[10];
+
+  sprintf(str,"%d",arg);
+  res = caml_copy_string(str);
+  CAMLreturn(res);
+}
+/*
+#include "util.h"
+static void
+ddPrintMintermAux(
+		  DdManager * dd,
+		  DdNode * node,
+		  int * list)
+{
+  DdNode	*N,*Nv,*Nnv;
+  int		i,v,index;
+
+  N = Cudd_Regular(node);
+
+  if (cuddIsConstant(N)) {
+    for (i = 0; i < dd->size; i++) {
+      v = list[i];
+      if (v == 0) (void) fprintf(dd->out,"0");
+      else if (v == 1) (void) fprintf(dd->out,"1");
+      else (void) fprintf(dd->out,"-");
+    }
+    (void) fprintf(dd->out," %g, %d\n", 
+		   Double_val(((cuddauxDdNode*)node)->type.value),
+		   ((cuddauxDdNode*)node)->type.value);
+    
+  } else {
+    Nv  = cuddT(N);
+    Nnv = cuddE(N);
+    if (Cudd_IsComplement(node)) {
+      Nv  = Cudd_Not(Nv);
+      Nnv = Cudd_Not(Nnv);
+    }
+    index = N->index;
+    list[index] = 0;
+    ddPrintMintermAux(dd,Nnv,list); 
+    list[index] = 1;
+    ddPrintMintermAux(dd,Nv,list);
+    list[index] = 2;
+  }
+  return;
+
+}
+
+int
+Cuddaux_PrintMinterm(
+		     DdManager * manager,
+		     DdNode * node)
+{
+    int		i, *list;
+
+    list = ALLOC(int,manager->size);
+    if (list == NULL) {
+      manager->errorCode = CUDD_MEMORY_OUT;
+      return(0);
+    }
+    for (i = 0; i < manager->size; i++) list[i] = 2;
+    ddPrintMintermAux(manager,node,list);
+    FREE(list);
+    return(1);
+    
+}
+*/
 
 /* ========================================================================= */
 /* Declarations */
@@ -34,6 +128,7 @@ typedef struct camlidl_cudd_op_t {
      5: existop
      6: existand
      7: existandop
+     8: composeapply : USE cuddHashTableQuit instead of cuddauxHashTableQuit !!
   */
   short int ddtype;
   /* 0: rdd, 1:idd, 2:vdd */
@@ -74,7 +169,7 @@ void camlidl_custom_op_finalize(value val)
 
   camlidl_cudd_op_ml2c(val, &op);
   if (op->table != NULL){
-    cuddHashTableQuit(op->table);
+    cuddauxHashTableQuit(op->table);
   }
   caml_remove_global_root(&op->closure);
   if (op->special != Val_unit) caml_remove_global_root(&op->special);
@@ -94,7 +189,7 @@ void camlidl_custom_op_finalize(value val)
   free(op);
 }
 struct custom_operations camlidl_custom_op = {
-  "camlidl_cudd_custom_bdd",
+  "camlidl_cudd_custom_op",
   &camlidl_custom_op_finalize,
   custom_compare_default,
   custom_hash_default,
@@ -114,7 +209,7 @@ value camlidl_cudd_op_c2ml(camlidl_cudd_op_t* op)
 /* Registering and removing user operations */
 /* ========================================================================= */
 
-int camlidl_cudd_ddcustom_hook(DdManager* dd, const char* s, void* data)
+int camlidl_cudd_custom_hook(DdManager* dd, const char* s, void* data)
 {
   int i;
   if (camlidl_cudd_tabop != NULL){
@@ -122,7 +217,7 @@ int camlidl_cudd_ddcustom_hook(DdManager* dd, const char* s, void* data)
       if (camlidl_cudd_tabop[i]!=NULL && 
 	  camlidl_cudd_tabop[i]->table != NULL &&
 	  camlidl_cudd_tabop[i]->table->manager == dd){
-	cuddHashTableQuit(camlidl_cudd_tabop[i]->table);
+	cuddauxHashTableQuit(camlidl_cudd_tabop[i]->table);
 	camlidl_cudd_tabop[i]->table = NULL;
       }
     }
@@ -146,6 +241,7 @@ value camlidl_cudd_rivdd_register_op
     caml_register_global_root(&camlidl_cudd_rivdd_op_exn);
     camlidl_cudd_tabop_size = 32;
     camlidl_cudd_tabop = malloc(32*sizeof(camlidl_cudd_op_t*));
+    for (i=0; i<camlidl_cudd_tabop_size; i++) camlidl_cudd_tabop[i]=NULL;
   }
   /* Allocate the C structure */
   camlidl_cudd_op_t* op = (camlidl_cudd_op_t*)malloc(sizeof(camlidl_cudd_op_t));
@@ -215,7 +311,7 @@ value camlidl_cudd_rivdd_flush_op(value v_op)
   camlidl_cudd_op_t* op;
   camlidl_cudd_op_ml2c(v_op, &op);
   assert(op->table!=NULL && op->cachetype==2);
-  cuddHashTableQuit(op->table);
+  cuddauxHashTableQuit(op->table);
   op->table = NULL;
   return Val_unit;
 }
@@ -225,7 +321,7 @@ value camlidl_cudd_rivdd_flush_allop(value v)
   if (camlidl_cudd_tabop != NULL){
     for (i=0; i<camlidl_cudd_tabop_size; i++){
       if (camlidl_cudd_tabop[i]!=NULL && camlidl_cudd_tabop[i]->table!=NULL){
-	cuddHashTableQuit(camlidl_cudd_tabop[i]->table);
+	cuddauxHashTableQuit(camlidl_cudd_tabop[i]->table);
 	camlidl_cudd_tabop[i]->table = NULL;
       }
     }
@@ -245,7 +341,7 @@ static inline
 void freetable_if_different_manager(DdManager* man, camlidl_cudd_op_t* op)
 {
   if (op->table!=NULL && op->table->manager != man){
-    cuddHashTableQuit(op->table);
+    cuddauxHashTableQuit(op->table);
     op->table = NULL;
   }
 }
@@ -253,7 +349,7 @@ static inline
 void freetable_auto(camlidl_cudd_op_t* op)
 {  
   if (op->cachetype == 1 && op->table != NULL){
-    cuddHashTableQuit(op->table);
+    cuddauxHashTableQuit(op->table);
     op->table=NULL;
   }
 }
@@ -299,6 +395,9 @@ value camlidl_cudd_rivdd_map_op(value v_op, value v_tno)
     camlidl_cudd_node_ml2c(v_no, &no[i]);
   }
 
+  res.man = no[0].man;
+  res.node = NULL;
+
   /* */
   freetable_if_different_manager(res.man->man, op);
   if (op2) freetable_if_different_manager(res.man->man, op2);
@@ -309,16 +408,13 @@ value camlidl_cudd_rivdd_map_op(value v_op, value v_tno)
   if (op2) op2->man = no[0].man;
   if (op1) op1->man = no[0].man;
   
-  res.man = no[0].man;
-  res.node = NULL;
-
   switch (op->optype){
   case 0: /* op1 */
     if (size!=1) abort();
     if (alloctable(res.man->man,op,1)==0){
       goto camlidl_cudd_rivdd_mapop_end;
     }
-    res.node = Cuddaux_addApply1(res.man->man,op->table,op,camlidl_cudd_rivdd_op1,no[0].node);
+    res.node = Cuddaux_addApply1(res.man->man,&op->table,op,camlidl_cudd_rivdd_op1,no[0].node);
     break;
   case 1: /* op2 */
     if (size!=2) abort();
@@ -328,7 +424,7 @@ value camlidl_cudd_rivdd_map_op(value v_op, value v_tno)
     if (alloctable(res.man->man,op,2)==0){
       goto camlidl_cudd_rivdd_mapop_end;
     }
-    res.node = Cuddaux_addApply2(res.man->man, op->table, op, op->commutative,
+    res.node = Cuddaux_addApply2(res.man->man, &op->table, op, op->commutative,
 				 camlidl_cudd_rivdd_op2, no[0].node, no[1].node);
     break;
   case 2: /* test2 */
@@ -339,7 +435,7 @@ value camlidl_cudd_rivdd_map_op(value v_op, value v_tno)
     if (alloctable(res.man->man,op,2)==0){
       goto camlidl_cudd_rivdd_mapop_end;
     }
-    i = Cuddaux_addTest2(res.man->man, op->table, op, op->commutative,
+    i = Cuddaux_addTest2(res.man->man, &op->table, op, op->commutative,
 			 camlidl_cudd_rivdd_cmpop,no[0].node,no[1].node);
     break;
   case 3: /* op3 */
@@ -350,7 +446,7 @@ value camlidl_cudd_rivdd_map_op(value v_op, value v_tno)
     if (alloctable(res.man->man,op,3)==0){
       goto camlidl_cudd_rivdd_mapop_end;
     }
-    res.node = Cuddaux_addApply3(res.man->man,op->table,op,camlidl_cudd_rivdd_op3,no[0].node,no[1].node,no[2].node);
+    res.node = Cuddaux_addApply3(res.man->man,&op->table,op,camlidl_cudd_rivdd_op3,no[0].node,no[1].node,no[2].node);
     break;
   case 4: /* exist */
     if (size!=2) abort();
@@ -361,7 +457,7 @@ value camlidl_cudd_rivdd_map_op(value v_op, value v_tno)
 	alloctable(res.man->man,op2,2)==0){
       goto camlidl_cudd_rivdd_mapop_end;
     }
-    res.node = Cuddaux_addAbstract(res.man->man, op->table, op2->table, op2,
+    res.node = Cuddaux_addAbstract(res.man->man, &op->table, &op2->table, op2,
 				   camlidl_cudd_rivdd_op2,no[1].node,no[0].node);
     break;
   case 5: /* existop1 */
@@ -374,7 +470,7 @@ value camlidl_cudd_rivdd_map_op(value v_op, value v_tno)
 	alloctable(res.man->man,op1,1)==0){
       goto camlidl_cudd_rivdd_mapop_end;
     }
-    res.node = Cuddaux_addApplyAbstract(res.man->man, op->table, op2->table, op1->table,
+    res.node = Cuddaux_addApplyAbstract(res.man->man, &op->table, &op2->table, &op1->table,
 					op2, op1, 
 					camlidl_cudd_rivdd_op2,camlidl_cudd_rivdd_op1,
 					no[1].node,no[0].node);
@@ -394,7 +490,7 @@ value camlidl_cudd_rivdd_map_op(value v_op, value v_tno)
       if (background==NULL)
 	goto camlidl_cudd_rivdd_mapop_end;
       cuddRef(background);
-      res.node = Cuddaux_addBddAndAbstract(res.man->man, op->table, op2->table,
+      res.node = Cuddaux_addBddAndAbstract(res.man->man, &op->table, &op2->table,
 					   op2, camlidl_cudd_rivdd_op2,
 					   no[1].node,no[2].node,no[0].node,background);
       cuddDeref(background);
@@ -416,7 +512,7 @@ value camlidl_cudd_rivdd_map_op(value v_op, value v_tno)
       if (background==NULL)
 	goto camlidl_cudd_rivdd_mapop_end;
       cuddRef(background);
-      res.node = Cuddaux_addApplyBddAndAbstract(res.man->man, op->table, op2->table, op1->table,
+      res.node = Cuddaux_addApplyBddAndAbstract(res.man->man, &op->table, &op2->table, &op1->table,
 						op2, op1, 
 						camlidl_cudd_rivdd_op2,camlidl_cudd_rivdd_op1,
 						no[1].node,no[2].node,no[0].node,background);
@@ -519,7 +615,7 @@ DdNode* camlidl_cudd_rivdd_op2(DdManager* man, DDAUX_IDOP ptr, DdNode* F, DdNode
       _v_val = Field(_v_val,0);
       camlidl_cudd_node_ml2c(_v_val,&no);
       res = no.node;
-      if (op->man != no.man) caml_failwith("Ddcustom.map_op2: the special function returned a diagram on a different manager !");
+      if (op->man != no.man) caml_failwith("Custom.map_op2: the special function returned a diagram on a different manager !");
       goto camlidl_cudd_rivdd_op2_exit;
     }
   }
@@ -638,7 +734,7 @@ DdNode* camlidl_cudd_rivdd_op3(DdManager* man, DDAUX_IDOP ptr, DdNode* F, DdNode
       _v_val = Field(_v_val,0);
       camlidl_cudd_node_ml2c(_v_val,&no);
       res = no.node;
-      if (op->man != no.man) caml_failwith("Ddcustom.map_op2: the special function returned a diagram on a different manager !");
+      if (op->man != no.man) caml_failwith("Custom.map_op2: the special function returned a diagram on a different manager !");
       goto camlidl_cudd_rivdd_op3_exit;
     }
   }
