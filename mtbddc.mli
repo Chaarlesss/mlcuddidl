@@ -1,18 +1,17 @@
-(** MTBDDs using a weak hashtable for unique constants *)
+(** MTBDDs using a weak hashtable for unique constants, version
+    for custom blocks with finalization function *)
 
 (* This file is part of the MLCUDDIDL Library, released under LGPL license.
    Please read the COPYING file packaged in the distribution  *)
 
+type 'a capsule = private {
+  content : 'a
+}
 type 'a unique
   (** Type of unique representants of MTBDD leaves of type ['a].
       
-      For technical reason, type ['a] should not be implemented as
-      a custom block with finalization function. (This is checked
-      and the program aborts with an error message). 
-
-      Use {!Mtbddc} module if your type does not fulfill this
-      requirement.  [Mtbddc] modules automatically encapsulate the
-      value into a ML type. *)
+      Use this module rather than {!Mtbdd} when ['a] is implemented as a 
+      a custom block with finalization function. *)
 
 type 'a t = 'a unique Vdd.t
   (** Type of MTBDDs.
@@ -42,7 +41,7 @@ val get : 'a unique -> 'a
 
 (** Public type for exploring the abstract type [t] *)
 type 'a mtbdd =
-  | Leaf of 'a unique      (** Terminal value *)
+  | Leaf of 'a unique        (** Terminal value *)
   | Ite of int * 'a t * 'a t (** Decision on CUDD variable *)
 
 (** We refer to the modules {!Add} and {!Vdd} for the description
@@ -189,8 +188,8 @@ external tdrestrict : 'a t -> Man.v Bdd.t -> 'a t = "camlidl_cudd_add_tdrestrict
 
 (**
 Two options:
-- By decomposition into guards and leafs: see module {!Mapleaf}
-- By using CUDD cache: see module {!User}
+- By decomposition into guards and leafs: see module {!Mapleaf};
+- By using CUDD cache: see module {!User}.
 *)
 
 (* ====================================================== *)

@@ -2,6 +2,9 @@
 
 let restrict = ref false
 
+(*  ********************************************************************** *)
+(** {2 Internal functions} *)
+(*  ********************************************************************** *)
 let combineretractive (guard,leaf) res =
   let man = Vdd.manager res in
   Vdd.ite guard (Vdd.cst man leaf) res
@@ -32,6 +35,18 @@ let combineleaf1
   done;
   !res
 
+let mapleaf1
+    (f:'a -> 'b)
+    (vdd:'a Vdd.t)
+    :
+    'b Vdd.t
+    =
+  combineleaf1
+    ~default:(Vdd._background (Vdd.manager vdd))
+    ~combine:combineretractive
+    (fun g leaf -> (g, f leaf))
+    vdd
+
 let retractivemapleaf1
     ~(default:'b Vdd.t)
     (f:Bdd.vt -> 'a -> Bdd.vt * 'b)
@@ -53,17 +68,6 @@ let expansivemapleaf1
   combineleaf1 ~default ~combine:(combineexpansive ~default ~merge)
     f vdd
 
-let mapleaf1
-    (f:'a -> 'b)
-    (vdd:'a Vdd.t)
-    :
-    'b Vdd.t
-    =
-  combineleaf1
-    ~default:(Vdd._background (Vdd.manager vdd))
-    ~combine:combineretractive
-    (fun g leaf -> (g, f leaf))
-    vdd
 
 (*  ********************************************************************** *)
 (** {2 Arity 2} *)
@@ -164,6 +168,7 @@ let combineleaf_array
     'c
     =
   let length = Array.length tvdd in
+  assert(length>=1);
   let cudd = Vdd.manager tvdd.(0) in
   let res = ref default in
 
@@ -278,4 +283,3 @@ let combineleaf2_array
       f guard leaf1 leaf2 tleaf
     )
     (Array.append [|vdd1;vdd2|] tvdd)
-

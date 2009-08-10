@@ -79,8 +79,13 @@ static int bddCheckPositiveCube (DdManager *manager, DdNode *cube);
 DdNode *
 Cuddaux_addApply1(DdManager * dd,
 		  DdHashTable** table,
+		  /* if table==NULL, use global cache,
+		     otherwise, if *table!=NULL, use the hashtable
+		     otherwise, creates an hashtable and stores it in *table */
 		  DDAUX_IDOP pid,
+		  /* Identifier of the operation (for use in global cache */
 		  DDAUX_AOP1 op,
+		  /* The operation itself */
 		  DdNode * f)
 {
   DdNode *res;
@@ -229,8 +234,13 @@ Cuddaux_addApply3(DdManager * dd,
 
 /**Function********************************************************************
 
+  Synopsis:
+	       exist(ite(var,cube,false),ite(var,f+,f-)) = 
+	         op(exist(cube,f+),exist(cube,f-))
+	       exist(true,f) = f
+
   Assumptions:
-	       existop(f,f) = f,
+	       op(f,f) = f,
 
   SideEffects [None
 
@@ -273,7 +283,7 @@ Cuddaux_addAbstract(DdManager * dd,
 	assert(*tableop==NULL);
 	*tableop = cuddHashTableInit(dd,2,2);
 	if (*tableop == NULL){
-	  cuddauxHashTableQuit(*table);
+	  cuddHashTableQuit(*table);
 	  *table = NULL;
 	  return(NULL);
 	}
@@ -287,8 +297,15 @@ Cuddaux_addAbstract(DdManager * dd,
 
 /**Function********************************************************************
 
+  Synopsis:    exist(cube,op1(f))
+
+	       existapply(ite(var,cube,false),ite(var,f+,f-)) = 
+	         op(existapply(cube,f+),existapply(cube,f-))
+	       existapply(true,f) = op1 f 
+
+
   Assumptions:
-	       existop(f,f) = f,
+	       op(f,f) = f,
 
   SideEffects [None
 
@@ -334,7 +351,7 @@ Cuddaux_addApplyAbstract(DdManager * dd,
 	assert(*tableop==NULL);
 	*tableop = cuddHashTableInit(dd,2,2);
 	if (*tableop == NULL){
-	  cuddauxHashTableQuit(*table);
+	  cuddHashTableQuit(*table);
 	  *table = NULL;
 	  return(NULL);
 	}
@@ -343,9 +360,9 @@ Cuddaux_addApplyAbstract(DdManager * dd,
 	assert(*tableop1==NULL);
 	*tableop1 = cuddHashTableInit(dd,1,2);
 	if (*tableop1 == NULL){
-	  cuddauxHashTableQuit(*table);
+	  cuddHashTableQuit(*table);
 	  *table = NULL;
-	  cuddauxHashTableQuit(*tableop);
+	  cuddHashTableQuit(*tableop);
 	  *tableop = NULL;
 	  return(NULL);
 	}
@@ -359,8 +376,18 @@ Cuddaux_addApplyAbstract(DdManager * dd,
 
 /**Function********************************************************************
 
+  Synopsis:    exist(cube,ite(f,g,background))
+
+               existand(ite(var,cube,false),ite(var,f+,f-),ite(var,g+,g-)) =
+	         op(existand(cube,f+,g+),existand(cube,f-,g-)
+
+	       existand(cube,true,g) = exist(cube,g)
+	       existand(cube,false,g) = background
+
+	       existand(true,f,g) = ite(f,g,background)
+
   Assumptions:
-	       existop(f,f) = f,
+	       op(f,f) = f,
 	       false AND f = background
 	       true AND f = f
 
@@ -403,7 +430,7 @@ Cuddaux_addBddAndAbstract(DdManager * dd,
 	assert(*tableop==NULL);
 	*tableop = cuddHashTableInit(dd,2,2);
 	if (*tableop == NULL){
-	  cuddauxHashTableQuit(*table);
+	  cuddHashTableQuit(*table);
 	  *table = NULL;
 	  return(NULL);
 	}
@@ -416,6 +443,8 @@ Cuddaux_addBddAndAbstract(DdManager * dd,
 } /* end of Cuddaux_addApplyBddAndAbstract */
 
 /**Function********************************************************************
+
+  Synopsis:    exist(cube,ite(f,op1(g),background))
 
   Assumptions:
 	       existop(f,f) = f,
@@ -464,7 +493,7 @@ Cuddaux_addApplyBddAndAbstract(DdManager * dd,
 	assert(*tableop==NULL);
 	*tableop = cuddHashTableInit(dd,2,2);
 	if (*tableop == NULL){
-	  cuddauxHashTableQuit(*table);
+	  cuddHashTableQuit(*table);
 	  *table = NULL;
 	  return(NULL);
 	}
@@ -473,9 +502,9 @@ Cuddaux_addApplyBddAndAbstract(DdManager * dd,
 	assert(*tableop1==NULL);
 	*tableop1 = cuddHashTableInit(dd,1,2);
 	if (*tableop1 == NULL){
-	  cuddauxHashTableQuit(*table);
+	  cuddHashTableQuit(*table);
 	  *table = NULL;
-	  cuddauxHashTableQuit(*tableop);
+	  cuddHashTableQuit(*tableop);
 	  *tableop = NULL;
 	  return(NULL);
 	}
@@ -490,59 +519,6 @@ Cuddaux_addApplyBddAndAbstract(DdManager * dd,
 /*---------------------------------------------------------------------------*/
 /* Definition of internal functions                                          */
 /*---------------------------------------------------------------------------*/
-
-/**Function********************************************************************
-
-  Synopsis    [Shuts down a hash table, but performing cuddDeref instead of Cudd_RecursiveDeref]
-
-  Description [Shuts down a hash table, dereferencing all the values.  It
-  assumes that the values have been created recursively by cuddUniqueInter,
-  so that cuddDeref should be used instead of Cudd_RecursiveDeref]
-
-  SideEffects [None]
-
-  SeeAlso     [cuddHashTableQuit]
-
-******************************************************************************/
-
-void
-cuddauxHashTableQuit(
-  DdHashTable * hash)
-{
-#ifdef __osf__
-#pragma pointer_size save
-#pragma pointer_size short
-#endif
-    unsigned int i;
-    DdManager *dd = hash->manager;
-    DdHashItem *bucket;
-    DdHashItem **memlist, **nextmem;
-    unsigned int numBuckets = hash->numBuckets;
-
-    for (i = 0; i < numBuckets; i++) {
-	bucket = hash->bucket[i];
-	while (bucket != NULL) {
-	    cuddDeref(bucket->value);
-	    bucket = bucket->next;
-	}
-    }
-
-    memlist = hash->memoryList;
-    while (memlist != NULL) {
-	nextmem = (DdHashItem **) memlist[0];
-	FREE(memlist);
-	memlist = nextmem;
-    }
-
-    FREE(hash->bucket);
-    FREE(hash);
-#ifdef __osf__
-#pragma pointer_size restore
-#endif
-
-    return;
-
-} /* end of cuddauxHashTableQuit */
 
 /**Function********************************************************************
 
@@ -1053,8 +1029,8 @@ cuddauxAddAbstractRecur(DdManager * dd,
 	Cudd_RecursiveDeref(dd, E);
 	return(NULL);
       }
-      cuddDeref(E);
       cuddDeref(T);
+      cuddDeref(E);
     }
   }
  cuddauxAddAbstractRecur_end:

@@ -25,26 +25,28 @@ value camlidl_cudd_custom_copy_shr(value arg)
   sz = Wosize_val(arg);
   if (sz == 0) CAMLreturn (arg);
   tg = Tag_val(arg);
-  res = caml_alloc_shr(sz, tg);
-  if (tg >= No_scan_tag) {
-    memcpy(Bp_val(res), Bp_val(arg), sz * sizeof(value));
+  if (tg==Custom_tag){
+    struct custom_operations *op = Custom_ops_val(arg);
+    if (op->finalize!=NULL){
+      fprintf(stderr,"\n\
+Library mlcuddidl/Cudd module: custom_caml.c:\n\
+camlidl_cudd_custom_copy_shr (probably called from Cudd.Mtbdd.unique):\n\
+an OCaml value/type implemented as a custom block with a finalization\n\
+function cannot be used as leaves of Mtbdds (for technical reasons).\n\
+Sorry for that !\n\
+The things to do is to first encapsulate the type into a record with one field:\n\
+something like type 'a capsule = { val:'a }\n");
+      abort();
+    }
   }
-  else {
+  res = caml_alloc_shr(sz, tg);
+  if (tg < No_scan_tag) {
     for (i = 0; i < sz; i++) caml_initialize(&Field(res, i), Field(arg, i));
   }
+  else {
+    memcpy(Bp_val(res), Bp_val(arg), sz * sizeof(value));
+  }
   CAMLreturn (res);
-}
-
-/* pour debugger test_mtbdd.ml */
-value camlidl_string_of_value(value arg)
-{
-  CAMLparam1(arg);
-  CAMLlocal1(res);
-  char str[10];
-
-  sprintf(str,"%d",arg);
-  res = caml_copy_string(str);
-  CAMLreturn(res);
 }
 
 /* ========================================================================= */
@@ -67,10 +69,10 @@ typedef struct camlidl_cudd_op_t {
      5: existop
      6: existand
      7: existandop
-     8: composeapply : USE cuddHashTableQuit instead of cuddauxHashTableQuit !!
+     8: composeapply
   */
   short int ddtype;
-  /* 0: rdd, 1:idd, 2:vdd */
+  /* 0: add, 1:idd, 2:vdd */
   short int commutative;
   short int idempotent;
   short int cachetype;
@@ -91,7 +93,7 @@ static camlidl_cudd_op_t** camlidl_cudd_tabop = NULL;
 static int camlidl_cudd_tabop_size = 0;
 
 /* Exception */
-static value camlidl_cudd_rivdd_op_exn = Val_unit;
+static value camlidl_cudd_avdd_op_exn = Val_unit;
 
 /* ========================================================================= */
 /* Allocating and freeing camlidl_cudd_op_t */
@@ -108,7 +110,7 @@ void camlidl_custom_op_finalize(value val)
 
   camlidl_cudd_op_ml2c(val, &op);
   if (op->table != NULL){
-    cuddauxHashTableQuit(op->table);
+    cuddHashTableQuit(op->table);
   }
   caml_remove_global_root(&op->closure);
   if (op->special != Val_unit) caml_remove_global_root(&op->special);
@@ -153,10 +155,10 @@ int camlidl_cudd_custom_hook(DdManager* dd, const char* s, void* data)
   int i;
   if (camlidl_cudd_tabop != NULL){
     for (i=0; i<camlidl_cudd_tabop_size; i++){
-      if (camlidl_cudd_tabop[i]!=NULL && 
+      if (camlidl_cudd_tabop[i]!=NULL &&
 	  camlidl_cudd_tabop[i]->table != NULL &&
 	  camlidl_cudd_tabop[i]->table->manager == dd){
-	cuddauxHashTableQuit(camlidl_cudd_tabop[i]->table);
+	cuddHashTableQuit(camlidl_cudd_tabop[i]->table);
 	camlidl_cudd_tabop[i]->table = NULL;
       }
     }
@@ -164,10 +166,10 @@ int camlidl_cudd_custom_hook(DdManager* dd, const char* s, void* data)
   return 1;
 }
 
-value camlidl_cudd_rivdd_register_op
-(value v_ddtype, value v_cachetype, value v_optype, 
+value camlidl_cudd_avdd_register_op
+(value v_ddtype, value v_cachetype, value v_optype,
  value v_commutative, value v_idempotent,
- value v_op2, value v_op1, 
+ value v_op2, value v_op1,
  value v_special, value v_closure)
 {
   CAMLparam5(v_cachetype, v_optype, v_ddtype, v_commutative, v_idempotent);
@@ -177,7 +179,7 @@ value camlidl_cudd_rivdd_register_op
 
   /* if first call */
   if (camlidl_cudd_tabop==NULL){
-    caml_register_global_root(&camlidl_cudd_rivdd_op_exn);
+    caml_register_global_root(&camlidl_cudd_avdd_op_exn);
     camlidl_cudd_tabop_size = 32;
     camlidl_cudd_tabop = malloc(32*sizeof(camlidl_cudd_op_t*));
     for (i=0; i<camlidl_cudd_tabop_size; i++) camlidl_cudd_tabop[i]=NULL;
@@ -210,7 +212,7 @@ value camlidl_cudd_rivdd_register_op
     }
     if (i==camlidl_cudd_tabop_size+1){
       /* Resize the table */
-      camlidl_cudd_tabop = 
+      camlidl_cudd_tabop =
 	realloc(camlidl_cudd_tabop,
 		2*camlidl_cudd_tabop_size*sizeof(camlidl_cudd_op_t*));
       camlidl_cudd_tabop[i]=op;
@@ -224,43 +226,43 @@ value camlidl_cudd_rivdd_register_op
   CAMLreturn(v_res);
 }
 
-value camlidl_cudd_rivdd_register_op_byte(value * argv, int argn)
+value camlidl_cudd_avdd_register_op_byte(value * argv, int argn)
 {
   assert(argn==9);
-  return camlidl_cudd_rivdd_register_op(argv[0],argv[1],argv[2],argv[3],
+  return camlidl_cudd_avdd_register_op(argv[0],argv[1],argv[2],argv[3],
 					argv[4],argv[5],argv[6],argv[7],
 					argv[8]);
 }
 
-value camlidl_cudd_rivdd_op2_of_exist(value v_op)
+value camlidl_cudd_avdd_op2_of_exist(value v_op)
 {
    camlidl_cudd_op_t* op;
    camlidl_cudd_op_ml2c(v_op, &op);
    return op->op2;
 }
-value camlidl_cudd_rivdd_op1_of_existop1(value v_op)
+value camlidl_cudd_avdd_op1_of_existop1(value v_op)
 {
    camlidl_cudd_op_t* op;
    camlidl_cudd_op_ml2c(v_op, &op);
    return op->op1;
 }
 
-value camlidl_cudd_rivdd_flush_op(value v_op)
+value camlidl_cudd_avdd_flush_op(value v_op)
 {
   camlidl_cudd_op_t* op;
   camlidl_cudd_op_ml2c(v_op, &op);
   assert(op->table!=NULL && op->cachetype==2);
-  cuddauxHashTableQuit(op->table);
+  cuddHashTableQuit(op->table);
   op->table = NULL;
   return Val_unit;
 }
-value camlidl_cudd_rivdd_flush_allop(value v)
+value camlidl_cudd_avdd_flush_allop(value v)
 {
   int i;
   if (camlidl_cudd_tabop != NULL){
     for (i=0; i<camlidl_cudd_tabop_size; i++){
       if (camlidl_cudd_tabop[i]!=NULL && camlidl_cudd_tabop[i]->table!=NULL){
-	cuddauxHashTableQuit(camlidl_cudd_tabop[i]->table);
+	cuddHashTableQuit(camlidl_cudd_tabop[i]->table);
 	camlidl_cudd_tabop[i]->table = NULL;
       }
     }
@@ -271,24 +273,24 @@ value camlidl_cudd_rivdd_flush_allop(value v)
 /* ========================================================================= */
 /* Main user operations */
 /* ========================================================================= */
-DdNode* camlidl_cudd_rivdd_op1(DdManager* man, DDAUX_IDOP ptr, DdNode* f);
-DdNode* camlidl_cudd_rivdd_op2(DdManager* man, DDAUX_IDOP ptr, DdNode* F, DdNode* G);
-DdNode* camlidl_cudd_rivdd_cmpop(DdManager* man, DDAUX_IDOP ptr, DdNode* F, DdNode* G);
-DdNode* camlidl_cudd_rivdd_op3(DdManager* man, DDAUX_IDOP ptr, DdNode* F, DdNode* G, DdNode* H);
+DdNode* camlidl_cudd_avdd_op1(DdManager* man, DDAUX_IDOP ptr, DdNode* f);
+DdNode* camlidl_cudd_avdd_op2(DdManager* man, DDAUX_IDOP ptr, DdNode* F, DdNode* G);
+DdNode* camlidl_cudd_avdd_cmpop(DdManager* man, DDAUX_IDOP ptr, DdNode* F, DdNode* G);
+DdNode* camlidl_cudd_avdd_op3(DdManager* man, DDAUX_IDOP ptr, DdNode* F, DdNode* G, DdNode* H);
 
 static inline
 void freetable_if_different_manager(DdManager* man, camlidl_cudd_op_t* op)
 {
   if (op->table!=NULL && op->table->manager != man){
-    cuddauxHashTableQuit(op->table);
+    cuddHashTableQuit(op->table);
     op->table = NULL;
   }
 }
 static inline
 void freetable_auto(camlidl_cudd_op_t* op)
-{  
+{
   if (op->cachetype == 1 && op->table != NULL){
-    cuddauxHashTableQuit(op->table);
+    cuddHashTableQuit(op->table);
     op->table=NULL;
   }
 }
@@ -305,7 +307,7 @@ int alloctable(DdManager* man,
     return 1;
 }
 
-value camlidl_cudd_rivdd_map_op(value v_op, value v_tno)
+value camlidl_cudd_avdd_map_op(value v_op, value v_tno)
 {
   CAMLparam2(v_op, v_tno); CAMLlocal2(v_no,v_res);
   int i,size;
@@ -326,7 +328,7 @@ value camlidl_cudd_rivdd_map_op(value v_op, value v_tno)
     op1 = NULL;
 
   /* Initialize exception */
-  camlidl_cudd_rivdd_op_exn = Val_unit;
+  camlidl_cudd_avdd_op_exn = Val_unit;
   /* Conversion from CAML */
   size = Wosize_val(v_tno);
   for (i=0; i<size; i++){
@@ -346,14 +348,14 @@ value camlidl_cudd_rivdd_map_op(value v_op, value v_tno)
   op->man = no[0].man;
   if (op2) op2->man = no[0].man;
   if (op1) op1->man = no[0].man;
-  
+
   switch (op->optype){
   case 0: /* op1 */
     if (size!=1) abort();
     if (alloctable(res.man->man,op,1)==0){
-      goto camlidl_cudd_rivdd_mapop_end;
+      goto camlidl_cudd_avdd_mapop_end;
     }
-    res.node = Cuddaux_addApply1(res.man->man,&op->table,op,camlidl_cudd_rivdd_op1,no[0].node);
+    res.node = Cuddaux_addApply1(res.man->man,&op->table,op,camlidl_cudd_avdd_op1,no[0].node);
     break;
   case 1: /* op2 */
     if (size!=2) abort();
@@ -361,10 +363,10 @@ value camlidl_cudd_rivdd_map_op(value v_op, value v_tno)
       failwith("Dd: binary function called with nodes belonging to different managers !");
     }
     if (alloctable(res.man->man,op,2)==0){
-      goto camlidl_cudd_rivdd_mapop_end;
+      goto camlidl_cudd_avdd_mapop_end;
     }
     res.node = Cuddaux_addApply2(res.man->man, &op->table, op, op->commutative,
-				 camlidl_cudd_rivdd_op2, no[0].node, no[1].node);
+				 camlidl_cudd_avdd_op2, no[0].node, no[1].node);
     break;
   case 2: /* test2 */
     if (size!=2) abort();
@@ -372,10 +374,10 @@ value camlidl_cudd_rivdd_map_op(value v_op, value v_tno)
       failwith("Dd: binary function called with nodes belonging to different managers !");
     }
     if (alloctable(res.man->man,op,2)==0){
-      goto camlidl_cudd_rivdd_mapop_end;
+      goto camlidl_cudd_avdd_mapop_end;
     }
     i = Cuddaux_addTest2(res.man->man, &op->table, op, op->commutative,
-			 camlidl_cudd_rivdd_cmpop,no[0].node,no[1].node);
+			 camlidl_cudd_avdd_cmpop,no[0].node,no[1].node);
     break;
   case 3: /* op3 */
     if (size!=3) abort();
@@ -383,9 +385,9 @@ value camlidl_cudd_rivdd_map_op(value v_op, value v_tno)
       failwith("Dd: ternary function called with nodes belonging to different managers !");
     }
     if (alloctable(res.man->man,op,3)==0){
-      goto camlidl_cudd_rivdd_mapop_end;
+      goto camlidl_cudd_avdd_mapop_end;
     }
-    res.node = Cuddaux_addApply3(res.man->man,&op->table,op,camlidl_cudd_rivdd_op3,no[0].node,no[1].node,no[2].node);
+    res.node = Cuddaux_addApply3(res.man->man,&op->table,op,camlidl_cudd_avdd_op3,no[0].node,no[1].node,no[2].node);
     break;
   case 4: /* exist */
     if (size!=2) abort();
@@ -394,10 +396,10 @@ value camlidl_cudd_rivdd_map_op(value v_op, value v_tno)
     }
     if (alloctable(res.man->man,op,2)==0 ||
 	alloctable(res.man->man,op2,2)==0){
-      goto camlidl_cudd_rivdd_mapop_end;
+      goto camlidl_cudd_avdd_mapop_end;
     }
     res.node = Cuddaux_addAbstract(res.man->man, &op->table, &op2->table, op2,
-				   camlidl_cudd_rivdd_op2,no[1].node,no[0].node);
+				   camlidl_cudd_avdd_op2,no[1].node,no[0].node);
     break;
   case 5: /* existop1 */
     if (size!=2) abort();
@@ -407,66 +409,68 @@ value camlidl_cudd_rivdd_map_op(value v_op, value v_tno)
     if (alloctable(res.man->man,op,2)==0 ||
 	alloctable(res.man->man,op2,2)==0 ||
 	alloctable(res.man->man,op1,1)==0){
-      goto camlidl_cudd_rivdd_mapop_end;
+      goto camlidl_cudd_avdd_mapop_end;
     }
     res.node = Cuddaux_addApplyAbstract(res.man->man, &op->table, &op2->table, &op1->table,
-					op2, op1, 
-					camlidl_cudd_rivdd_op2,camlidl_cudd_rivdd_op1,
+					op2, op1,
+					camlidl_cudd_avdd_op2,camlidl_cudd_avdd_op1,
 					no[1].node,no[0].node);
     break;
   case 6: /* existand */
-    if (size!=3) abort();    
+    if (size!=3) abort();
     if (no[0].man!=no[1].man || no[0].man!=no[2].man){
       failwith("Dd: ternary function called with nodes belonging to different managers !");
     }
     if (alloctable(res.man->man,op,2)==0 ||
 	alloctable(res.man->man,op2,2)==0){
-      goto camlidl_cudd_rivdd_mapop_end;
+      goto camlidl_cudd_avdd_mapop_end;
     }
     {
       cuddauxType type = Type_val(op->ddtype,op->closure);
       DdNode* background = cuddauxUniqueType(op->ddtype==2,res.man->man,&type);
       if (background==NULL)
-	goto camlidl_cudd_rivdd_mapop_end;
+	goto camlidl_cudd_avdd_mapop_end;
       cuddRef(background);
       res.node = Cuddaux_addBddAndAbstract(res.man->man, &op->table, &op2->table,
-					   op2, camlidl_cudd_rivdd_op2,
+					   op2, camlidl_cudd_avdd_op2,
 					   no[1].node,no[2].node,no[0].node,background);
       cuddDeref(background);
     }
     break;
   case 7: /* existandapply */
-    if (size!=3) abort();    
+    if (size!=3) abort();
     if (no[0].man!=no[1].man || no[0].man!=no[2].man){
       failwith("Dd: ternary function called with nodes belonging to different managers !");
     }
     if (alloctable(res.man->man,op,2)==0 ||
 	alloctable(res.man->man,op2,2)==0 ||
 	alloctable(res.man->man,op1,1)==0){
-      goto camlidl_cudd_rivdd_mapop_end;
+      goto camlidl_cudd_avdd_mapop_end;
     }
     {
       cuddauxType type = Type_val(op->ddtype,op->closure);
       DdNode* background = cuddauxUniqueType(op->ddtype==2,res.man->man,&type);
       if (background==NULL)
-	goto camlidl_cudd_rivdd_mapop_end;
+	goto camlidl_cudd_avdd_mapop_end;
       cuddRef(background);
       res.node = Cuddaux_addApplyBddAndAbstract(res.man->man, &op->table, &op2->table, &op1->table,
-						op2, op1, 
-						camlidl_cudd_rivdd_op2,camlidl_cudd_rivdd_op1,
+						op2, op1,
+						camlidl_cudd_avdd_op2,camlidl_cudd_avdd_op1,
 						no[1].node,no[2].node,no[0].node,background);
       cuddDeref(background);
     }
     break;
   }
- camlidl_cudd_rivdd_mapop_end:
+ camlidl_cudd_avdd_mapop_end:
+  if (res.node) cuddRef(res.node);
   freetable_auto(op);
   if (op2 != NULL) freetable_auto(op2);
   if (op1 != NULL) freetable_auto(op1);
-  if (camlidl_cudd_rivdd_op_exn!=Val_unit){
+  if (res.node) cuddDeref(res.node);
+  if (camlidl_cudd_avdd_op_exn!=Val_unit){
     Cudd_ClearErrorCode(res.man->man);
-    assert(Is_exception_result(camlidl_cudd_rivdd_op_exn));
-    caml_raise(Extract_exception(camlidl_cudd_rivdd_op_exn));
+    assert(Is_exception_result(camlidl_cudd_avdd_op_exn));
+    caml_raise(Extract_exception(camlidl_cudd_avdd_op_exn));
   }
 
   switch (op->optype){
@@ -489,9 +493,9 @@ static
 DdNode* camlidl_cudd_mapop_result(int ddtype, DdManager* man, value _v_val)
 {
   DdNode* res;
-  
+
   if (Is_exception_result(_v_val)){
-    camlidl_cudd_rivdd_op_exn = _v_val;
+    camlidl_cudd_avdd_op_exn = _v_val;
     res = NULL;
   }
   else {
@@ -501,7 +505,7 @@ DdNode* camlidl_cudd_mapop_result(int ddtype, DdManager* man, value _v_val)
   return res;
 }
 
-DdNode* camlidl_cudd_rivdd_op1(DdManager* man, DDAUX_IDOP ptr, DdNode* f)
+DdNode* camlidl_cudd_avdd_op1(DdManager* man, DDAUX_IDOP ptr, DdNode* f)
 {
   CAMLparam0();
   CAMLlocal2(_v_f,_v_val);
@@ -511,7 +515,7 @@ DdNode* camlidl_cudd_rivdd_op1(DdManager* man, DDAUX_IDOP ptr, DdNode* f)
   if (cuddIsConstant(f)){
     cuddauxType type;
     camlidl_cudd_op_t* op = (camlidl_cudd_op_t*)ptr;
-    
+
     _v_f = Val_DdNode(op->ddtype,f);
     _v_val = caml_callback_exn(op->closure, _v_f);
     res = camlidl_cudd_mapop_result(op->ddtype,man,_v_val);
@@ -522,21 +526,21 @@ DdNode* camlidl_cudd_rivdd_op1(DdManager* man, DDAUX_IDOP ptr, DdNode* f)
   CAMLreturnT(DdNode*,res);
 }
 
-DdNode* camlidl_cudd_rivdd_op2(DdManager* man, DDAUX_IDOP ptr, DdNode* F, DdNode* G)
+DdNode* camlidl_cudd_avdd_op2(DdManager* man, DDAUX_IDOP ptr, DdNode* F, DdNode* G)
 {
   CAMLparam0();
   CAMLlocal3(_v_F,_v_G,_v_val);
   DdNode *res;
   node__t noF,noG;
   camlidl_cudd_op_t* op = (camlidl_cudd_op_t*)ptr;
-  
+
   res = NULL;
   if (op->idempotent && F==G) {
     res = F;
-    goto camlidl_cudd_rivdd_op2_exit;
+    goto camlidl_cudd_avdd_op2_exit;
   }
   if (!cuddIsConstant(F) && !cuddIsConstant(G)){
-    goto camlidl_cudd_rivdd_op2_exit;
+    goto camlidl_cudd_avdd_op2_exit;
   }
   if (op->special != Val_unit &&
       (cuddIsConstant(F) || cuddIsConstant(G))){
@@ -546,8 +550,8 @@ DdNode* camlidl_cudd_rivdd_op2(DdManager* man, DDAUX_IDOP ptr, DdNode* F, DdNode
     _v_G = camlidl_cudd_node_c2ml(&noG);
     _v_val = caml_callback2_exn(op->special,_v_F,_v_G);
     if (Is_exception_result(_v_val)){
-      camlidl_cudd_rivdd_op_exn = _v_val;
-      goto camlidl_cudd_rivdd_op2_exit;
+      camlidl_cudd_avdd_op_exn = _v_val;
+      goto camlidl_cudd_avdd_op2_exit;
     }
     else if (Is_block(_v_val)){
       node__t no;
@@ -555,7 +559,7 @@ DdNode* camlidl_cudd_rivdd_op2(DdManager* man, DDAUX_IDOP ptr, DdNode* F, DdNode
       camlidl_cudd_node_ml2c(_v_val,&no);
       res = no.node;
       if (op->man != no.man) caml_failwith("Custom.map_op2: the special function returned a diagram on a different manager !");
-      goto camlidl_cudd_rivdd_op2_exit;
+      goto camlidl_cudd_avdd_op2_exit;
     }
   }
   if (cuddIsConstant(F) && cuddIsConstant(G)){
@@ -575,28 +579,28 @@ DdNode* camlidl_cudd_rivdd_op2(DdManager* man, DDAUX_IDOP ptr, DdNode* F, DdNode
     default: abort();
     }
     _v_val = caml_callback2_exn(op->closure, _v_F, _v_G);
-  camlidl_cudd_rivdd_op2_end:
+  camlidl_cudd_avdd_op2_end:
     res = camlidl_cudd_mapop_result(op->ddtype,man,_v_val);
   }
-  camlidl_cudd_rivdd_op2_exit:
+  camlidl_cudd_avdd_op2_exit:
   CAMLreturnT(DdNode*,res);
 }
 
-DdNode* camlidl_cudd_rivdd_cmpop(DdManager* man, DDAUX_IDOP ptr, DdNode* F, DdNode* G)
+DdNode* camlidl_cudd_avdd_cmpop(DdManager* man, DDAUX_IDOP ptr, DdNode* F, DdNode* G)
 {
   CAMLparam0();
   CAMLlocal3(_v_F,_v_G,_v_val);
   DdNode *res;
   node__t noF,noG;
   camlidl_cudd_op_t* op = (camlidl_cudd_op_t*)ptr;
- 
+
   res = NULL;
   if (op->idempotent && F==G) {
     res = DD_ONE(man);
-    goto camlidl_cudd_rivdd_cmp_exit;
+    goto camlidl_cudd_avdd_cmp_exit;
   }
   if (!cuddIsConstant(F) && !cuddIsConstant(G)){
-    goto camlidl_cudd_rivdd_cmp_exit;
+    goto camlidl_cudd_avdd_cmp_exit;
   }
   if (op->special != Val_unit &&
       (cuddIsConstant(F) || cuddIsConstant(G))){
@@ -606,11 +610,11 @@ DdNode* camlidl_cudd_rivdd_cmpop(DdManager* man, DDAUX_IDOP ptr, DdNode* F, DdNo
     _v_G = camlidl_cudd_node_c2ml(&noG);
     _v_val = caml_callback2_exn(op->special,_v_F,_v_G);
     if (Is_exception_result(_v_val)){
-      goto camlidl_cudd_rivdd_cmp_end;
-    }    
+      goto camlidl_cudd_avdd_cmp_end;
+    }
     else if (Is_block(_v_val)){
       _v_val = Field(_v_val,0);
-      goto camlidl_cudd_rivdd_cmp_end;
+      goto camlidl_cudd_avdd_cmp_end;
     }
   }
   if (cuddIsConstant(F) && cuddIsConstant(G)){
@@ -630,20 +634,20 @@ DdNode* camlidl_cudd_rivdd_cmpop(DdManager* man, DDAUX_IDOP ptr, DdNode* F, DdNo
     default: abort();
     }
     _v_val = caml_callback2_exn(op->closure, _v_F, _v_G);
-  camlidl_cudd_rivdd_cmp_end:
+  camlidl_cudd_avdd_cmp_end:
     if (Is_exception_result(_v_val)){
-      camlidl_cudd_rivdd_op_exn = _v_val;	
+      camlidl_cudd_avdd_op_exn = _v_val;
     }
     else {
       DdNode* one = DD_ONE(man);
       res = (Bool_val(_v_val) ? one : Cudd_Not(one));
     }
-  }  
- camlidl_cudd_rivdd_cmp_exit:
+  }
+ camlidl_cudd_avdd_cmp_exit:
   CAMLreturnT(DdNode*,res);
 }
 
-DdNode* camlidl_cudd_rivdd_op3(DdManager* man, DDAUX_IDOP ptr, DdNode* F, DdNode* G, DdNode* H)
+DdNode* camlidl_cudd_avdd_op3(DdManager* man, DDAUX_IDOP ptr, DdNode* F, DdNode* G, DdNode* H)
 {
   CAMLparam0();
   CAMLlocal4(_v_F,_v_G,_v_H,_v_val);
@@ -653,7 +657,7 @@ DdNode* camlidl_cudd_rivdd_op3(DdManager* man, DDAUX_IDOP ptr, DdNode* F, DdNode
 
   res = NULL;
   if (!cuddIsConstant(F) && !cuddIsConstant(G) && !cuddIsConstant(H)){
-    goto camlidl_cudd_rivdd_op3_exit;
+    goto camlidl_cudd_avdd_op3_exit;
   }
   if (op->special != Val_unit &&
       (cuddIsConstant(F) || cuddIsConstant(G) || cuddIsConstant(H))){
@@ -665,8 +669,8 @@ DdNode* camlidl_cudd_rivdd_op3(DdManager* man, DDAUX_IDOP ptr, DdNode* F, DdNode
     _v_H = camlidl_cudd_node_c2ml(&noH);
     _v_val = caml_callback3_exn(op->special,_v_F,_v_G,_v_H);
     if (Is_exception_result(_v_val)){
-      camlidl_cudd_rivdd_op_exn = _v_val;
-      goto camlidl_cudd_rivdd_op3_exit;
+      camlidl_cudd_avdd_op_exn = _v_val;
+      goto camlidl_cudd_avdd_op3_exit;
     }
     else if (Is_block(_v_val)){
       node__t no;
@@ -674,7 +678,7 @@ DdNode* camlidl_cudd_rivdd_op3(DdManager* man, DDAUX_IDOP ptr, DdNode* F, DdNode
       camlidl_cudd_node_ml2c(_v_val,&no);
       res = no.node;
       if (op->man != no.man) caml_failwith("Custom.map_op2: the special function returned a diagram on a different manager !");
-      goto camlidl_cudd_rivdd_op3_exit;
+      goto camlidl_cudd_avdd_op3_exit;
     }
   }
   if (cuddIsConstant(F) && cuddIsConstant(G) && cuddIsConstant(H)) {
@@ -697,9 +701,9 @@ DdNode* camlidl_cudd_rivdd_op3(DdManager* man, DDAUX_IDOP ptr, DdNode* F, DdNode
     default: abort();
     }
     _v_val = caml_callback3_exn(op->closure, _v_F, _v_G, _v_H);
-  camlidl_cudd_rivdd_op3_end:
+  camlidl_cudd_avdd_op3_end:
     res = camlidl_cudd_mapop_result(op->ddtype,man,_v_val);
   }
- camlidl_cudd_rivdd_op3_exit:
+ camlidl_cudd_avdd_op3_exit:
   CAMLreturnT(DdNode*,res);
 }
