@@ -56,12 +56,15 @@ FILES_TOINSTALL = META \
 	cudd-2.4.2/util/util.h \
 	cuddaux.h cudd_caml.h \
 	$(IDLMODULES:%=%.idl) \
-	cudd_ocamldoc.mli \
 	cudd.cmi cudd.cma \
 	cudd.cmx cudd.cmxa cudd.a \
 	cudd.d.cmxa cudd.d.a \
 	cudd.p.cmx cudd.p.cmxa cudd.p.a \
 	$(CCLIB)
+
+ifneq ($(OCAMLPACK),)
+FILES_TOINSTALL += cudd_ocamldoc.mli
+endif
 
 #---------------------------------------
 # Rules
@@ -80,14 +83,12 @@ all: $(FILES_TOINSTALL)
 
 META: Makefile
 	/bin/rm -f META
-	echo "\n\
-description = \"Interface to CUDD BDD library, together with CUDD library\" \n\
-version = \"2.2.0\" \n\
-archive(byte) = \"cudd.cma\" \n\
-archive(native) = \"cudd.cmxa\" \n\
-archive(native,debug) = \"cudd.d.cmxa\" \n\
-archive(native,gprof) = \"cudd.p.cmxa\" \n\
-" >META
+	echo "description = \"Interface to CUDD BDD library, together with CUDD library\"" >META
+	echo "version = \"2.2.0\"" >>META
+	echo "archive(byte) = \"cudd.cma\"" >>META
+	echo "archive(native) = \"cudd.cmxa\"" >>META
+	echo "archive(native,debug) = \"cudd.d.cmxa\"" >>META
+	echo "archive(native,gprof) = \"cudd.p.cmxa\"" >>META
 
 install: $(FILES_TOINSTALL)
 	$(OCAMLFIND) remove $(PKG-NAME)
