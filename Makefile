@@ -35,7 +35,7 @@ OCAMLCCOPT = \
 
 IDLMODULES = hash cache memo man bdd vdd custom add
 
-MLMODULES = hash cache memo man bdd vdd custom weakke pWeakke mtbdd mtbddc user mapleaf add 
+MLMODULES = hash cache memo man bdd vdd custom weakke pWeakke mtbdd mtbddc user mapleaf add
 
 CCMODULES = \
 	cuddauxAddCamlTable cuddauxAddIte cuddauxBridge cuddauxCompose \
@@ -43,7 +43,7 @@ CCMODULES = \
 	cuddauxTDGenCof cuddauxAddApply \
 	$(IDLMODULES:%=%_caml) cudd_caml
 
-CCLIB = libcuddcaml.a libcuddcaml.d.a libcuddcaml.p.a 
+CCLIB = libcuddcaml.a libcuddcaml.d.a libcuddcaml.p.a
 ifneq ($(HAS_SHARED),)
 	CCLIB += dllcuddcaml.so
 endif
@@ -56,12 +56,15 @@ FILES_TOINSTALL = META \
 	cudd-2.4.2/util/util.h \
 	cuddaux.h cudd_caml.h \
 	$(IDLMODULES:%=%.idl) \
-	cudd_ocamldoc.mli \
 	cudd.cmi cudd.cma \
 	cudd.cmx cudd.cmxa cudd.a \
 	cudd.d.cmxa cudd.d.a \
 	cudd.p.cmx cudd.p.cmxa cudd.p.a \
 	$(CCLIB)
+
+ifneq ($(OCAMLPACK),)
+FILES_TOINSTALL += cudd_ocamldoc.mli
+endif
 
 #---------------------------------------
 # Rules
@@ -74,20 +77,9 @@ all: $(FILES_TOINSTALL)
 %.byte: %.ml
 	$(OCAMLFIND) ocamlc $(OCAMLFLAGS) $(OCAMLINC) -o $@ $*.ml \
 	-package cudd -linkpkg
-%.opt: %.ml 
+%.opt: %.ml
 	$(OCAMLFIND) ocamlopt -verbose $(OCAMLOPTFLAGS) $(OCAMLINC) -o $@ $*.ml \
 	-package cudd -linkpkg
-
-META: Makefile
-	/bin/rm -f META
-	echo "\n\
-description = \"Interface to CUDD BDD library, together with CUDD library\" \n\
-version = \"2.2.0\" \n\
-archive(byte) = \"cudd.cma\" \n\
-archive(native) = \"cudd.cmxa\" \n\
-archive(native,debug) = \"cudd.d.cmxa\" \n\
-archive(native,gprof) = \"cudd.p.cmxa\" \n\
-" >META
 
 install: $(FILES_TOINSTALL)
 	$(OCAMLFIND) remove $(PKG-NAME)
@@ -108,7 +100,7 @@ distclean: mostlyclean
 clean:
 	/bin/rm -f cuddtop *.byte *.opt
 	/bin/rm -f cuddaux.?? cuddaux.??? cuddaux.info
-	/bin/rm -f *.[ao] *.so *.cm[ioxa] *.cmxa *.opt *.opt2 *.annot cudd_ocamldoc.mli
+	/bin/rm -f *.[ao] *.so *.cm[ioxat] *.cmti *.cmxa *.opt *.opt2 *.annot cudd_ocamldoc.mli
 	/bin/rm -f cmttb*
 	/bin/rm -fr html
 
@@ -162,16 +154,16 @@ cudd-2.4.2/libcuddall.a:
 	make libcuddall.a CPP="$(CC)" CC="$(CC)" XCFLAGS="$(XCFLAGS)" ICFLAGS="$(CFLAGS)" RANLIB="$(RANLIB)" DDDEBUG="" MTRDEBUG="")
 cudd-2.4.2/libcuddall.p.a:
 	(cd cudd-2.4.2; \
-	make libcuddall.p.a CPP="$(CC)" CC="$(CC)" XCFLAGS="$(XCFLAGS)" ICFLAGS="$(CFLAGS_PROF)" RANLIB="$(RANLIB)" DDDEBUG="" MTRDEBUG="-")
+	make libcuddall.p.a CPP="$(CC)" CC="$(CC)" XCFLAGS="$(XCFLAGS)" ICFLAGS="$(CFLAGS_PROF)" RANLIB="$(RANLIB)" DDDEBUG="" MTRDEBUG="")
 cudd-2.4.2/libcuddall.d.a:
 	(cd cudd-2.4.2; \
-	make libcuddall.d.a CPP="$(CC)" CC="$(CC)" XCFLAGS="$(XCFLAGS)" ICFLAGS="$(CFLAGS_DEBUG)" RANLIB="$(RANLIB)" DDDEBUG="-DDD.D -DDD_VERBOSE -DDD_STATS -DDD_CACHE_PROFILE -DDD_UNIQUE_PROFILE -DDD_COUNT" MTRDEBUG="-DMTR_DEBUG")
+	make libcuddall.d.a CPP="$(CC)" CC="$(CC)" XCFLAGS="$(XCFLAGS)" ICFLAGS="$(CFLAGS_DEBUG)" RANLIB="$(RANLIB)" DDDEBUG="-DDD_DEBUG -DDD_VERBOSE -DDD_STATS -DDD_CACHE_PROFILE -DDD_UNIQUE_PROFILE -DDD_COUNT" MTRDEBUG="-DMTR_DEBUG")
 
 # HTML and LATEX rules
 .PHONY: html
 
-cudd_ocamldoc.mli: $(MLMODULES:%=%.mli) introduction.odoc
-	$(OCAMLPACK) -o cudd_ocamldoc -title "Interface to CUDD library" -intro introduction.odoc -intf $(MLMODULES)
+cudd_ocamldoc.mli: cudd.mlpacki $(MLMODULES:%=%.mli)
+	$(OCAMLPACK) -o $@ -intro cudd.mlpacki -level 2 $(MLMODULES:%=%.mli)
 
 mlcuddidl.pdf: mlcuddidl.dvi
 	$(DVIPDF) mlcuddidl.dvi
@@ -192,12 +184,12 @@ mlcuddidl.dvi: cudd_ocamldoc.mli
 dot: $(MLMODULES:%=%.ml)
 	$(OCAMLDOC) -dot -dot-reduce -o cudd.dot $(MLMODULES:%=%.ml)
 
-html: mlcuddidl.odoc cudd_ocamldoc.mli
+html: mlcuddidl.odoci cudd_ocamldoc.mli
 	mkdir -p tmp
 	cp cudd_ocamldoc.mli tmp/cudd.mli
 	(cd tmp; $(OCAMLC) $(OCAMLINC) -c cudd.mli)
 	mkdir -p html
-	$(OCAMLDOC) $(OCAMLINC) -I tmp -html -d html -colorize-code -intro mlcuddidl.odoc tmp/cudd.mli
+	$(OCAMLDOC) $(OCAMLINC) -I tmp -html -d html -colorize-code -intro mlcuddidl.odoci tmp/cudd.mli
 
 homepage: html mlcuddidl.pdf
 	hyperlatex index
