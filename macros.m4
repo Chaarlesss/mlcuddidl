@@ -1,201 +1,246 @@
 dnl This file is part of the MLCUDDIDL Library, released under LGPL license.
 dnl Please read the COPYING file packaged in the distribution
-dnl
-changequote([[, ]])dnl
-dnl
-dnl
-dnl ***************************************************************************
-dnl Macros to wrap the transformation DdNode* en node__t
-dnl ***************************************************************************
-dnl
-dnl Unary operations: name of the arg. of type node__t is no,
-dnl Binary operations: no1, no2
-dnl Ternary operations: no1,no2,no3
-dnl
-dnl ===========================================================================
-dnl Check identity of the managers
-dnl ===========================================================================
-dnl
-define([[CHECK_MAN2]],
-[[if (no1.man!=no2.man){ \
-  caml_invalid_argument(\"Dd: binary function called with nodes belonging to different managers !\"); \
-}]])dnl
-dnl
-define([[CHECK_MAN3]],
-[[if (no1.man!=no2.man || no1.man!=no3.man){ \
-  caml_invalid_argument(\"Dd: ternary function called with nodes belonging to different managers !\"); \
-}]])dnl
-dnl
-dnl ===========================================================================
-dnl Macros for calling sequences
-dnl ===========================================================================
-dnl
-dnl The number(s) indicates in which order the arguments are applied
-dnl
-define([[VAL_OF_MAN]],
-[[quote(call, "
-Begin_roots1(_v_man);
-_res = $1(man->man);
-End_roots();
-")]])dnl
-define([[UNIT_OF_MAN_VAL]],
-[[quote(call, "
-Begin_roots1(_v_man);
-$1(man->man,v);
-End_roots();
-")]])dnl
-define([[NO_OF_NO]],
-[[quote(call, "
-Begin_roots1(_v_no);
-_res.man = no.man;
-_res.node = $1(no.node);
-End_roots();
-")]])dnl
-define([[NO_OF_MAN_NO]],
-[[quote(call, "
-Begin_roots1(_v_no);
-_res.man = no.man;
-_res.node = $1(no.man->man,no.node);
-End_roots();
-")]])dnl
-define([[NO_OF_MAN_NO12]],
-[[quote(call,
-"CHECK_MAN2();
-Begin_roots2(_v_no1,_v_no2);
-_res.man = no1.man;
-_res.node = $1(no1.man->man,no1.node,no2.node);
-End_roots();
-")]])dnl
-define([[NO_OF_MAN_NO21]],
-[[quote(call,
-"CHECK_MAN2();
-Begin_roots2(_v_no1,_v_no2);
-_res.man = no1.man;
-_res.node = $1(no1.man->man,no2.node,no1.node);
-End_roots();
-")]])dnl
-define([[NO_OF_MAN_NO123]],
-[[quote(call,
-"CHECK_MAN3();
-Begin_roots3(_v_no1,_v_no2,_v_no3);
-_res.man = no1.man;
-_res.node = $1(no1.man->man,no1.node,no2.node,no3.node);
-End_roots();
-")]])dnl
-define([[NO_OF_MAN_NO231]],
-[[quote(call,
-"CHECK_MAN3();
-Begin_roots3(_v_no1,_v_no2,_v_no3);
-_res.man = no1.man;
-_res.node = $1(no1.man->man,no2.node,no3.node,no1.node);
-End_roots();
-")]])dnl
-dnl
-dnl ===========================================================================
-dnl Macro for subset or superset approximation functions on BDDs
-dnl ===========================================================================
-dnl
-define([[SUBSUPERSET]],
-[[quote(call,"
-Begin_roots1(_v_no);
-_res.man=no.man; _res.node = $1(no.man->man,no.node,nvars,threshold);
-End_roots();
-")]])dnl
-dnl
-dnl ===========================================================================
-dnl Macro for decomposition functions on BDDs
-dnl ===========================================================================
-dnl
-define([[DECOMP]],[[
-quote(MLI,"(** [$2]. *)")
-quote(MLMLI,"external $1: 'a t -> ('a t * 'a t) option = \"camlidl_bdd_$1\"")
-quote(C,"
-value camlidl_bdd_$1(value _v_no)
-{
-  CAMLparam1(_v_no); CAMLlocal4(_v_res,_v_a,_v_b,_v_pair);
-  bdd__t no;
-  int res;
-  DdNode** tab;
-  bdd__t a;
-  bdd__t b;
 
-  camlidl_cudd_node_ml2c(_v_no,&no);
-  res = $2(no.man->man,no.node,&tab);
-  switch(res){
-  case 0:
-    caml_failwith(\"Bdd.$1: decomposition function failed (probably CUDD_OUT_OF_MEM)\");
-    break;
-  case 1:
-    _v_res = Val_int(0);
-    cuddDeref(tab[0]);
-    free(tab);
-    break;
-  case 2:
-    a.man = b.man = no.man;
-    a.node = tab[0];
-    b.node = tab[1];
-    cuddDeref(a.node);
-    _v_a = camlidl_cudd_bdd_c2ml(&a);
-    cuddDeref(b.node);
-    _v_b = camlidl_cudd_bdd_c2ml(&b);
-    _v_pair = alloc_small(0,2);
-    Field(_v_pair,0) = _v_a;
-    Field(_v_pair,1) = _v_b;
-    _v_res = alloc_small(0,1);
-    Field(_v_res,0) = _v_pair;
-    free(tab);
-    break;
-  }
-  CAMLreturn(_v_res);
-}")
-]])dnl
-dnl
-dnl ===========================================================================
-dnl Macro for applying unary and binary operations on ADDs
-dnl ===========================================================================
-dnl
-define([[APPLYBINOP]],[[quote(call,
-"CHECK_MAN2();
-Begin_roots2(_v_no1,_v_no2);
-_res.man = no1.man;
-_res.node = Cudd_addApply(no1.man->man,$1,no1.node,no2.node);
-End_roots();
-")]])dnl
-dnl
-define([[APPLYUNOP]],[[quote(call,"
-Begin_roots1(_v_no);
-_res.man = no.man;
-_res.node = Cudd_addMonadicApply(no.man->man,$1,no.node);
-End_roots();
-")]])dnl
-dnl
-dnl
-dnl ***************************************************************************
-dnl Macros for matrix multiplication on ADDs
-dnl ***************************************************************************
-dnl
-define([[MATMUL]],[[
-value $1(value _v_array, value _v_no1, value _v_no2)
-{
-  CAMLparam3(_v_array,_v_no1,_v_no2); CAMLlocal1(_v_res);
-  int i,size;
-  DdNode** array;
-  node__t no,no1,no2;
+changequote([[, ]])
 
-  camlidl_cudd_node_ml2c(_v_no1,&no1);
-  camlidl_cudd_node_ml2c(_v_no2,&no2);
-  CHECK_MAN2();
-  size = Wosize_val(_v_array);
-  array = malloc(size * sizeof(DdNode*));
-  for (i=0; i<size; i++){
-    value _v_index = Field(_v_array,i);
-    int index = Int_val(_v_index);
-    array[i] = Cudd_bddIthVar(no1.man->man, index);
+dnl **********************************************************************
+dnl General wrappers
+dnl **********************************************************************
+
+define([[FUN_1]],[[
+CAMLprim cudd_caml_$1_$2(value v1)
+{
+  CAMLparam1(v1);
+  $3 x1 = cudd_caml_$3_ml2c(v1);
+  ifelse($4,[[unit]],,[[$4 xr;]])
+  ifelse($5,[[]],[[ifelse($4,[[unit]],,[[xr=]])$2(x1);]],$5)
+  value vr = ifelse($4,[[unit]],[[Val_unit]],[[cudd_caml_$4_c2ml(xr)]]);
+  CAMLreturn vr;
+}
+]])
+
+define([[FUN_2]],[[
+CAMLprim cudd_caml_$1_$2(value v1, value v2)
+{
+  CAMLparam2(v1,v2);
+  $3 x1 = cudd_caml_$3_ml2c(v1);
+  $4 x2 = cudd_caml_$4_ml2c(v2);
+  ifelse($5,[[unit]],,[[$5 xr;]])
+  ifelse($6,[[]],[[ifelse($5,[[unit]],,[[xr=]])$2(x1,x2);]],$6)
+  value vr = ifelse($5,[[unit]],[[Val_unit]],[[cudd_caml_$5_c2ml(xr)]]);
+  CAMLreturn vr;
+}
+]])
+define([[FUN_3]],[[
+CAMLprim cudd_caml_$1_$2(value v1, value v2, value v3)
+{
+  CAMLparam3(v1,v2,v3);
+  $3 x1 = cudd_caml_$3_ml2c(v1);
+  $4 x2 = cudd_caml_$4_ml2c(v2);
+  $5 x3 = cudd_caml_$5_ml2c(v3);
+  ifelse($6,[[unit]],,[[$6 xr;]])
+  ifelse($7,[[]],[[ifelse($6,[[unit]],,[[xr=]])$2(x1,x2,x3);]],$7)
+  value vr = ifelse($6,[[unit]],[[Val_unit]],[[cudd_caml_$6_c2ml(xr)]]);
+  CAMLreturn vr;
+}
+]])
+define([[FUN_4]],[[
+CAMLprim cudd_caml_$1_$2(value v1, value v2, value v3, value v4)
+{
+  CAMLparam4(v1,v2,v3,v4);
+  $3 x1 = cudd_caml_$3_ml2c(v1);
+  $4 x2 = cudd_caml_$4_ml2c(v2);
+  $5 x3 = cudd_caml_$5_ml2c(v3);
+  $6 x4 = cudd_caml_$6_ml2c(v4);
+  ifelse($7,[[unit]],,[[$7 xr;]])
+  ifelse($8,[[]],[[ifelse($7,[[unit]],,[[xr=]])$2(x1,x2,x3,x4);]],$8)
+  value vr = ifelse($7,[[unit]],[[Val_unit]],[[cudd_caml_$7_c2ml(xr)]]);
+  CAMLreturn vr;
+}
+]])
+define([[FUN_5]],[[
+CAMLprim cudd_caml_$1_$2(value v1, value v2, value v3, value v4, value v5)
+{
+  CAMLparam5(v1,v2,v3,v4,v5);
+  $3 x1 = cudd_caml_$3_ml2c(v1);
+  $4 x2 = cudd_caml_$4_ml2c(v2);
+  $5 x3 = cudd_caml_$5_ml2c(v3);
+  $6 x4 = cudd_caml_$6_ml2c(v4);
+  $7 x5 = cudd_caml_$7_ml2c(v5);
+  ifelse($8,[[unit]],,[[$8 xr;]])
+  ifelse($9,[[]],[[ifelse($8,[[unit]],,[[xr=]])$2(x1,x2,x3,x4,x5);]],$9)
+  value vr = ifelse($8,[[unit]],[[Val_unit]],[[cudd_caml_$8_c2ml(xr)]]);
+  CAMLreturn vr;
+}
+]])
+define([[FUN_6]],[[
+CAMLprim cudd_caml_$1_$2(value v1, value v2, value v3, value v4, value v5,value v6)
+{
+  CAMLparam5(v1,v2,v3,v4,v5);CAMLxparam1(v6);
+  $3 x1 = cudd_caml_$3_ml2c(v1);
+  $4 x2 = cudd_caml_$4_ml2c(v2);
+  $5 x3 = cudd_caml_$5_ml2c(v3);
+  $6 x4 = cudd_caml_$6_ml2c(v4);
+  $7 x5 = cudd_caml_$7_ml2c(v5);
+  $8 x6 = cudd_caml_$8_ml2c(v6);
+  ifelse($9,[[unit]],,[[$9 xr;]])
+  ifelse($10,[[]],[[ifelse($9,[[unit]],,[[xr=]])$2(x1,x2,x3,x4,x5);]],$10)
+  value vr = ifelse($9,[[unit]],[[Val_unit]],[[cudd_caml_$9_c2ml(xr)]]);
+  CAMLreturn vr;
+}
+]])
+
+
+
+
+define([[FUN_1_unsafe]],[[
+CAMLprim cudd_caml_$1_$2(value v1)
+{
+  $3 x1 = cudd_caml_$3_ml2c(v1);
+  ifelse($4,[[unit]],,[[$4 xr;]])
+  ifelse($5,[[]],[[ifelse($4,[[unit]],,[[xr=]])$2(x1);]],$5)
+  value vr = ifelse($4,[[unit]],[[Val_unit]],[[cudd_caml_$4_c2ml(xr)]]);
+  return vr;
+}
+]])
+define([[FUN_2_unsafe]],[[
+CAMLprim cudd_caml_$1_$2(value v1, value v2)
+{
+  $3 x1 = cudd_caml_$3_ml2c(v1);
+  $4 x2 = cudd_caml_$4_ml2c(v2);
+  ifelse($5,[[unit]],,[[$5 xr;]])
+  ifelse($6,[[]],[[ifelse($5,[[unit]],,[[xr=]])$2(x1,x2);]],$6)
+  value vr = ifelse($5,[[unit]],[[Val_unit]],[[cudd_caml_$5_c2ml(xr)]]);
+  return vr;
+}
+]])
+define([[FUN_node1_1]],[[
+CAMLprim cudd_caml_$1_$2(value v1, value v2)
+{
+  CAMLparam2(v1,v2);
+  $3 x1 = cudd_caml_$3_ml2c(v1);
+  $4 x2 = cudd_caml_$4_ml2c(v2);
+  $5 xr;
+  ifelse($6,[[]],[[xr = $2(x1.man->man,x1.node,x2);]])
+  value vr = cudd_caml_$5_c2ml(xr);
+  CAMLreturn vr;
+}
+]])
+define([[FUN_node2]],[[
+CAMLprim cudd_caml_$1_$2(value v1, value v2)
+{
+  CAMLparam2(v1,v2);
+  $3 x1 = cudd_caml_$3_ml2c(v1);
+  $4 x2 = cudd_caml_$4_ml2c(v2);
+  if (x1.man!=x2.man){
+    caml_invalid_argument("Cudd: binary function called with nodes belonging to different managers !");
   }
-  no.man = no1.man;
-  no.node = $2(no1.man->man,no1.node,no2.node,array,size);
-  _v_res = camlidl_cudd_node_c2ml(&no);
-  free(array);
-  CAMLreturn(_v_res);
-}]])dnl
-dnl
+  $5 xr;
+  ifelse($6,[[]],[[xr = $2(x1.man->man,x1.node,x2.node);]])
+  value vr = cudd_caml_$5_c2ml(xr);
+  CAMLreturn vr;
+}
+]])
+define([[FUN_node2_1]],[[
+CAMLprim cudd_caml_$1_$2(value v1, value v2)
+{
+  CAMLparam3(v1,v2,v3);
+  $3 x1 = cudd_caml_$3_ml2c(v1);
+  $4 x2 = cudd_caml_$4_ml2c(v2);
+  $5 x3 = cudd_caml_$5_ml2c(v3);
+  if (x1.man!=x2.man)
+    caml_invalid_argument("Cudd: binary function called with nodes belonging to different managers !");
+  }
+  $6 xr;
+  ifelse($7,[[]],[[xr = $2(x1.man->man,x1.node,x2.node,x3.node);]])
+  value vr = cudd_caml_$6_c2ml(xr);
+  CAMLreturn vr;
+}
+]])
+define([[FUN_node3]],[[
+CAMLprim cudd_caml_$1_$2(value v1, value v2, value v3)
+{
+  CAMLparam3(v1,v2,v3);
+  $3 x1 = cudd_caml_$3_ml2c(v1);
+  $4 x2 = cudd_caml_$4_ml2c(v2);
+  $5 x3 = cudd_caml_$5_ml2c(v3);
+  if (x1.man!=x2.man || x1.man!=x3.man)
+    caml_invalid_argument("Cudd: ternary function called with nodes belonging to different managers !");
+  $6 xr;
+  ifelse($7,[[]],[[xr = $2(x1.man->man,x1.node,x2.node,x3.node);]])
+  value vr = cudd_caml_$6_c2ml(xr);
+  CAMLreturn vr;
+}
+]])
+define([[FUN_node1_node]],[[
+CAMLprim cudd_caml_$1_$2(value v1)
+{
+  CAMLparam1(v1);
+  $3 x1 = cudd_caml_$3_ml2c(v1);
+  $4 xr;
+  xr.man = x1.man;
+  xr.node = $2(x1.node);
+  value vr = cudd_caml_$4_c2ml(xr);
+  CAMLreturn vr;
+}
+]])
+define([[FUN_node1_1_node]],[[
+CAMLprim cudd_caml_$1_$2(value v1, value v2)
+{
+  CAMLparam2(v1,v2);
+  $3 x1 = cudd_caml_$3_ml2c(v1);
+  $4 x2 = cudd_caml_$4_ml2c(v2);
+  $5 xr;
+  xr.man = x1.man;
+  xr.node = $2(x1.man->man,x1.node,x2);
+  value vr = cudd_caml_$5_c2ml(xr);
+  CAMLreturn vr;
+}
+]])
+define([[FUN_node2_node]],[[
+CAMLprim cudd_caml_$1_$2(value v1, value v2)
+{
+  CAMLparam2(v1,v2);
+  $3 x1 = cudd_caml_$3_ml2c(v1);
+  $4 x2 = cudd_caml_$4_ml2c(v2);
+  if (x1.man!=x2.man)
+    caml_invalid_argument("Cudd: binary function called with nodes belonging to different managers !");
+  $5 xr;
+  xr.man = x1.man;
+  xr.node = $2(x1.man->man,x1.node,x2.node);
+  value vr = cudd_caml_$5_c2ml(xr);
+  CAMLreturn vr;
+}
+]])
+define([[FUN_node2_1_node]],[[
+CAMLprim cudd_caml_$1_$2(value v1, value v2)
+{
+  CAMLparam3(v1,v2,v3);
+  $3 x1 = cudd_caml_$3_ml2c(v1);
+  $4 x2 = cudd_caml_$4_ml2c(v2);
+  $5 x3 = cudd_caml_$5_ml2c(v3);
+  if (x1.man!=x2.man)
+    caml_invalid_argument("Cudd: binary function called with nodes belonging to different managers !");
+  $6 xr;
+  xr.man = x1.man;
+  xr.node = $2(x1.man->man,x1.node,x2.node,x3);
+  value vr = cudd_caml_$6_c2ml(xr);
+  CAMLreturn vr;
+}
+]])define([[FUN_node3_node]],[[
+CAMLprim cudd_caml_$1_$2(value v1, value v2)
+{
+  CAMLparam3(v1,v2,v3);
+  $3 x1 = cudd_caml_$3_ml2c(v1);
+  $4 x2 = cudd_caml_$4_ml2c(v2);
+  $5 x3 = cudd_caml_$5_ml2c(v3);
+  if (x1.man!=x2.man || x1.man!=x3.man){
+    caml_invalid_argument("Cudd: ternary function called with nodes belonging to different managers !");
+  }
+  $6 xr;
+  xr.man = x1.man;
+  xr.node = $2(x1.man->man,x1.node,x2.node,x3.node);
+  value vr = cudd_caml_$6_c2ml(xr);
+  CAMLreturn vr;
+}
+]])

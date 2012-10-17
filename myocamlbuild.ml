@@ -196,7 +196,6 @@ let _ = dispatch begin function
 	containing these tags. *)
       ocamldoc_rules ();
       ocamlpack_rules();
-      camlidl_rules();
       ()
   | _ -> ()
 end
