@@ -91,6 +91,10 @@ module B : sig
     ('a, 'b) bdd -> (('a, any) bdd * ('a, any) bdd) option
   val vardisjdecomp :
     ('a, 'b) bdd -> (('a, any) bdd * ('a, any) bdd) option
+  type ('a,'b) inspect =
+    | Bool of bool
+    | Ite of int * ('a,'b) bdd * ('a,'b) bdd
+  external inspect : ('a,'b) bdd -> ('a,'b) inspect = "cudd_caml_bdd_inspect"
   external dthen : ('a, 'b) bdd -> ('a, 'b) bdd = "cudd_caml_bdd_Cudd_T"
   external delse : ('a, 'b) bdd -> ('a, 'b) bdd = "cudd_caml_bdd_Cudd_E"
   external dtrue : 'a Man.t -> 'a atom = "cudd_caml_bdd_dtrue"
@@ -251,6 +255,10 @@ module A : sig
   val matrix_multiply : int array -> add -> add -> add
   val times_plus : int array -> add -> add -> add
   val triangle : int array -> add -> add -> add
+  type inspect =
+    | Leaf of float
+    | Ite of int * add * add
+  external inspect : add -> inspect = "cudd_caml_avdd_inspect"
   external neg : add -> add = "cudd_caml_add"
   external log : add -> add = "cudd_caml_add_log"
   external is_leq : add -> add -> bool = "cudd_caml_add_Cudd_addLeq"
@@ -260,4 +268,10 @@ module A : sig
   external to_bdd_threshold : add -> threshold:float -> (Man.d, any) bdd = "camlidl_cudd_add_Cudd_addBddThreshold"
   external to_bdd_strictthreshold : add -> threshold:float -> add = "camlidl_cudd_add_Cudd_addBddStrictThreshold"
   external to_bdd_interval : add -> lower:float -> upper:float -> add = "camlidl_cudd_add_Cudd_addBddIntervall"
+end
+module V = struct
+  type 'a inspect =
+    | Leaf of 'a
+    | Ite of int * 'a vdd * 'a vdd
+  external inspect : 'a vdd -> 'a inspect = "cudd_caml_avdd_inspect"
 end

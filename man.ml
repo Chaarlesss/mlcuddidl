@@ -20,10 +20,10 @@ type error =
   | MAX_MEM_EXCEEDED
   | INVALID_ARG
   | INTERNAL_ERROR
-external set_gc : int -> (unit -> unit) -> (unit -> unit) -> unit
+external set_gc : heap:int -> gc:(unit -> unit) -> reordering:(unit -> unit) -> unit
   = "camlidl_cudd_set_gc"
 external srandom : int -> unit = "camlidl_cudd_man_srandom"
-external _make : bool -> int -> int -> int -> int -> int -> 'a t
+external _make : caml:bool -> numVars:int -> numVarsZ:int -> numSlots:int -> cacheSize:int -> maxMemory:int -> 'a t
   = "camlidl_cudd_man_Cudd_Init_bytecode" "camlidl_cudd_man_Cudd_Init"
 external debugcheck : 'a t -> bool = "camlidl_cudd_man_Cudd_DebugCheck"
 external check_keys : 'a t -> int = "camlidl_cudd_man_Cudd_CheckKeys"
@@ -141,15 +141,15 @@ external get_zddvar_nb : 'a t -> int = "cudd_man_Cudd_ReadZddSize"
 (* Definitions *)
 (* ********************************************************************** *)
 
-let _ = set_gc 1000000 Gc.full_major (fun () -> ())
+let _ = set_gc heap:1000000 gc:Gc.full_major gcreorder:Gc.full_major
 let _ = Callback.register_exception "invalid argument exception" (Invalid_argument "")
 
 let print_limit = ref 30
 
 let make_d ?(numVars=0) ?(numVarsZ=0) ?(numSlots=0) ?(cacheSize=0) ?(maxMemory=0) () =
-  _make false numVars numVarsZ numSlots cacheSize maxMemory
+  _make caml:false ~numVars ~numVarsZ ~numSlots ~cacheSize ~maxMemory
 let make_v ?(numVars=0) ?(numVarsZ=0) ?(numSlots=0) ?(cacheSize=0) ?(maxMemory=0) () =
-  _make true numVars numVarsZ numSlots cacheSize maxMemory
+  _make caml:true ~numVars ~numVarsZ ~numSlots ~cacheSize ~maxMemory
 
 let string_of_reorder = function
   | REORDER_SAME -> "SAME"

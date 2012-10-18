@@ -368,8 +368,6 @@ val vectorcompose : ?memo:Memo.t -> 'a t array -> 'a t -> 'a t
 ")
 
 quote(ML,"
-external _vectorcompose : 'a t array -> 'a t -> 'a t = \"camlidl_bdd_vectorcompose\"
-external _vectorcompose_memo : Memo.t -> 'a t array -> 'a t -> 'a t = \"camlidl_bdd_vectorcompose_memo\"
 let vectorcompose ?memo tbdd bdd =
   match memo with
   | Some(memo) ->

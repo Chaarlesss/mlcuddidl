@@ -14,89 +14,103 @@
 
 #include "caml/mlvalues.h"
 
-typedef value mlvalue;
-
-typedef DdManager* man_t;
-typedef DdNode* node_t;
-
 typedef struct CuddauxHash* hash__t;
 typedef struct CuddauxCache* cache__t;
 typedef struct CuddauxMan* man__t;
-typedef struct memo__t* memo__t;
+typedef struct memo__t memo__t;
 typedef struct node__t node__t;
+typedef struct node__t bdd__t;
 typedef Cudd_ReorderingType reorder_t;
 typedef Cudd_AggregationType aggregation_t;
 typedef Cudd_ErrorType error_t;
+typedef Cudd_LazyGroupType lazygroup_t;
+typedef Cudd_VariableType variabletype_t;
+typedef int mtr_t;
+
+extern struct custom_operations cudd_caml_custom_hash;
+extern struct custom_operations cudd_caml_custom_cache;
+extern struct custom_operations cudd_caml_custom_man;
+extern struct custom_operations cudd_caml_custom_node;
+extern struct custom_operations cudd_caml_custom_bdd;
+extern struct custom_operations cudd_caml_custom_pid;
 
 
-/* man */
+/* ********************************************************************** */
+/* man.ml */
+/* ********************************************************************** */
 static inline man__t cudd_caml_man__t_ml2c(value val)
 { return *((man__t*)(Data_custom_val(val))); }
 value cudd_caml_man__t_c2ml(man__t man);
-static inline man_t cudd_caml_man_t_ml2c(value val)
-{ return ((man__t*)(Data_custom_val(val)))->man; }
+static inline DdManager* cudd_caml_man_t_ml2c(value val)
+{
+  man__t man = cudd_caml_man__t_ml2c(val);
+  return man->man;
+}
+static inline reorder_t cudd_caml_reorder_t_ml2c(value val) { return Int_val(val); }
+static inline value cudd_caml_reorder_t_c2ml(reorder_t x) { return Val_int(x); }
+static inline aggregation_t cudd_caml_aggregation_t_ml2c(value val) { return Int_val(val); }
+static inline value cudd_caml_aggregation_t_c2ml(aggregation_t x) { return Val_int(x); }
+static inline error_t cudd_caml_error_t_ml2c(value val){ return Int_val(val); }
+static inline value cudd_caml_error_t_c2ml(error_t x) { return Val_int(x); }
+static inline lazygroup_t cudd_caml_lazygroup_t_ml2c(value val) { return Int_val(val); }
+static inline value cudd_caml_lazygroup_t_c2ml(lazygroup_t x) { return Val_int(x); }
+static inline variabletype_t cudd_caml_variabletype_t_ml2c(value val) { return Int_val(val); }
+static inline value cudd_caml_variabletype_t_c2ml(variabletype_t x) { return Val_int(x); }
+static inline mtr_t cudd_caml_mtr_t_ml2c(value val) { int x = Int_val(val); return x==0 ? 0 : 4; }
+static inline value cudd_caml_mtr_t_c2ml(int x) { int y = x==4 ? 1 : 0; return Val_int(y); }
 
-static inline node__t cudd_caml_node__t_ml2c(value val)
-{ return *((node__t*)(Data_custom_val(val))); }
-value cudd_caml_node__t_c2ml(node__t man);
-static inline node_t cudd_caml_node_t_ml2c(value val)
-{ return ((node__t*)(Data_custom_val(x)))->node; }
+/* ********************************************************************** */
+/* hash.ml, cache.ml and memo.ml */
+/* ********************************************************************** */
 
-#define DdManager_of_vnode(x) ((node__t*)(Data_custom_val(x)))->man->man
-
-
-
-static inline Cudd_ReorderingType cudd_caml_ReorderingType_ml2c(value val)
-{ return Int_val(val) }
-static inline value cudd_caml_ReorderingType_c2ml(Cudd_ReorderingType x)
-{ return Val_int(x); }
-static inline Cudd_AggregationType cudd_caml_AggregationType_ml2c(value val)
-{ return Int_val(val) }
-static inline value cudd_caml_AggregationType_c2ml(Cudd_AggregationType x)
-{ return Val_int(x); }
-static inline Cudd_ErrorType cudd_caml_ErrorType_ml2c(value val)
-{ return Int_val(val) }
-static inline value cudd_caml_ErrorType_c2ml(Cudd_ErrorType x)
-{ return Val_int(x); }
-static inline Cudd_LazyGroupType cudd_caml_LazyGroupType_ml2c(value val)
-{ return Int_val(val) }
-static inline value cudd_caml_LazyGroupType_c2ml(Cudd_LazyGroupType x)
-{ return Val_int(x); }
-static inline Cudd_VariableType cudd_caml_VariableType_ml2c(value val)
-{ return Int_val(val) }
-static inline value cudd_caml_VariableType_c2ml(Cudd_VariableType x)
-{ return Val_int(x); }
-static inline Cudd_mtr cudd_caml_mtr_ml2c(value val)
-{ int x = Int_val(val); return x==0 ? 0 : 4; }
-static inline value cudd_caml_mtr_c2ml(int x)
-{ int y = x==4 ? 1 : 0; return Val_int(y); }
-
-static inline hash__t cudd_caml_hash_ml2c(value val)
+static inline hash__t cudd_caml_hash__t_ml2c(value val)
 { return *((hash__t*)(Data_custom_val(val))); }
-static inline cache__t cudd_caml_cache_ml2c(value val)
+static inline cache__t cudd_caml_cache__t_ml2c(value val)
 { return *((cache__t*)(Data_custom_val(val))); }
 static inline pid cudd_caml_pid_ml2c(value val)
 { return *((pid*)(Data_custom_val(val))); }
-static inline struct node__t cudd_caml_node_ml2c(value val)
-{ return *(node__t*)(Data_custom_val(val)); }
+memo__t cudd_caml__memo_t_ml2c(value val);
 
-value cudd_caml_hash_c2ml(hash__t hash);
-value cudd_caml_cache_c2ml(cache__t cache);
-value cudd_caml_pid_c2ml(pid pid);
-value cudd_caml_node_c2ml(struct node__t* no);
-value cudd_caml_bdd_c2ml(struct node__t* bdd);
+static inline value cudd_caml_hash__t_c2ml(hash__t hash)
+{
+  value val = caml_alloc_custom(&cudd_caml_custom_hash, sizeof(hash__t), 0, 1);
+  *(hash__t*)(Data_custom_val(val)) = hash;
+  return val;
+}
+static inline value cudd_caml_cache__t_c2ml(cache__t cache)
+{
+  value val = caml_alloc_custom(&cudd_caml_custom_cache, sizeof(cache__t), 0, 1);
+  *(cache__t*)(Data_custom_val(val)) = cache;
+  return val;
+}
+static inline value cudd_caml_pid_c2ml(pid pidd)
+{
+  value val = caml_alloc_custom(&cudd_caml_custom_pid, sizeof(pid), 0, 1);
+  *(pid*)(Data_custom_val(val)) = pidd;
+  return val;
+}
+
+/* ********************************************************************** */
+/* decision diagrams */
+/* ********************************************************************** */
+
+static inline node__t cudd_caml_node__t_ml2c(value val)
+{ return *((node__t*)(Data_custom_val(val))); }
+value cudd_caml_node__t_c2ml(node__t no);
+value cudd_caml_bdd__t_c2ml(node__t no);
+static inline value cudd_caml_bddnode__t_c2ml(bool is_bdd,node__t no)
+{ return is_bdd ? cudd_caml_bdd__t_c2ml(no) : cudd_caml_node__t_c2ml(no); }
+
+/* Variations */
+static inline DdNode* cudd_caml_node_t_ml2c(value val)
+{ return ((node__t*)(Data_custom_val(val)))->node; }
+
 /*
-static inline void cudd_caml_mlvalue_ml2c(value val, value* p)
-{ *p = val; }
-static inline value cudd_caml_mlvalue_c2ml(value* p)
-{ return *p; }
-#define man_of_vmanager(x) (*(man__t*)(Data_custom_val(x)))
-#define node_of_vnode(x) ((node__t*)(Data_custom_val(x)))
-*/
+#define DdManager_of_vnode(x) ((node__t*)(Data_custom_val(x)))->man->man
 #define DdManager_of_vmanager(x) (*(man__t*)(Data_custom_val(x)))->man
 #define DdManager_of_vnode(x) ((node__t*)(Data_custom_val(x)))->man->man
 #define DdNode_of_vnode(x) ((node__t*)(Data_custom_val(x)))->node
-
+*/
 
 value cudd_caml_set_gc(value _v_heap, value _v_gc, value _v_reordering);
 int cudd_caml_garbage(DdManager* dd, const char* s, void* data);

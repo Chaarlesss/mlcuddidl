@@ -45,7 +45,7 @@ val print_limit : int ref
     of minterms to be printed. Above this numbers, only statistics on
     the BDD is printed. *)
 
-external set_gc: int -> (unit -> unit) -> (unit -> unit) -> unit = "camlidl_cudd_set_gc"
+external set_gc : heap:int -> gc:(unit -> unit) -> reordering:(unit -> unit) -> unit = "camlidl_cudd_set_gc"
 (** [set_gc max gc reordering] performs several things:
     - It sets the ratio used/max for BDDs abstract values to
     [1/max] (see the OCaml manual for details). 1 000 000 is a

@@ -124,6 +124,21 @@ let ocamlpack_rules () =
   ;
   ()
 
+let m4_rules () =
+  rule "m4: macros.m4 & file.m4 -> file"
+    ~deps:["macros.m4"; "%.m4"]
+    ~prod:["%"]
+    (begin fun env build ->
+      let target = env "%" in
+      Seq [
+	rm_f target;
+	Cmd (S[
+	  A m4; P (env "macros.m4"); P (env "%.m4"); Sh ">"; Px target
+	])
+      ]
+     end);
+  ()
+
 let camlidl_rules () =
   rule "camlidl: .idl & idl* & macros.m4 -> _tmp.ml _tmp.mli _tmp_stubs.c"
     ~deps:["%.idl";
@@ -196,6 +211,9 @@ let _ = dispatch begin function
 	containing these tags. *)
       ocamldoc_rules ();
       ocamlpack_rules();
+      m4_rules();
+       (* C compile flags *)
+      flag ["c"; "compile"] & S[A"-ccopt"; A"-std=c99"; A"-ccopt"; A"-I.."; A"-ccopt"; A"-I../cudd-2.4.2/cudd"; A"-ccopt"; A"-I../cudd-2.4.2/mtr"; A"-ccopt"; A"-I../cudd-2.4.2/epd"; A"-ccopt"; A"-I../cudd-2.4.2/st"; A"-ccopt"; A"-I../cudd-2.4.2/util"];
       ()
   | _ -> ()
 end

@@ -443,7 +443,7 @@ static inline DdNode* cuddauxCommonLookup3(struct common* common, DdNode* f, DdN
   DdNode* res = NULL;
   switch (common->memo.discr){
   case Global:
-    res = cuddCacheLookup(common->man->man,(ptruint)common->pid,f,g,h);
+    res = cuddCacheLookup(common->man->man,(uintptr_t)common->pid,f,g,h);
     break;
   case Cache:
     {
@@ -519,7 +519,7 @@ static inline DdNode* cuddauxCommonInsert3(struct common* common, DdNode* f, DdN
 {
   switch (common->memo.discr){
   case Global:
-    cuddCacheInsert(common->man->man,(ptruint)common->pid,f,g,h,res);
+    cuddCacheInsert(common->man->man,(uintptr_t)common->pid,f,g,h,res);
     return res;
   case Cache:
     {

@@ -3,6 +3,11 @@
 /* This file is part of the MLCUDDIDL Library, released under LGPL license.
    Please read the COPYING file packaged in the distribution  */
 
+#include "caml/fail.h"
+#include "caml/alloc.h"
+#include "caml/custom.h"
+#include "caml/memory.h"
+#include "caml/callback.h"
 #include "cudd_caml.h"
 
 /* ********************************************************************** */
@@ -525,6 +530,35 @@ FUN_2(bdd,is_var_dependent,int,node__t,bool,
 	DdNode* v = Cudd_bddIthVar(x2.man->man,x1);
 	xr = Cudd_bddVarIsDependent(x2.man->man, x2.node, v);
 	]])
+
+
+value cudd_caml_bdd_inspect(value vno)
+{
+  CAMLparam1(vno); CAMLlocal3(vres,vthen,velse);
+  node__t no = cudd_caml_node__ml2c(vno);
+  DdNode* N = Cudd_Regular(no.node);
+  if (cuddIsConstant(N)){
+   vres = caml_alloc_small(1,0);
+   Field(vres,0) = Val_bool(no.node == DD_ONE(no.man->man));
+  }
+  else {
+    node__t bthen,belse;
+    bthen.man = belse.man = no.man;
+    bthen.node = cuddT(N);
+    belse.node = cuddE(N);
+    if (Cudd_IsComplement(no.node)) {
+      bthen.node = Cudd_Not(bthen.node);
+      belse.node = Cudd_Not(belse.node);
+    }
+    vthen = cudd_caml_bdd__t_c2ml(bthen);
+    velse = cudd_caml_bdd__t_c2ml(belse);
+    vres = caml_alloc_small(3,1);
+    Field(vres,0) = Val_int(N->index);
+    Field(vres,1) = vthen;
+    Field(vres,2) = velse;
+  }
+  CAMLreturn(vres);
+}
 
 FUN_node1_node(bdd,Cudd_T,node__t,bdd__t,
 	       [[
@@ -1087,6 +1121,30 @@ value cudd_caml_add_matop(value _v_op, value _v_array, value _v_no1, value _v_no
   _v_res = cudd_caml_node__t_c2ml(no);
   free(array);
   CAMLreturn(_v_res);
+}
+
+value cudd_caml_avdd_inspect(value vno)
+{
+  CAMLparam1(vno); CAMLlocal4(vres,vthen,velse,val);
+  node__t no = cudd_caml_node__t_ml2c(vno);
+  if (cuddIsConstant(no.node)){
+    val = Val_DdNode(no.man->caml,no.node);
+    vres = caml_alloc_small(1,0);
+    Field(vres,0) = val;
+  }
+  else {
+    node__t bthen,belse;
+    bthen.man = belse.man = no.man;
+    bthen.node = cuddT(no.node);
+    belse.node = cuddE(no.node);
+    vthen = cudd_caml_node__t_c2ml(bthen);
+    velse = cudd_caml_node__t_c2ml(belse);
+    vres = caml_alloc_small(3,1);
+    Field(vres,0) = Val_int(no.node->index);
+    Field(vres,1) = vthen;
+    Field(vres,2) = velse;
+  }
+  CAMLreturn(vres);
 }
 FUN_node1_node(add,Cudd_addNegate,node__t,node__t)
 FUN_1(add,log,node__t,node__t,

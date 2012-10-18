@@ -4,6 +4,51 @@ dnl Please read the COPYING file packaged in the distribution
 changequote([[, ]])
 
 dnl **********************************************************************
+dnl General conversion functions
+dnl **********************************************************************
+
+dnl arguments: 1:returned value, 2:some (boolean) 3:type 4:value (of type)
+define([[OPTION_c2ml]], [[
+if ($2){
+  value v_$4 = cudd_caml_$3_c2ml($4);
+  Begin_roots(v_$4){
+    $1 = caml_alloc_small(1,0);
+    Field($1,0) = v_$4;
+  } End_roots()
+}
+else
+  v = Val_int(0);
+]])
+dnl arguments: 1:returned value (caml), 2:type 3:array 4:size
+define([[ARRAY_c2ml]], [[
+$1 = caml_alloc($4,0);
+for (int i=0; i<$4; i++){
+  value v_$1_v = cudd_caml_$2_c2ml($3[i]);
+  Store_field($1,iv,);
+}
+]]
+dnl arguments: 1:returned array (of type $3), 2:its size, 3:type 4:value (caml)
+define([[ARRAY_ml2c]], [[
+int $2 = Wosize_val($4);
+$3* $1 = malloc($2*sizeof($3));
+for (int i=0; i<$2; i++){
+  $1[i] = cudd_caml_$3_ml2c(Field($4,i));
+}
+]]
+
+if ($2){
+  value v_$4 = cudd_caml_$3_c2ml($4);
+  Begin_roots(v_$4){
+    $1 = caml_alloc_small(1,0);
+    Field($1,0) = v_$4;
+  } End_roots()
+}
+else
+  v = Val_int(0);
+]])
+
+
+dnl **********************************************************************
 dnl General wrappers
 dnl **********************************************************************
 
