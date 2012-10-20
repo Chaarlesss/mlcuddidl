@@ -435,7 +435,8 @@ man__t camlidl_cudd_tnode_ml2c(value _v_vec, int size, DdNode** vec)
   else
     return NULL;
 }
-value cudd_caml_tnode_c2ml(man__t man, DdNode** vec, int size)
+value camlidl_cudd_tnode_c2ml(man__t man,DdNode** vec, int size)
+
 {
   value _v_res=0,_v_no=0;
   node__t no;

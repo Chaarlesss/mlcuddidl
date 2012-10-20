@@ -125,15 +125,15 @@ let ocamlpack_rules () =
   ()
 
 let m4_rules () =
-  rule "m4: macros.m4 & file.m4 -> file"
-    ~deps:["macros.m4"; "%.m4"]
-    ~prod:["%"]
+  rule "m4: macros.m4 & _caml.c.m4 -> _caml.c"
+    ~deps:["macros.m4"; "%_caml.c.m4"]
+    ~prod:"%_caml.c"
     (begin fun env build ->
-      let target = env "%" in
+      let target = env "%_caml.c" in
       Seq [
 	rm_f target;
 	Cmd (S[
-	  A m4; P (env "macros.m4"); P (env "%.m4"); Sh ">"; Px target
+	  A m4; P (env "macros.m4"); P (env "%_caml.c.m4"); Sh ">"; Px target
 	])
       ]
      end);

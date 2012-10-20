@@ -217,7 +217,7 @@ int Cuddaux_ClassifySupport(DdManager* dd, DdNode* f, DdNode* g, DdNode** common
 /* f is a BDD/ADD node and var a projection function */
 bool Cuddaux_IsVarIn(DdManager* dd, DdNode* f, DdNode* var);
 /* f is a BDD/ADD node and level a level. */
-cuddaux_list_t* Cuddaux_NodesBelowLevel(DdManager* dd, DdNode* f, int level, size_t max, size_t* psize, bool take_background);
+cuddaux_list_t* Cuddaux_NodesBelowLevel(DdManager* dd, DdNode* f, int level, size_t max, int* psize, bool take_background);
 void cuddaux_list_free(cuddaux_list_t* l);
 /* f and h are ADDs */
 DdNode* Cuddaux_addGuardOfNode(DdManager* dd, DdNode* f, DdNode* h);

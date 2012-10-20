@@ -1,48 +1,48 @@
 
-type 'a boolean
-type ('a, 'b) conj
-type pos
-type any
-type var
 type +'a value
 
 type ('a, 'b) t
-type ('a, 'b) bdd  = ('a, 'b boolean) t
-type ('a, 'b) avdd = ('a, 'b value  ) t
+type ('a, 'b) bdd  = ('a,'b) t constraint 'b=[>`none]
+type ('a, 'b) avdd = ('a, 'b value) t
 
 (* All the following types implictly includes the case of constant values (false and true) *)
-type ('a, 'b, 'c) cube = ('a, ('b,  'c)  conj) bdd
-type ('a, 'c) literal  = ('a, (var, 'c)  conj) bdd
-type ('a, 'b) supp     = ('a, ('b,  pos) conj) bdd
-type 'a atom =           ('a, (var, pos) conj) bdd
+type tag_bdd     = [`none]
+type tag_cube    = [`none | `conj]
+type tag_literal = [`none | `conj | `lit]
+type tag_supp    = [`none | `conj | `pos]
+type tag_atom    = [`none | `conj | `lit | `pos]
+type 'a cube    = ('a,tag_bdd) bdd
+type 'a literal = ('a,tag_cube) bdd
+type 'a supp    = ('a,tag_literal) bdd
+type 'a atom    = ('a,tag_atom) bdd
 
 type add    = (Man.d, float) avdd
 type 'a vdd = (Man.v, 'a   ) avdd
 
-external manager : ('a, 'b) t -> 'a Man.t = "cudd_caml_manager"
-external is_cst : ('a, 'b) t -> bool = "cudd_caml_Cudd_IsConstant" "noalloc"
-external topvar : ('a, 'b) t -> int = "cudd_caml_Cudd_NodeReadIndex"
-external support : ('a, 'b) t -> ('a,any) supp = "cudd_caml_Cuddaux_Support"
-external supportsize : ('a, 'b) t -> int = "cudd_caml_Cuddaux_SupportSize"
-external is_var_in : int -> ('a, 'b) t -> bool = "cudd_caml_Cuddaux_is_var_in"
-external vectorsupport : ('a, 'b) t array -> ('a,'c) supp = "cudd_caml_vectorsupport"
-external size : ('a, 'b) t -> int = "cudd_caml_Cudd_DagSize"
-external nbleaves : ('a, 'b) t -> int = "cudd_caml_Cudd_CountLeaves"
-external nbpaths : ('a, 'b) t -> float = "cudd_caml_Cudd_CountPaths"
-external nbminterms : nbvars:int -> ('a, 'b) t -> float = "cudd_caml_Cudd_CountMinterm"
-external density : nbvars:int -> ('a, 'b) t -> float = "cudd_caml_Cudd_Density"
+external manager : ('a, 'b) t -> 'a Man.t = "cudd_caml__manager"
+external is_cst : ('a, 'b) t -> bool = "cudd_caml__Cudd_IsConstant" "noalloc"
+external topvar : ('a, 'b) t -> int = "cudd_caml__Cudd_NodeReadIndex"
+external support : ('a, 'b) t -> ('a,any) supp = "cudd_caml__Cuddaux_Support"
+external supportsize : ('a, 'b) t -> int = "cudd_caml__Cuddaux_SupportSize"
+external is_var_in : int -> ('a, 'b) t -> bool = "cudd_caml__Cuddaux_is_var_in"
+external vectorsupport : ('a, 'b) t array -> ('a,'c) supp = "cudd_caml__vectorsupport"
+external size : ('a, 'b) t -> int = "cudd_caml__Cudd_DagSize"
+external nbleaves : ('a, 'b) t -> int = "cudd_caml__Cudd_CountLeaves"
+external nbpaths : ('a, 'b) t -> float = "cudd_caml__Cudd_CountPath"
+external nbminterms : nbvars:int -> ('a, 'b) t -> float = "cudd_caml__Cudd_CountMinterm"
+external density : nbvars:int -> ('a, 'b) t -> float = "cudd_caml__Cudd_Density"
 
-external is_equal : ('a, 'b) t -> ('a, 'c) t -> bool = "cudd_caml_is_equal"
-external is_equal_when : ('a, 'b) t -> ('a, 'c) t -> care:('a, 'd) bdd -> bool = "cudd_caml_bdd_is_equal_when"
+external is_equal : ('a, 'b) t -> ('a, 'c) t -> bool = "cudd_caml__is_equal"
+external is_equal_when : ('a, 'b) t -> ('a, 'c) t -> care:('a, 'd) bdd -> bool = "cudd_caml__is_equal_when"
 
-external list_of_support: ('a,'b) supp -> int list = "cudd_caml_list_of_support"
-external list_of_cube: ('a,'b,'c) cube -> (int*bool) list = "cudd_caml_list_of_cube"
-external minterm_of_cube: ('a,'b,'c) cube -> Man.tbool array = "cudd_caml_minterm_of_cube"
-external cube_of_minterm: 'a Man.t -> Man.tbool array -> ('a, any, any) cube = "cudd_caml_cube_of_minterm"
+external list_of_support: ('a,'b) supp -> int list = "cudd_caml__list_of_support"
+external list_of_cube: ('a,'b,'c) cube -> (int*bool) list = "cudd_caml__list_of_cube"
+external minterm_of_cube: ('a,'b,'c) cube -> Man.tbool array = "cudd_caml__minterm_of_cube"
+external cube_of_minterm: 'a Man.t -> Man.tbool array -> ('a, any, any) cube = "cudd_caml__cube_of_minterm"
 
-external cofactors : is_bdd:bool -> int -> ('a, 'b) t -> ('a,'b) t * ('a,'b) t = "cudd_caml_cofactors"
-external ite_cst : is_bdd:bool -> ('a, 'b) bdd -> ('a, 'c) t -> ('a, 'd) t -> ('a, 'e) t option = "cudd_caml_ite_cst"
-external is_ite_cst : is_bdd:bool -> ('a, 'b) bdd -> ('a, 'c) t -> ('a, 'd) t -> bool = "cudd_caml_ite_cst"
+external cofactors : is_bdd:bool -> int -> ('a, 'b) t -> ('a,'b) t * ('a,'b) t = "cudd_caml__cofactors"
+external ite_cst : is_bdd:bool -> ('a, 'b) bdd -> ('a, 'c) t -> ('a, 'd) t -> ('a, 'e) t option = "cudd_caml__ite_cst"
+external is_ite_cst : is_bdd:bool -> ('a, 'b) bdd -> ('a, 'c) t -> ('a, 'd) t -> bool = "cudd_caml__ite_cst"
 external varmap : is_bdd:bool -> ('a, 'b) t -> ('a, 'b) t = "camlidl_cudd_varmap"
 external _permute : is_bdd:bool -> ?memo:Memo.t -> perm:int array -> ('a, 'b) t -> ('a, 'b) t = "camlidl_cudd_permute_memo"
 let permute ~is_bdd ?memo ~perm vdd =
@@ -61,8 +61,8 @@ let permute ~is_bdd ?memo ~perm vdd =
   end;
   _permute ~is_bdd ?memo ~perm vdd
 
-external compose : is_bdd:bool -> var:int -> f:('a, 'b) bdd -> ('a, 'c) t -> ('a, 'd) t = "cudd_caml_compose"
-external _vectorcompose : is_bdd:bool -> ?memo:Memo.t -> ('a, 'b) bdd array -> ('a, 'c) t -> ('a, 'd) t = "cudd_caml_vectorcompose_memo"
+external compose : is_bdd:bool -> var:int -> f:('a, 'b) bdd -> ('a, 'c) t -> ('a, 'd) t = "cudd_caml__compose"
+external _vectorcompose : is_bdd:bool -> ?memo:Memo.t -> ('a, 'b) bdd array -> ('a, 'c) t -> ('a, 'd) t = "cudd_caml__vectorcompose_memo"
 
 let vectorcompose ~is_bdd ?memo tbdd dd =
   begin match memo with
@@ -73,25 +73,24 @@ let vectorcompose ~is_bdd ?memo tbdd dd =
       | Memo.Hash x -> Hash.arity x
       in
       if arity<>1 then
-	raise (Invalid_argument "Cudd.Bdd.vectorcompose_memo: memo.arity<>1")
+	raise (Invalid_argument "Cudd.Bdd.vectorcompose: memo.arity<>1")
       ;
   | None -> ()
   end;
   _vectorcompose ~is_bdd ?memo tbdd dd
-external iter_node : is_bdd:bool -> (('a,'b) t -> unit) -> ('a,'b) t -> unit = "cudd_caml_iter_node"
-external transfer : is_bdd:bool -> ('a,'c) t -> man:'b Man.t -> ('b,'c) t = "cudd_caml_transfer"
+external iter_node : is_bdd:bool -> (('a,'b) t -> unit) -> ('a,'b) t -> unit = "cudd_caml__iter_node"
+external transfer : is_bdd:bool -> ('a,'c) t -> man:'b Man.t -> ('b,'c) t = "cudd_caml__transfer"
 
 module B = struct
   let (genatom : 'a atom -> ('a,'b) bdd) = Obj.magic
-  let (genliteral : ('a,'b) literal -> ('a,'c) bdd) = Obj.magic
-  let (gensupp : ('a,'b) supp -> ('a,'c) bdd) = Obj.magic
-  let (gencube : ('a,'b,'c) cube -> ('a,'d) bdd) = Obj.magic
+  let (genliteral : ('a,'b) literal -> ('a,('c,any) conj bdd) = Obj.magic
+  let (gensupp : ('a,'b) supp -> ('a,(any,pos) conj bdd) = Obj.magic
+  let (gencube : ('a,'b,'c) cube -> ('a,any) bdd) = Obj.magic
 
   external binop : int -> ('a,'b) t -> ('a,'c) t -> ('a,'d) bdd = "cudd_caml_bdd_binop"
   let (gcofactor:('a, 'b) bdd -> ('a, 'c, 'd) cube -> ('a,'b) bdd) = fun x cube -> binop 0 x cube
   let (cofactor:('a, 'b) bdd -> cube:('a, 'c, 'd) cube -> ('a,'b) bdd) = fun x ~cube -> binop 0 x cube
-
-  let (supp_inter : ('a, 'b) supp -> ('a, 'c) supp -> ('a,any) supp) = fun x1 x2 -> binop 1 x1 x2
+  let (gcube_or : ('a, 'b, 'c) cube -> ('a, 'd, 'e) cube -> ('a,'f,'g) cube) = fun x1 x2 -> binop 1 x1 x2
   let (gand : ('a,'b) bdd -> ('a,'c) bdd -> ('a,'d) bdd) = fun x1 x2 -> binop 2 x1 x2
   let (dand : ('a,'b) bdd -> ('a,'c) bdd -> ('a,any) bdd) = gand
   let (dor : ('a,'b) bdd -> ('a,'c) bdd -> ('a,any) bdd) = fun x1 x2 -> binop 3 x1 x2
@@ -105,9 +104,8 @@ module B = struct
   let (tdrestrict : ('a,'b) bdd -> care:('a,'c) bdd -> ('a,any) bdd) = fun x ~care -> binop 11 x care
   let (minimize : ('a,'b) bdd -> care:('a,'c) bdd -> ('a,any) bdd) = fun x ~care -> binop 12 x care
   let (licompaction : ('a,'b) bdd -> care:('a,'c) bdd -> ('a,any) bdd) = fun x ~care -> binop 13 x care
-  let (squeeze: ('a,'b) bdd -> care:('a,'c) bdd -> ('a,any) bdd) = fun x ~care -> binop 14 x care
-  let (cube_or : ('a,'b,'c) cube -> ('a,'d,'e) cube -> ('a,any,any) cube) = fun x1 x2 -> binop 15 x1 x2
-  let (guard_of_node : ('a,'b) avdd -> node:('a,'b) avdd -> ('a,any) bdd) = fun x ~node -> binop 16 x node
+  let (squeeze : lower:('a, 'b) bdd -> upper:('a, 'c) bdd -> ('a, any) bdd) = fun ~lower ~upper -> binop 14 lower upper
+  let (guard_of_node : ('a,'b) avdd -> node:('a,'b) avdd -> ('a,any) bdd) = fun x ~node -> binop 15 x node
 
   external terop : int -> ('a,'b) bdd -> ('a,'c) bdd -> ('a,'d) bdd -> ('a,'e) bdd = "cudd_caml_bdd_terop"
   let ite x1 x2 x3 : ('a,any) bdd = terop 0 x1 x2 x3
@@ -166,12 +164,15 @@ module B = struct
   let varmap (x:('a,'b) bdd) : ('a,'b) bdd = varmap ~is_bdd:true x
   let permute ?memo ~perm (x:('a,'b) bdd) : ('a,'b) bdd = permute ~is_bdd:true ?memo ~perm x
   let compose ~var ~f (x:('a,'b) bdd) : ('a,any) bdd = compose ~is_bdd:true ~var ~f x
+  let (vectorcompose : ?memo:Memo.t -> ('a, 'b) bdd array -> ('a, 'c) bdd -> ('a, any) bdd) = fun ?memo tbdd bdd -> vectorcompose ~is_bdd:true ?memo tbdd bdd
   let iter_node (f:('a,'b) bdd -> unit) (x:('a,'c) bdd) = iter_node ~is_bdd:true f x
   let (transfer : ('a,'c) bdd -> man:'b Man.t -> ('b,'c) bdd) = fun x ~man -> transfer ~is_bdd:true x ~man
 
-  let (supp_union:('a, 'b) supp -> ('a, 'c) supp -> ('a,any) supp) = gand
-  let (supp_diff:('a, 'b) supp -> ('a, 'c) supp -> ('a,'b) supp) = gcofactor
+  let (support_inter:('a, 'b) supp -> ('a, 'c) supp -> ('a,any) supp) = gcube_or
+  let (support_union:('a, 'b) supp -> ('a, 'c) supp -> ('a,any) supp) = gand
+  let (support_diff:('a, 'b) supp -> ('a, 'c) supp -> ('a,'b) supp) = gcofactor
   let (cube_and : ('a,'b,'c) cube -> ('a,'d,'e) cube -> ('a,any,any) cube) = gand
+  let (cube_or : ('a, 'b, 'c) cube -> ('a, 'd, 'e) cube -> ('a,any,any) cube) = gcube_or
   let cube_union = cube_or
 
   external nbtruepaths : ('a, 'b) bdd -> float = "cudd_caml_bdd_Cudd_CountPathsToNonZero"
@@ -231,6 +232,7 @@ module AV = struct
   let varmap (x:('a,'b) avdd) : ('a,'b) avdd = varmap ~is_bdd:false x
   let permute ?memo ~perm (x:('a,'b) avdd) : ('a,'b) avdd = permute ~is_bdd:false ?memo ~perm x
   let compose ~var ~f (x:('a,'b) avdd) : ('a,'b) avdd = compose ~is_bdd:false ~var ~f x
+  let (vectorcompose : ?memo:Memo.t -> ('a, 'b) bdd array -> ('a, 'c) avdd -> ('a, 'c) avdd) = fun ?memo tbdd avdd -> vectorcompose ~is_bdd:true ?memo tbdd avdd
   let iter_node (f:('a,'b) avdd -> unit) (x:('a,'b) avdd) = iter_node ~is_bdd:false f x
   let (transfer : ('a,'c) avdd -> man:'a Man.t -> ('a,'c) avdd) = fun x ~man -> transfer ~is_bdd:false x ~man
 
@@ -283,7 +285,7 @@ module A = struct
   external to_bdd_strictthreshold : add -> threshold:float -> add = "camlidl_cudd_add_Cudd_addBddStrictThreshold"
   external to_bdd_interval : add -> lower:float -> upper:float -> add = "camlidl_cudd_add_Cudd_addBddIntervall"
 end
-module V : sig
+module V = struct
   type 'a inspect =
     | Leaf of 'a
     | Ite of int * 'a vdd * 'a vdd

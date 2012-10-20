@@ -8,11 +8,33 @@
 
 #include <stdio.h>
 #include <assert.h>
-
 #include "cuddInt.h"
 #include "cuddaux.h"
-
 #include "caml/mlvalues.h"
+
+/* ********************************************************************** */
+/* Standard definitions */
+/* ********************************************************************** */
+
+#define cudd_caml_int_c2ml(x) Val_int(x)
+#define cudd_caml_int_ml2c(x) Int_val(x)
+#define cudd_caml_bool_c2ml(x) Val_bool(x)
+#define cudd_caml_bool_ml2c(x) Bool_val(x)
+#define cudd_caml_double_c2ml(x) copy_double(x)
+#define cudd_caml_double_ml2c(x) Double_val(x)
+typedef struct intarray_t {
+  int* array;
+  int size;
+} intarray_t;
+typedef struct doublearray_t {
+  double* array;
+  int size;
+} doublearray_t;
+doublearray_t cudd_caml_doublearray_t_ml2c(value v);
+
+/* ********************************************************************** */
+/* Types */
+/* ********************************************************************** */
 
 typedef struct CuddauxHash* hash__t;
 typedef struct CuddauxCache* cache__t;
@@ -20,6 +42,7 @@ typedef struct CuddauxMan* man__t;
 typedef struct memo__t memo__t;
 typedef struct node__t node__t;
 typedef struct node__t bdd__t;
+typedef DdNode* node_t;
 typedef Cudd_ReorderingType reorder_t;
 typedef Cudd_AggregationType aggregation_t;
 typedef Cudd_ErrorType error_t;
@@ -69,7 +92,7 @@ static inline cache__t cudd_caml_cache__t_ml2c(value val)
 { return *((cache__t*)(Data_custom_val(val))); }
 static inline pid cudd_caml_pid_ml2c(value val)
 { return *((pid*)(Data_custom_val(val))); }
-memo__t cudd_caml__memo_t_ml2c(value val);
+memo__t cudd_caml_memo__t_ml2c(value val);
 
 static inline value cudd_caml_hash__t_c2ml(hash__t hash)
 {
