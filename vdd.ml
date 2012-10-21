@@ -170,31 +170,25 @@ let print__minterm print_leaf fmt dd =
     fprintf fmt "@]"
   end
 
-let print (type a) (type b) (type c) :
-    (Format.formatter -> (a,b) Bdd.t -> unit) ->
-  (Format.formatter -> c -> unit) ->
-  Format.formatter ->
-  c t -> unit
-  =
-  fun print_bdd print_leaf fmt dd ->
-    if is_cst dd then print_leaf fmt (dval dd)
-    else
-      let nb = nbpaths dd in
-      if nb > (float_of_int !Man.print_limit) then
-	fprintf fmt "dd with %i nodes, %i leaves and %g paths" (size dd) (nbleaves dd) nb
-      else begin
-	let leaves = leaves dd in
-	fprintf fmt "{ @[<v>";
-	for i=Array.length leaves - 1 downto 0 do
-	  let leaf = leaves.(i) in
-	  let bdd = guard_of_leaf dd leaf in
-	  fprintf fmt "%a IF %a"
-	    print_leaf leaf print_bdd bdd;
-	  if i > 0 then
-	    fprintf fmt ",@ ";
-	done;
-	fprintf fmt "@] }"
-      end
+let print (print_bdd: (Format.formatter -> [>Bdd.any] Bdd.vt -> unit)) print_leaf fmt dd =
+  if is_cst dd then print_leaf fmt (dval dd)
+  else
+    let nb = nbpaths dd in
+    if nb > (float_of_int !Man.print_limit) then
+      fprintf fmt "dd with %i nodes, %i leaves and %g paths" (size dd) (nbleaves dd) nb
+    else begin
+      let leaves = leaves dd in
+      fprintf fmt "{ @[<v>";
+      for i=Array.length leaves - 1 downto 0 do
+	let leaf = leaves.(i) in
+	let bdd = guard_of_leaf dd leaf in
+	fprintf fmt "@[<hv>%a@ IF %a@]"
+	  print_leaf leaf print_bdd (bdd:>[>Bdd.any] Bdd.vt);
+	if i > 0 then
+	  fprintf fmt ",@ ";
+      done;
+      fprintf fmt "@] }"
+    end
 
 let print_minterm print_id print_leaf formatter dd =
-  print (fun bdd -> Bdd.print_minterm print_id bdd) print_leaf formatter dd
+  print (fun fmt bdd -> Bdd.print_minterm print_id fmt (bdd:>[>Bdd.any] Bdd.vt)) print_leaf formatter dd

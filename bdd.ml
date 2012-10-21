@@ -4,27 +4,15 @@
    Please read the COPYING file packaged in the distribution  *)
 
 type ('a,'b) t = ('a,'b) Dd.bdd
-type ('a,'b) conj = ('a,'b) Dd.conj
-type pos = Dd.pos
-type any = Dd.any
-type var = Dd.var
 
-type ('a, 'b, 'c) cube = ('a, ('b,  'c)  conj) t
-type ('a, 'b) supp     = ('a, ('b,  pos) conj) t
-type ('a, 'c) literal  = ('a, (var, 'c)  conj) t
-type 'a atom           = ('a, (var, pos) conj) t
+type any  = [`any]
+type cube = [`any | `cube]
+type lit  = [`any | `cube | `lit]
+type supp = [`any | `cube | `pos]
+type atom = [`any | `cube | `lit | `pos]
 
-type dt       = (Man.d,any) t
-type dcube    = (Man.d,any,any) cube
-type dliteral = (Man.d,any) literal
-type dsupp    = (Man.d,any) supp
-type datom    = Man.d atom
-
-type vt       = (Man.v,any) t
-type vcube    = (Man.v,any,any) cube
-type vliteral = (Man.v,any) literal
-type vsupp    = (Man.v,any) supp
-type vatom    = Man.v atom
+type 'a dt       = (Man.d,'a) t
+type 'a vt       = (Man.v,'a) t
 
 (** Public type for exploring the abstract type [t] *)
 type ('a,'b) bdd = ('a,'b) Dd.B.inspect =

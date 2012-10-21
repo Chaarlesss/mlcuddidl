@@ -245,21 +245,23 @@ CAMLprim value cudd_caml__cofactors(value v_is_bdd, value v_var, value v_no)
 CAMLprim value cudd_caml__ite_cst(value v_is_bdd, value v1, value v2, value v3)
 {
   CAMLparam3(v1,v2,v3);
-  CAMLlocal1(vr);
+  CAMLlocal2(vr,vres);
   bool is_bdd = Bool_val(v_is_bdd);
   node__t x1 = cudd_caml_node__t_ml2c(v1);
   node__t x2 = cudd_caml_node__t_ml2c(v2);
   node__t x3 = cudd_caml_node__t_ml2c(v3);
   if (x1.man!=x2.man || x1.man!=x3.man)
     caml_invalid_argument("Cudd: ternary function called with nodes belonging to different managers !");
-  node__t xr;
-  xr.man = x1.man;
-  xr.node = is_bdd ? Cudd_bddIteConstant(x1.man->man,x1.node,x2.node,x3.node) : Cuddaux_addIteConstant(x1.man->man,x1.node,x2.node,x3.node);
+  DdNode* node = is_bdd ? Cudd_bddIteConstant(x1.man->man,x1.node,x2.node,x3.node) : Cuddaux_addIteConstant(x1.man->man,x1.node,x2.node,x3.node);
   value vres;
-  if (xr.node==DD_NON_CONSTANT)
+  if (node==DD_NON_CONSTANT || !Cudd_IsConstant(node))
     vres = Val_int(0);
   else {
-    value vr = cudd_caml_bddnode__t_c2ml(is_bdd,xr);
+    if (is_bdd){
+      vr = Val_bool(node==DD_ONE(x1.man->man));
+    } else {
+      vr = Val_DdNode(x1.man->caml,node);
+    }
     vres = caml_alloc_small(1,0);
     Field(vres,0) = vr;
   }
@@ -862,7 +864,7 @@ CAMLprim value cudd_caml_avdd_cst(value vman, value vleaf)
   CAMLreturn(vres);
 }
 FUN_node3_node(avdd,Cuddaux_addIte,node__t,node__t,node__t,node__t)
-CAMLprim value cudd_caml_avdd_is_eval_cst(value vno1, value vno2)
+CAMLprim value cudd_caml_avdd_eval_cst(value vno1, value vno2)
 {
   CAMLparam2(vno1,vno2); CAMLlocal2(v,vres);
   node__t no1 = cudd_caml_node__t_ml2c(vno1);
@@ -878,6 +880,18 @@ CAMLprim value cudd_caml_avdd_is_eval_cst(value vno1, value vno2)
     vres = caml_alloc_small(1,0);
     Field(vres,0) = v;
   }
+  CAMLreturn(vres);
+}
+CAMLprim value cudd_caml_avdd_is_eval_cst(value vno1, value vno2)
+{
+  CAMLparam2(vno1,vno2); CAMLlocal2(v,vres);
+  node__t no1 = cudd_caml_node__t_ml2c(vno1);
+  node__t no2 = cudd_caml_node__t_ml2c(vno2);
+  if (no1.man!=no2.man){
+    caml_invalid_argument("Dd: binary function called with nodes belonging to different managers !");
+  }
+  DdNode* node = Cuddaux_addEvalConst(no1.man->man,no1.node,no2.node);
+  vres = Val_bool(node!=DD_NON_CONSTANT && cuddIsConstant(node));
   CAMLreturn(vres);
 }
 CAMLprim value cudd_caml_avdd_iter_cube(value _v_closure, value _v_no)
