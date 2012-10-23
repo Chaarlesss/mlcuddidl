@@ -8,12 +8,12 @@ type atom = [`any | `cube | `lit | `pos]
 
 type +'a value
 
-type ('a, +'b) t
+type ('a, 'b) t
 type ('a, 'b) bdd  = ('a,'b) t constraint 'b=[>any]
-type ('a, +'b) avdd = ('a, 'b value) t
+type ('a, 'b) avdd = ('a, 'b value) t
 
 type    add = (Man.d, float) avdd
-type +'a vdd = (Man.v, 'a   ) avdd
+type 'a vdd = (Man.v, 'a   ) avdd
 
 (*  ********************************************************************** *)
 (** {3 Applies to any diagram} *)
@@ -259,8 +259,8 @@ module A : sig
   external of_bdd : (Man.d,'a) bdd -> add = "camlidl_cudd_add_Cudd_BddToAdd"
   external to_bdd : add -> (Man.d,any) bdd = "camlidl_cudd_add_Cudd_addBddPattern"
   external to_bdd_threshold : add -> threshold:float -> (Man.d,any) bdd = "camlidl_cudd_add_Cudd_addBddThreshold"
-  external to_bdd_strictthreshold : add -> threshold:float -> add = "camlidl_cudd_add_Cudd_addBddStrictThreshold"
-  external to_bdd_interval : add -> lower:float -> upper:float -> add = "camlidl_cudd_add_Cudd_addBddIntervall"
+  external to_bdd_strictthreshold : add -> threshold:float -> (Man.d,any) bdd = "camlidl_cudd_add_Cudd_addBddStrictThreshold"
+  external to_bdd_interval : add -> lower:float -> upper:float -> (Man.d,any) bdd = "camlidl_cudd_add_Cudd_addBddIntervall"
 end
 module V : sig
   type 'a inspect =

@@ -21,13 +21,13 @@ type error =
   | INVALID_ARG
   | INTERNAL_ERROR
 external set_gc : heap:int -> gc:(unit -> unit) -> reordering:(unit -> unit) -> unit
-  = "camlidl_cudd_set_gc"
-external srandom : int -> unit = "camlidl_cudd_man_srandom"
+  = "cudd_caml_set_gc"
+external srandom : int -> unit = "cudd_caml_man_srandom"
 external _make : caml:bool -> numVars:int -> numVarsZ:int -> numSlots:int -> cacheSize:int -> maxMemory:int -> 'a t
-  = "camlidl_cudd_man_Cudd_Init_bytecode" "camlidl_cudd_man_Cudd_Init"
-external debugcheck : 'a t -> bool = "camlidl_cudd_man_Cudd_DebugCheck"
-external check_keys : 'a t -> int = "camlidl_cudd_man_Cudd_CheckKeys"
-external copy_shr : 'a -> 'a = "camlidl_cudd_custom_copy_shr"
+  = "cudd_caml_man_Cudd_Init_bytecode" "cudd_caml_man_Cudd_Init"
+external debugcheck : 'a t -> bool = "cudd_caml_man_Cudd_DebugCheck"
+external check_keys : 'a t -> int = "cudd_caml_man_Cudd_CheckKeys"
+external copy_shr : 'a -> 'a = "cudd_caml_custom_copy_shr"
 type reorder =
     REORDER_SAME
   | REORDER_NONE
@@ -65,27 +65,27 @@ type aggregation =
 type lazygroup = LAZY_NONE | LAZY_SOFT_GROUP | LAZY_HARD_GROUP | LAZY_UNGROUP
 type vartype = VAR_PRIMARY_INPUT | VAR_PRESENT_STATE | VAR_NEXT_STATE
 type mtr = MTR_DEFAULT | MTR_FIXED
-external level_of_var : 'a t -> int -> int = "camlidl_cudd_man_Cudd_ReadPerm"
+external level_of_var : 'a t -> int -> int = "cudd_caml_man_Cudd_ReadPerm"
 external var_of_level : 'a t -> int -> int
-  = "camlidl_cudd_man_Cudd_ReadInvPerm"
+  = "cudd_caml_man_Cudd_ReadInvPerm"
 external reduce_heap : 'a t -> reorder -> int -> unit
-  = "camlidl_cudd_man_Cudd_ReduceHeap"
+  = "cudd_caml_man_Cudd_ReduceHeap"
 external shuffle_heap : 'a t -> int array -> unit
-  = "camlidl_cudd_man_Cudd_ShuffleHeap"
+  = "cudd_caml_man_Cudd_ShuffleHeap"
 external garbage_collect : 'a t -> int
-  = "camlidl_cudd_man_cuddGarbageCollect"
-external flush : 'a t -> unit = "camlidl_cudd_man_cuddCacheFlush"
+  = "cudd_caml_man_cuddGarbageCollect"
+external flush : 'a t -> unit = "cudd_caml_man_cuddCacheFlush"
 external enable_autodyn : 'a t -> reorder -> unit
-  = "camlidl_cudd_man_Cudd_AutodynEnable"
+  = "cudd_caml_man_Cudd_AutodynEnable"
 external disable_autodyn : 'a t -> unit
-  = "camlidl_cudd_man_Cudd_AutodynDisable"
+  = "cudd_caml_man_Cudd_AutodynDisable"
 external autodyn_status : 'a t -> reorder option
-  = "camlidl_cudd_man_Cudd_ReorderingStatus"
+  = "cudd_caml_man_Cudd_ReorderingStatus"
 external group : 'a t -> int -> int -> mtr -> unit
-  = "camlidl_cudd_man_Cudd_MakeTreeNode"
-external ungroupall : 'a t -> unit = "camlidl_cudd_man_Cudd_FreeTree"
+  = "cudd_caml_man_Cudd_MakeTreeNode"
+external ungroupall : 'a t -> unit = "cudd_caml_man_Cudd_FreeTree"
 external set_varmap : 'a t -> int array -> unit
-  = "camlidl_cudd_man_Cuddaux_SetVarMap"
+  = "cudd_caml_man_Cuddaux_SetVarMap"
 type parameters = {
   background : float;
   epsilon : float;
@@ -109,6 +109,8 @@ type parameters = {
 }
 external get_params : 'a t -> parameters = "cudd_caml_man_get_params"
 external set_params : 'a t -> parameters -> unit = "cudd_caml_man_set_params"
+external get_background : d t -> float = "cudd_caml_man_get_background"
+
 type statistics = {
   cache_hits : float;
   cache_lookups : float;
@@ -133,6 +135,7 @@ type statistics = {
   swaps : float;
 }
 external stats : 'a t -> statistics = "cudd_caml_man_stats"
+
 external error : 'a t -> error = "cudd_caml_man_Cudd_ReadError"
 external get_bddvar_nb : 'a t -> int = "cudd_man_Cudd_ReadSize"
 external get_zddvar_nb : 'a t -> int = "cudd_man_Cudd_ReadZddSize"
@@ -141,15 +144,15 @@ external get_zddvar_nb : 'a t -> int = "cudd_man_Cudd_ReadZddSize"
 (* Definitions *)
 (* ********************************************************************** *)
 
-let _ = set_gc heap:1000000 gc:Gc.full_major gcreorder:Gc.full_major
+let _ = set_gc ~heap:1000000 ~gc:Gc.full_major ~reordering:Gc.full_major
 let _ = Callback.register_exception "invalid argument exception" (Invalid_argument "")
 
 let print_limit = ref 30
 
 let make_d ?(numVars=0) ?(numVarsZ=0) ?(numSlots=0) ?(cacheSize=0) ?(maxMemory=0) () =
-  _make caml:false ~numVars ~numVarsZ ~numSlots ~cacheSize ~maxMemory
+  _make ~caml:false ~numVars ~numVarsZ ~numSlots ~cacheSize ~maxMemory
 let make_v ?(numVars=0) ?(numVarsZ=0) ?(numSlots=0) ?(cacheSize=0) ?(maxMemory=0) () =
-  _make caml:true ~numVars ~numVarsZ ~numSlots ~cacheSize ~maxMemory
+  _make ~caml:true ~numVars ~numVarsZ ~numSlots ~cacheSize ~maxMemory
 
 let string_of_reorder = function
   | REORDER_SAME -> "SAME"

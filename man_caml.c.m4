@@ -5,6 +5,46 @@
 
 #include "cudd_caml.h"
 
+FUN_2(hash,_create,int,int,hash__t,
+[[
+xr = malloc(sizeof(struct CuddauxHash));
+xr->hash = NULL;
+xr->arity = x1
+xr->initialsize = x2;
+xr->man = NULL;
+]])
+
+value camlidl_cudd_hash_arity(vhash)
+{
+  hash__t hash = cudd_caml_hash__t_ml2c(vhash);
+  return Val_int(hash->arity);
+}
+FUN_1(hash,cuddauxHashClear,hash__t,unit)
+
+FUN_3(cache,_create,int,int,int,cache__t,
+      [[
+	xr = malloc(sizeof(struct CuddauxCache));
+	xr->cache = NULL;
+	xr->arity = x1;
+	xr->initialsize = x2;
+	xr->maxsize = x3;
+	xr->man = NULL;
+	]]
+      )
+value cudd_caml_cache_arity(value vcache)
+{
+  cache__t cache = cudd_caml_cache__t_ml2c(vcache);
+  return Val_int(cache->arity);
+}
+FUN_1(cache,clear,cache__t,unit,
+      [[
+	if (x1->cache){
+	  cuddLocalCacheQuit(x1->cache);
+	  x1->cache = NULL;
+	}
+	]])
+
+
 FUN_1_unsafe(man,Cudd_Srandom,long,unit)
 
 CAMLprim cudd_caml_man_Cudd_Init
@@ -196,6 +236,11 @@ CAMLprim cudd_caml_man_stats(value vman)
   Store_field(vres,20,caml_copy_double(Cudd_ReadSwpaSteps(man)));
   CAMLreturn vres;
 }
+FUN_1_unsafe(man,get_background,man_t,double,
+	     [[
+	       DdNode* add = Cudd_ReadBackground(man);
+	       xr = cuddV(add);
+	       ]]);
 FUN_1_unsafe(man,Cudd_ReadError,man_t,int);
 FUN_1_unsafe(man,Cudd_ReadSize,man_t,int);
 FUN_1_unsafe(man,Cudd_ReadZddSize,man_t,int);

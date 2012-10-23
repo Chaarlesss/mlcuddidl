@@ -19,8 +19,6 @@ type +'a vdd = 'a Dd.V.inspect =
 | Leaf of 'a         (** Terminal value *)
 | Ite of int * 'a t * 'a t (** Decision on CUDD variable *)
 
-
-
 (* ====================================================== *)
 (** {3 Extractors} *)
 (* ====================================================== *)

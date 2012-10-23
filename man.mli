@@ -45,7 +45,7 @@ val print_limit : int ref
     of minterms to be printed. Above this numbers, only statistics on
     the BDD is printed. *)
 
-external set_gc : heap:int -> gc:(unit -> unit) -> reordering:(unit -> unit) -> unit = "camlidl_cudd_set_gc"
+external set_gc : heap:int -> gc:(unit -> unit) -> reordering:(unit -> unit) -> unit = "cudd_caml_set_gc"
 (** [set_gc max gc reordering] performs several things:
     - It sets the ratio used/max for BDDs abstract values to
     [1/max] (see the OCaml manual for details). 1 000 000 is a
@@ -60,7 +60,7 @@ external set_gc : heap:int -> gc:(unit -> unit) -> reordering:(unit -> unit) -> 
     them. Default values are [Gc.full_major()] for both hooks.
 *)
 
-external srandom : int -> unit = "camlidl_cudd_man_srandom"
+external srandom : int -> unit = "cudd_caml_man_srandom"
 (**
    {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_Srandom}[Cudd_Srandom]}.
    Initializes the seed for the CUDD random number generator (used
@@ -71,8 +71,7 @@ external srandom : int -> unit = "camlidl_cudd_man_srandom"
 (*  ====================================================== *)
 
 (** Internal, do not use ! *)
-external _make : bool -> int -> int -> int -> int -> int -> 'a t
-  = "camlidl_cudd_man_Cudd_Init_bytecode" "camlidl_cudd_man_Cudd_Init"
+external _make : caml:bool -> numVars:int -> numVarsZ:int -> numSlots:int -> cacheSize:int -> maxMemory:int -> 'a t = "cudd_caml_man_Cudd_Init_bytecode" "cudd_caml_man_Cudd_Init"
 
 val make_d : ?numVars:int -> ?numVarsZ:int -> ?numSlots:int -> ?cacheSize:int -> ?maxMemory:int -> unit -> d t
 val make_v : ?numVars:int -> ?numVarsZ:int -> ?numSlots:int -> ?cacheSize:int -> ?maxMemory:int -> unit -> v t
@@ -86,15 +85,15 @@ val make_v : ?numVars:int -> ?numVarsZ:int -> ?numSlots:int -> ?cacheSize:int ->
     (dummy) hook function to be called whenever a CUDD reordering
     occurs. The defaults can be modified with {!set_gc}. *)
 
-external debugcheck : 'a t -> bool = "camlidl_cudd_man_Cudd_DebugCheck"
+external debugcheck : 'a t -> bool = "cudd_caml_man_Cudd_DebugCheck"
 (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_DebugCheck}[Cudd_DebugCheck]}.
     Returns [false] if it is OK, [true] if there is a problem, and throw
     a [Failure] exception in case of [OUT_OF_MEM]. *)
 
-external check_keys : 'a t -> int = "camlidl_cudd_man_Cudd_CheckKeys"
+external check_keys : 'a t -> int = "cudd_caml_man_Cudd_CheckKeys"
 (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_CheckKeys}[Cudd_CheckKeys]}. *)
 
-external copy_shr : 'a -> 'a = "camlidl_cudd_custom_copy_shr"
+external copy_shr : 'a -> 'a = "cudd_caml_custom_copy_shr"
 (** Internal use: duplicate a block to the major heap. Used by
     {!Mtbdd} and {!Mtbddc} modules *)
 
@@ -162,57 +161,57 @@ val string_of_reorder : reorder -> string
 (** Printing function *)
 
 
-external level_of_var : 'a t -> int -> int = "camlidl_cudd_man_Cudd_ReadPerm"
+external level_of_var : 'a t -> int -> int = "cudd_caml_man_Cudd_ReadPerm"
 (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_ReadPerm}[Cudd_ReadPerm]}. Returns
    the level of the variable (its order in the BDD) *)
 
-external var_of_level : 'a t -> int -> int = "camlidl_cudd_man_Cudd_ReadInvPerm"
+external var_of_level : 'a t -> int -> int = "cudd_caml_man_Cudd_ReadInvPerm"
 (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_ReadInvPerm}[Cudd_ReadInvPerm]}. Returns
    the variable associated to the given level. *)
 
-external reduce_heap : 'a t -> reorder -> int -> unit = "camlidl_cudd_man_Cudd_ReduceHeap"
+external reduce_heap : 'a t -> reorder -> int -> unit = "cudd_caml_man_Cudd_ReduceHeap"
 (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_ReduceHeap}[Cudd_ReduceHeap]}. Main
    reordering function, that applies the given heuristic. The
    provided integer is a bound below which no reordering takes
    place. *)
 
-external shuffle_heap : 'a t -> int array -> unit = "camlidl_cudd_man_Cudd_ShuffleHeap"
+external shuffle_heap : 'a t -> int array -> unit = "cudd_caml_man_Cudd_ShuffleHeap"
 (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_ShuffleHeap}[Cudd_ShuffleHeap]}. Reorder
    variables according to the given permutation. *)
 
-external garbage_collect : 'a t -> int = "camlidl_cudd_man_cuddGarbageCollect"
+external garbage_collect : 'a t -> int = "cudd_caml_man_cuddGarbageCollect"
 (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddAllDet.html#cuddGarbageCollect}[cuddGarbageCollect]}. Force
    a garbage collection (with cache clearing) *)
 
-external flush : 'a t -> unit = "camlidl_cudd_man_cuddCacheFlush"
+external flush : 'a t -> unit = "cudd_caml_man_cuddCacheFlush"
 (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddAllDet.html#cuddCacheFlush}[cuddCacheFlush]}. Clear
    the global cache *)
 
-external enable_autodyn : 'a t -> reorder -> unit = "camlidl_cudd_man_Cudd_AutodynEnable"
+external enable_autodyn : 'a t -> reorder -> unit = "cudd_caml_man_Cudd_AutodynEnable"
 (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_AutodynEnable}[Cudd_AutodynEnable]}. Enables
    dynamic reordering with the given heuristics. *)
 
-external disable_autodyn : 'a t -> unit = "camlidl_cudd_man_Cudd_AutodynDisable"
+external disable_autodyn : 'a t -> unit = "cudd_caml_man_Cudd_AutodynDisable"
 (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_AutodynDisable}[Cudd_AutodynDisable]}. Disables
    dynamic reordering. *)
 
 
-external autodyn_status : 'a t -> reorder option = "camlidl_cudd_man_Cudd_ReorderingStatus"
+external autodyn_status : 'a t -> reorder option = "cudd_caml_man_Cudd_ReorderingStatus"
 (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_ReorderingStatus}[Cudd_ReorderingStatus]}. Returns
    [None] if dynamic reordering is disables, [Some(heuristic)]
    otherwise. *)
 
-external group : 'a t -> int -> int -> mtr -> unit = "camlidl_cudd_man_Cudd_MakeTreeNode"
+external group : 'a t -> int -> int -> mtr -> unit = "cudd_caml_man_Cudd_MakeTreeNode"
 (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_MakeTreeNode}[Cudd_MakeTreeNode]}.
    [group man low size typ] creates a new variable group, ranging
    from index [low] to index [low+size-1], in which [typ]
    specifies if reordering is allowed inside the group. *)
 
-external ungroupall : 'a t -> unit = "camlidl_cudd_man_Cudd_FreeTree"
+external ungroupall : 'a t -> unit = "cudd_caml_man_Cudd_FreeTree"
 (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_FreeTree}[Cudd_FreeTree]}. Removes
    all the groups in the manager. *)
 
-external set_varmap : 'a t -> int array -> unit = "camlidl_cudd_man_Cuddaux_SetVarMap"
+external set_varmap : 'a t -> int array -> unit = "cudd_caml_man_Cuddaux_SetVarMap"
 (**
    [Cuddaux_SetVarMap]/{{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_SetVarMap}[Cudd_SetVarMap]}. Initializes
    the global mapping table, used by functions {!Bdd.varmap},
@@ -279,6 +278,7 @@ type parameters = {
 
 external get_params : 'a t -> parameters = "cudd_caml_man_get_params"
 external set_params : 'a t -> parameters -> unit = "cudd_caml_man_set_params"
+external get_background : d t -> float = "cudd_caml_man_get_background"
 
 (*  ====================================================== *)
 (** {3 Statistics} *)
