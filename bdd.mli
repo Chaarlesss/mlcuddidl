@@ -232,7 +232,7 @@ val density : nbvars:int -> ('a,'b) t -> float
 (*  ====================================================== *)
 
 val dnot : ('a,'b) t -> ('a,any) t
-val vnot : ('a,[>lit]) t -> ('a,[<lit]) t
+val vnot : ('a,[>lit]) t -> ('a,lit) t
 (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_Not}[Cudd_Not]}. Negation *)
 
 val dand : ('a,'b) t -> ('a,'c) t -> ('a,any) t

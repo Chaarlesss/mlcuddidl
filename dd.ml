@@ -128,7 +128,7 @@ module B = struct
   external newvar_at_level : 'a Man.t -> int -> ('a,[<atom]) bdd = "cudd_caml_bdd_Cudd_bddNewVarAtLevel"
 
   external dnot : ('a,'b) bdd -> ('a,any) bdd = "cudd_caml_bdd_Cudd_Not"
-  external vnot : ('a,[>lit]) bdd -> ('a,[<lit]) bdd = "cudd_caml_bdd_Cudd_Not"
+  external vnot : ('a,[>lit]) bdd -> ('a,lit) bdd = "cudd_caml_bdd_Cudd_Not"
 
   external is_complement : ('a,'b) bdd -> bool = "cudd_caml_bdd_Cudd_IsComplement" "noalloc"
   external is_true : ('a,'b) bdd -> bool = "cudd_caml_bdd_is_true" "noalloc"
