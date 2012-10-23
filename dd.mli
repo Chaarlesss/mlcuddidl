@@ -37,7 +37,7 @@ external is_equal_when :
 external list_of_support : ('a,[>supp]) bdd -> int list = "cudd_caml__list_of_support"
 external list_of_cube : ('a,[>cube]) bdd -> (int * bool) list = "cudd_caml__list_of_cube"
 external minterm_of_cube : ('a,[>cube]) bdd -> Man.tbool array = "cudd_caml__minterm_of_cube"
-external cube_of_minterm : 'a Man.t -> Man.tbool array -> ('a,[<cube]) bdd = "cudd_caml__cube_of_minterm"
+external cube_of_minterm : 'a Man.t -> Man.tbool array -> ('a,cube) bdd = "cudd_caml__cube_of_minterm"
 
 (*  ********************************************************************** *)
 (** {3 Applies to BDD} *)
@@ -106,7 +106,7 @@ module B : sig
   val nor : ('a,'b) bdd -> ('a,'c) bdd -> ('a,any) bdd
   val nxor : ('a,'b) bdd -> ('a,'c) bdd -> ('a,any) bdd
   val eq : ('a,'b) bdd -> ('a,'c) bdd -> ('a,any) bdd
-  external cube_of_bdd : ('a,'b) bdd -> ('a,[<cube]) bdd = "cudd_caml_bdd_Cudd_FindEssential"
+  external cube_of_bdd : ('a,'b) bdd -> ('a,cube) bdd = "cudd_caml_bdd_Cudd_FindEssential"
   external booleandiff : ('a,'b) bdd -> int -> ('a,any) bdd = "cudd_caml_bdd_Cudd_BooleandDiff"
   val cofactors : int -> ('a,'b) bdd -> ('a,'b) bdd * ('a,'b) bdd
   val ite_cst :
@@ -119,18 +119,18 @@ module B : sig
   val vectorcompose : ?memo:Memo.t -> ('a,'b) bdd array -> ('a,'c) bdd -> ('a,any) bdd
   val iter_node : (('a,any) bdd -> unit) -> ('a,'b) bdd -> unit
   val transfer : ('a,'c) bdd -> man:'b Man.t -> ('b,'c) bdd
-  val support_inter : ('a,[>supp]) bdd -> ('a,[>supp]) bdd -> ('a,[<supp]) bdd
-  val support_union : ('a,[>supp]) bdd -> ('a,[>supp]) bdd -> ('a,[<supp]) bdd
-  val support_diff : ('a,[>supp]) bdd -> ('a,[>supp]) bdd -> ('a,[<supp]) bdd
-  val cube_and : ('a,[>cube]) bdd -> ('a,[>cube]) bdd -> ('a,[<cube]) bdd
-  val cube_or : ('a,[>cube]) bdd -> ('a,[>cube]) bdd -> ('a,[<cube]) bdd
-  val cube_union : ('a,[>cube]) bdd -> ('a,[>cube]) bdd -> ('a,[<cube]) bdd
+  val support_inter : ('a,[>supp]) bdd -> ('a,[>supp]) bdd -> ('a,supp) bdd
+  val support_union : ('a,[>supp]) bdd -> ('a,[>supp]) bdd -> ('a,supp) bdd
+  val support_diff : ('a,[>supp]) bdd -> ('a,[>supp]) bdd -> ('a,supp) bdd
+  val cube_and : ('a,[>cube]) bdd -> ('a,[>cube]) bdd -> ('a,cube) bdd
+  val cube_or : ('a,[>cube]) bdd -> ('a,[>cube]) bdd -> ('a,cube) bdd
+  val cube_union : ('a,[>cube]) bdd -> ('a,[>cube]) bdd -> ('a,cube) bdd
   external nbtruepaths : ('a,'b) bdd -> float = "cudd_caml_bdd_Cudd_CountPathsToNonZero"
   external pick_minterm : ('a,'b) bdd -> Man.tbool array = "cudd_caml_pick_minterm"
   external pick_cube_on_support :
-    supp:('a,[>supp]) bdd -> ('a,'c) bdd -> ('a,[<cube]) bdd = "cudd_caml_pick_cube_on_support"
+    supp:('a,[>supp]) bdd -> ('a,'c) bdd -> ('a,cube) bdd = "cudd_caml_pick_cube_on_support"
   external pick_cubes_on_support :
-    supp:('a,[>supp]) bdd -> nb:int -> ('a,'c) bdd -> ('a,[<cube]) bdd array = "cudd_caml_pick_cubes_on_support"
+    supp:('a,[>supp]) bdd -> nb:int -> ('a,'c) bdd -> ('a,cube) bdd array = "cudd_caml_pick_cubes_on_support"
   external iter_cube : (Man.tbool array -> unit) -> ('a,'b) bdd -> unit = "cudd_caml_bdd_iter_cube"
   external iter_prime : (Man.tbool array -> unit) -> lower:('a,'b) bdd -> upper:('a,'c) bdd -> unit = "cudd_caml_bdd_iter_prime"
   type approx = Under | Over

@@ -34,7 +34,7 @@ external is_equal_when : ('a,'b) t -> ('a,'c) t -> care:('a,'d) bdd -> bool = "c
 external list_of_support: ('a,[>supp]) bdd -> int list = "cudd_caml__list_of_support"
 external list_of_cube: ('a,[>cube]) bdd -> (int*bool) list = "cudd_caml__list_of_cube"
 external minterm_of_cube: ('a,[>cube]) bdd -> Man.tbool array = "cudd_caml__minterm_of_cube"
-external cube_of_minterm: 'a Man.t -> Man.tbool array -> ('a,[<cube]) bdd = "cudd_caml__cube_of_minterm"
+external cube_of_minterm: 'a Man.t -> Man.tbool array -> ('a,cube) bdd = "cudd_caml__cube_of_minterm"
 
 external cofactors : is_bdd:bool -> int -> ('a,'b) t -> ('a,'b) t * ('a,'b) t = "cudd_caml__cofactors"
 external ite_cst : is_bdd:bool -> ('a,'b) bdd -> ('a,'c) t -> ('a,'d) t -> 'e option = "cudd_caml__ite_cst"
@@ -79,7 +79,7 @@ external transfer : is_bdd:bool -> ('a,'c) t -> man:'b Man.t -> ('b,'c) t = "cud
 
 module B = struct
   external binop : int -> ('a,'b) t -> ('a,'c) t -> ('a,'d) bdd = "cudd_caml_bdd_binop"
-  let (gcofactor:('a,'b) bdd -> ('a,[>cube]) bdd -> ('a,'b) bdd) = fun x cube -> binop 0 x cube
+  let (gcofactor:('a,'b) bdd -> ('a,[>cube]) bdd -> ('a,'c) bdd) = fun x cube -> binop 0 x cube
   let (cofactor:('a,'b) bdd -> cube:('a,[>cube]) bdd -> ('a,'b) bdd) = fun x ~cube -> binop 0 x cube
   let (gcube_or : ('a,[>cube]) bdd -> ('a,[>cube]) bdd -> ('a,'b) bdd) = fun x1 x2 -> binop 1 x1 x2
   let (gand : ('a,'b) bdd -> ('a,'c) bdd -> ('a,'d) bdd) = fun x1 x2 -> binop 2 x1 x2
@@ -146,11 +146,11 @@ module B = struct
   let nxor x1 x2 = dnot (xor x1 x2)
   let eq = nxor
 
-  external cube_of_bdd: ('a,'b) bdd -> ('a,[<cube]) bdd = "cudd_caml_bdd_Cudd_FindEssential"
+  external cube_of_bdd: ('a,'b) bdd -> ('a,cube) bdd = "cudd_caml_bdd_Cudd_FindEssential"
 
   external booleandiff : ('a,'b) bdd -> int -> ('a,any) bdd = "cudd_caml_bdd_Cudd_BooleandDiff"
   let (cofactors : int -> ('a,'b) bdd -> ('a,'b) bdd * ('a,'b) bdd) = fun x1 x2 -> cofactors ~is_bdd:true x1 x2
-  let ite_cst (x1:('a,'b) bdd) (x2:('a,'c) bdd) (x3:('a,'d) bdd) : ('a,any) bdd option = ite_cst ~is_bdd:true x1 x2 x3
+  let ite_cst (x1:('a,'b) bdd) (x2:('a,'c) bdd) (x3:('a,'d) bdd) : bool option = ite_cst ~is_bdd:true x1 x2 x3
   let is_ite_cst (x1:('a,'b) bdd) (x2:('a,'c) bdd) (x3:('a,'d) bdd) = is_ite_cst ~is_bdd:true x1 x2 x3
   let varmap (x:('a,'b) bdd) : ('a,'b) bdd = varmap ~is_bdd:true x
   let permute ?memo ~perm (x:('a,'b) bdd) : ('a,'b) bdd = permute ~is_bdd:true ?memo ~perm x
@@ -159,17 +159,17 @@ module B = struct
   let iter_node (f:('a,any) bdd -> unit) (x:('a,'b) bdd) = iter_node ~is_bdd:true f x
   let (transfer : ('a,'c) bdd -> man:'b Man.t -> ('b,'c) bdd) = fun x ~man -> transfer ~is_bdd:true x ~man
 
-  let (support_inter:('a,[>supp]) bdd -> ('a,[>supp]) bdd -> ('a,[<supp]) bdd) = gcube_or
-  let (support_union:('a,[>supp]) bdd -> ('a,[>supp]) bdd -> ('a,[<supp]) bdd) = gand
-  let (support_diff:('a,[>supp]) bdd -> ('a,[>supp]) bdd -> ('a,[<supp]) bdd) = gcofactor
-  let (cube_and : ('a,[>cube]) bdd -> ('a,[>cube]) bdd -> ('a,[<cube]) bdd) = gand
-  let (cube_or : ('a,[>cube]) bdd -> ('a,[>cube]) bdd -> ('a,[<cube]) bdd) = gcube_or
+  let (support_inter:('a,[>supp]) bdd -> ('a,[>supp]) bdd -> ('a,supp) bdd) = gcube_or
+  let (support_union:('a,[>supp]) bdd -> ('a,[>supp]) bdd -> ('a,supp) bdd) = gand
+  let (support_diff:('a,[>supp]) bdd -> ('a,[>supp]) bdd -> ('a,supp) bdd) = gcofactor
+  let (cube_and : ('a,[>cube]) bdd -> ('a,[>cube]) bdd -> ('a,cube) bdd) = gand
+  let (cube_or : ('a,[>cube]) bdd -> ('a,[>cube]) bdd -> ('a,cube) bdd) = gcube_or
   let cube_union = cube_or
 
   external nbtruepaths : ('a,'b) bdd -> float = "cudd_caml_bdd_Cudd_CountPathsToNonZero"
   external pick_minterm : ('a,'b) bdd -> Man.tbool array = "cudd_caml_pick_minterm"
-  external pick_cube_on_support : supp:('a,[>supp]) bdd -> ('a,'c) bdd -> ('a,[<cube]) bdd = "cudd_caml_pick_cube_on_support"
-  external pick_cubes_on_support : supp:('a,[>supp]) bdd -> nb:int -> ('a,'c) bdd -> ('a,[<cube]) bdd array = "cudd_caml_pick_cubes_on_support"
+  external pick_cube_on_support : supp:('a,[>supp]) bdd -> ('a,'c) bdd -> ('a,cube) bdd = "cudd_caml_pick_cube_on_support"
+  external pick_cubes_on_support : supp:('a,[>supp]) bdd -> nb:int -> ('a,'c) bdd -> ('a,cube) bdd array = "cudd_caml_pick_cubes_on_support"
 
   external iter_cube: (Man.tbool array -> unit) -> ('a,'b) bdd -> unit = "cudd_caml_bdd_iter_cube"
   external iter_prime: (Man.tbool array -> unit) -> lower:('a,'b) bdd -> upper:('a,'c) bdd -> unit = "cudd_caml_bdd_iter_prime"

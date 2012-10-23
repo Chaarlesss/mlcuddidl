@@ -4,7 +4,7 @@
    Please read the COPYING file packaged in the distribution  *)
 
 
-type +'a t = 'a Dd.vdd
+type 'a t = 'a Dd.vdd
 (** Type of VDDs (that are necessarily attached to a manager of
     type [Man.vt=Man.v Man.t]).
 
@@ -14,7 +14,7 @@ type +'a t = 'a Dd.vdd
     automatically garbage collected. *)
 
 (** Public type for exploring the abstract type [t] *)
-type +'a vdd =
+type 'a vdd = 'a Dd.V.inspect =
 | Leaf of 'a               (** Terminal value *)
 | Ite of int * 'a t * 'a t (** Decision on CUDD variable *)
 

@@ -3,9 +3,6 @@
 (* This file is part of the MLCUDDIDL Library, released under LGPL license.
    Please read the COPYING file packaged in the distribution  *)
 
-type 'a capsule = private {
-  content : 'a
-}
 type 'a unique
   (** Type of unique representants of MTBDD leaves of type ['a].
 
@@ -39,9 +36,9 @@ val get : 'a unique -> 'a
   (** Type conversion (no computation) *)
 
 (** Public type for exploring the abstract type [t] *)
-type 'a mtbdd =
-  | Leaf of 'a unique        (** Terminal value *)
-  | Ite of int * 'a t * 'a t (** Decision on CUDD variable *)
+type 'a mtbdd = 'a Vdd.vdd =
+  | Leaf of 'a               (** Terminal value *)
+  | Ite of int * 'a Vdd.t * 'a Vdd.t (** Decision on CUDD variable *)
 
 (** We refer to the modules {!Add} and {!Vdd} for the description
     of the interface. *)
@@ -50,89 +47,86 @@ type 'a mtbdd =
 (** {3 Extractors} *)
 (* ====================================================== *)
 
-external manager : 'a t -> Man.v Man.t = "camlidl_cudd_bdd_manager"
+val manager : 'a t -> Man.vt
   (** Returns the manager associated to the MTBDD *)
 
-external is_cst : 'a t -> bool = "camlidl_cudd_bdd_is_cst"
+val is_cst : 'a t -> bool
   (** Is the MTBDD constant ? *)
 
-external topvar : 'a t -> int = "camlidl_cudd_bdd_topvar"
+val topvar : 'a t -> int
   (** Returns the index of the top node of the MTBDD (65535 for a
       constant MTBDD) *)
 
-external dthen : 'a t -> 'a t = "camlidl_cudd_add_dthen"
+val dthen : 'a t -> 'a t
   (** Returns the positive subnode of the MTBDD *)
 
-external delse : 'a t -> 'a t = "camlidl_cudd_add_delse"
+val delse : 'a t -> 'a t
   (** Returns the negative subnode of the MTBDD *)
 
-external cofactors : int -> 'a t -> 'a t * 'a t = "camlidl_cudd_add_cofactors"
+val cofactors : int -> 'a t -> 'a t * 'a t
   (** Returns the positive and negative cofactor of the MTBDD wrt
       the variable *)
 
-external cofactor : 'a t -> Man.v Bdd.t -> 'a t = "camlidl_cudd_add_cofactor"
+val cofactor : 'a t -> cube:[>Bdd.cube] Bdd.vt -> 'a t
   (** [cofactor mtbdd cube] evaluates [mtbbdd] on the cube [cube] *)
 
 val dval_u : 'a t -> 'a unique
 val dval : 'a t -> 'a
   (** Returns the value of the assumed constant MTBDD *)
 
-val inspect : 'a t -> 'a mtbdd
+val inspect_u : 'a t -> 'a unique mtbdd
   (** Decompose the MTBDD *)
 
 (* ====================================================== *)
 (** {3 Supports} *)
 (* ====================================================== *)
 
-external support : 'a t -> Man.v Bdd.t = "camlidl_cudd_bdd_support"
-external supportsize : 'a t -> int = "camlidl_cudd_bdd_supportsize"
-external is_var_in : int -> 'a t -> bool = "camlidl_cudd_bdd_is_var_in"
-external vectorsupport : 'a t array -> Man.v Bdd.t = "camlidl_cudd_bdd_vectorsupport"
-external vectorsupport2 : Man.v Bdd.t array -> 'a t array -> Man.v Bdd.t = "camlidl_cudd_add_vectorsupport2"
+val support : 'a t -> Bdd.supp Bdd.vt
+val supportsize : 'a t -> int
+val is_var_in : int -> 'a t -> bool
+val vectorsupport : 'a t array -> Bdd.supp Bdd.vt
 
 (* ====================================================== *)
 (** {3 Classical operations} *)
 (* ====================================================== *)
 
-val cst_u : Man.v Man.t -> 'a unique -> 'a t
-val cst : Man.v Man.t -> 'a table -> 'a -> 'a t
+val cst_u : Man.vt -> 'a unique -> 'a t
+val cst : Man.vt -> 'a table -> 'a -> 'a t
 
-external ite : Man.v Bdd.t -> 'a t -> 'a t -> 'a t = "camlidl_cudd_add_ite"
-external ite_cst : Man.v Bdd.t -> 'a t -> 'a t -> 'a t option = "camlidl_cudd_add_ite_cst"
-external eval_cst : 'a t -> Man.v Bdd.t -> 'a t option = "camlidl_cudd_add_eval_cst"
-external compose : int -> Man.v Bdd.t -> 'a t -> 'a t = "camlidl_cudd_add_compose"
-external vectorcompose: Man.v Bdd.t array -> 'a t -> 'a t = "camlidl_cudd_add_vectorcompose"
+val ite : [>Bdd.any] Bdd.vt -> 'a t -> 'a t -> 'a t
+val eval_cst_u : care:[>Bdd.any] Bdd.vt -> 'a t -> 'a unique option
+val eval_cst : care:[>Bdd.any] Bdd.vt -> 'a t -> 'a option
+val ite_cst_u : [>Bdd.any] Bdd.vt -> 'a t -> 'a t -> 'a unique option
+val ite_cst : [>Bdd.any] Bdd.vt -> 'a t -> 'a t -> 'a option
+val compose : var:int -> f:[>Bdd.any] Bdd.vt -> 'a t -> 'a t
+val vectorcompose: ?memo:Memo.t -> [>Bdd.any] Bdd.vt array -> 'a t -> 'a t
 
 (* ====================================================== *)
 (** {3 Logical tests} *)
 (* ====================================================== *)
 
-external is_equal : 'a t -> 'a t -> bool = "camlidl_cudd_bdd_is_equal"
-external is_equal_when : 'a t -> 'a t -> Man.v Bdd.t -> bool = "camlidl_cudd_bdd_is_equal_when"
+val is_equal : 'a t -> 'a t -> bool
+val is_equal_when : 'a t -> 'a t -> care:[>Bdd.any] Bdd.vt -> bool
 
-
-val is_eval_cst_u : 'a t -> Man.v Bdd.t -> 'a unique option
-val is_ite_cst_u : Man.v Bdd.t -> 'a t -> 'a t -> 'a unique option
-val is_eval_cst : 'a t -> Man.v Bdd.t -> 'a option
-val is_ite_cst : Man.v Bdd.t -> 'a t -> 'a t -> 'a option
+val is_eval_cst : care:[>Bdd.any] Bdd.vt -> 'a t -> bool
+val is_ite_cst : [>Bdd.any] Bdd.vt -> 'a t -> 'a t -> bool
 
 (* ====================================================== *)
 (** {3 Structural information} *)
 (* ====================================================== *)
 
-external size : 'a t -> int = "camlidl_cudd_bdd_size"
-external nbpaths : 'a t -> float = "camlidl_cudd_bdd_nbpaths"
-external nbnonzeropaths : 'a t -> float = "camlidl_cudd_bdd_nbtruepaths"
-external nbminterms : int -> 'a t -> float = "camlidl_cudd_bdd_nbminterms"
-external density : int -> 'a t -> float = "camlidl_cudd_bdd_density"
-external nbleaves : 'a t -> int = "camlidl_cudd_add_nbleaves"
+val size : 'a t -> int
+val nbpaths : 'a t -> float
+val nbminterms : nbvars:int -> 'a t -> float
+val density : nbvars:int -> 'a t -> float
+val nbleaves : 'a t -> int
 
 (* ====================================================== *)
 (** {3 Variable mapping} *)
 (* ====================================================== *)
 
-external varmap : 'a t -> 'a t = "camlidl_cudd_add_varmap"
-external permute : 'a t -> int array -> 'a t = "camlidl_cudd_add_permute"
+val varmap : 'a t -> 'a t
+val permute : ?memo:Memo.t -> perm:int array -> 'a t -> 'a t
 
 (* ====================================================== *)
 (** {3 Iterators} *)
@@ -140,21 +134,19 @@ external permute : 'a t -> int array -> 'a t = "camlidl_cudd_add_permute"
 
 val iter_cube_u : (Man.tbool array -> 'a unique -> unit) -> 'a t -> unit
 val iter_cube : (Man.tbool array -> 'a -> unit) -> 'a t -> unit
-
-
-external iter_node: ('a t -> unit) -> 'a t -> unit = "camlidl_cudd_iter_node"
+val iter_node: ('a t -> unit) -> 'a t -> unit
 
 (* ====================================================== *)
 (** {3 Leaves and guards} *)
 (* ====================================================== *)
 
-external guard_of_node : 'a t -> 'a t -> Man.v Bdd.t = "camlidl_cudd_add_guard_of_node"
-external guard_of_nonbackground : 'a t -> Man.v Bdd.t = "camlidl_cudd_add_guard_of_nonbackground"
-val nodes_below_level: ?max:int -> 'a t -> int option -> 'a t array
+val guard_of_node : 'a t -> node:'a t -> Bdd.any Bdd.vt
+val guard_of_nonbackground : 'a t -> Bdd.any Bdd.vt
+val nodes_below_level: ?level:int -> ?max:int -> 'a t -> 'a t array
 
 (** Guard of the given leaf *)
-val guard_of_leaf_u : 'a t -> 'a unique -> Man.v Bdd.t
-val guard_of_leaf : 'a table -> 'a t -> 'a -> Man.v Bdd.t
+val guard_of_leaf_u : 'a t -> 'a unique -> Bdd.any Bdd.vt
+val guard_of_leaf : 'a table -> 'a t -> 'a -> Bdd.any Bdd.vt
 
 (** Returns the set of leaf values (excluding the background value) *)
 val leaves_u: 'a t -> 'a unique array
@@ -165,17 +157,17 @@ val pick_leaf_u : 'a t -> 'a unique
 val pick_leaf : 'a t -> 'a
 
 (** Returns the set of leaf values together with their guard in the ADD *)
-val guardleafs_u : 'a t -> (Man.v Bdd.t * 'a unique) array
-val guardleafs : 'a t -> (Man.v Bdd.t * 'a) array
+val guardleafs_u : 'a t -> (Bdd.any Bdd.vt * 'a unique) array
+val guardleafs : 'a t -> (Bdd.any Bdd.vt * 'a) array
 
 (* ====================================================== *)
 (** {3 Minimizations} *)
 (* ====================================================== *)
 
-external constrain: 'a t -> Man.v Bdd.t -> 'a t = "camlidl_cudd_add_constrain"
-external tdconstrain: 'a t -> Man.v Bdd.t -> 'a t = "camlidl_cudd_add_tdconstrain"
-external restrict: 'a t -> Man.v Bdd.t -> 'a t = "camlidl_cudd_add_restrict"
-external tdrestrict : 'a t -> Man.v Bdd.t -> 'a t = "camlidl_cudd_add_tdrestrict"
+val constrain: 'a t -> care:[>Bdd.any] Bdd.vt -> 'a t
+val tdconstrain: 'a t -> care:[>Bdd.any] Bdd.vt -> 'a t
+val restrict: 'a t -> care:[>Bdd.any] Bdd.vt -> 'a t
+val tdrestrict : 'a t -> care:[>Bdd.any] Bdd.vt -> 'a t
 
 (* ====================================================== *)
 (** {3 Conversions} *)
@@ -195,7 +187,7 @@ Two options:
 (** {3 Miscellaneous} *)
 (* ====================================================== *)
 
-external transfer : 'a t -> Man.v Man.t -> 'a t = "camlidl_cudd_add_transfer"
+val transfer : 'a t -> man:Man.vt -> 'a t
 
 (* ====================================================== *)
 (** {3 Printing} *)
@@ -209,6 +201,6 @@ val print_minterm:
   (Format.formatter -> 'a -> unit) ->
   Format.formatter -> 'a t -> unit
 val print:
-  (Format.formatter -> Man.v Bdd.t -> unit) ->
+  (Format.formatter -> Bdd.any Bdd.vt -> unit) ->
   (Format.formatter -> 'a -> unit) ->
   Format.formatter -> 'a t -> unit

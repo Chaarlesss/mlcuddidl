@@ -33,7 +33,7 @@ val mapleaf1 : ('a -> 'b) -> 'a Vdd.t -> 'b Vdd.t
 
 val retractivemapleaf1 :
   default:'a Vdd.t ->
-  (Bdd.vt -> 'b -> Bdd.vt * 'a) -> 'b Vdd.t -> 'a Vdd.t
+  (Bdd.any Bdd.vt -> 'b -> Bdd.any Bdd.vt * 'a) -> 'b Vdd.t -> 'a Vdd.t
   (** Assuming that the new guards delivered by the function [f]
       are disjoint, return the MTBDD [default \/ (\/ nguard ->
       nleaf)] with [(nguard,nleaf) = f guard leaf]. *)
@@ -41,14 +41,14 @@ val retractivemapleaf1 :
 val expansivemapleaf1 :
   default:'a Vdd.t ->
   merge:('a Vdd.t -> 'a Vdd.t -> 'a Vdd.t) ->
-  (Bdd.vt -> 'b -> Bdd.vt * 'a) -> 'b Vdd.t -> 'a Vdd.t
+  (Bdd.any Bdd.vt -> 'b -> Bdd.any Bdd.vt * 'a) -> 'b Vdd.t -> 'a Vdd.t
   (** Same as above, but with [\/] replaced by [merge] (supposed
       to be commutative and associative). *)
 
 val combineleaf1 :
   default:'c ->
   combine:('b -> 'c -> 'c) ->
-  (Bdd.vt -> 'a -> 'b) -> 'a Vdd.t -> 'c
+  (Bdd.any Bdd.vt -> 'a -> 'b) -> 'a Vdd.t -> 'c
   (** Generic function, instanciated above.  The result [acc]
       (kind of accumulator) is initialized with [default], to
       which one progressively add [combine acc (f guard leaf)].
@@ -69,16 +69,16 @@ val mapleaf2 : ('a -> 'b -> 'c) -> 'a Vdd.t -> 'b Vdd.t -> 'c Vdd.t
 
 val retractivemapleaf2 :
   default:'a Vdd.t ->
-  (Bdd.vt -> 'b -> 'c -> Bdd.vt * 'a) ->
+  (Bdd.any Bdd.vt -> 'b -> 'c -> Bdd.any Bdd.vt * 'a) ->
   'b Vdd.t -> 'c Vdd.t -> 'a Vdd.t
   (** Assuming that the new guards delivered by the function [f]
-      are disjoint, return the MTBDD 
-      [default \/ (\/ nguard -> nleaf)] with 
+      are disjoint, return the MTBDD
+      [default \/ (\/ nguard -> nleaf)] with
       [(nguard,nleaf) = f (guard1 /\ guard2) leaf1 leaf2]. *)
 val expansivemapleaf2 :
   default:'a Vdd.t ->
   merge:('a Vdd.t -> 'a Vdd.t -> 'a Vdd.t) ->
-  (Bdd.vt -> 'b -> 'c -> Bdd.vt * 'a) ->
+  (Bdd.any Bdd.vt -> 'b -> 'c -> Bdd.any Bdd.vt * 'a) ->
   'b Vdd.t -> 'c Vdd.t -> 'a Vdd.t
   (** Same as above, but with [\/] replaced by [merge] (supposed
       to be commutative and associative). *)
@@ -86,7 +86,7 @@ val expansivemapleaf2 :
 val combineleaf2 :
   default:'d ->
   combine:('c -> 'd -> 'd) ->
-  (Bdd.vt -> 'a -> 'b -> 'c) ->
+  (Bdd.any Bdd.vt -> 'a -> 'b -> 'c) ->
   'a Vdd.t -> 'b Vdd.t -> 'd
   (** Generic function, instanciated above.  The result [acc]
       (kind of accumulator) is initialized with [default], to
@@ -108,10 +108,10 @@ val combineleaf_array :
   default:'c ->
   combine:('b -> 'c -> 'c) ->
   tabsorbant:('a -> bool) option array ->
-  (Bdd.vt -> 'a array -> 'b) -> 'a Vdd.t array -> 'c
+  (Bdd.any Bdd.vt -> 'a array -> 'b) -> 'a Vdd.t array -> 'c
   (** Generic function,.  The result [acc] (kind of accumulator)
       is initialized with [default], to which one progressively
-      add [combine acc (f (/\ tguard) tleaves)].  
+      add [combine acc (f (/\ tguard) tleaves)].
 
       The arrays are assumed to be non-empty.
 
@@ -127,7 +127,7 @@ val combineleaf1_array :
   combine:('c -> 'd -> 'd) ->
   ?absorbant:('a -> bool) ->
   tabsorbant:('b -> bool) option array ->
-  (Bdd.vt -> 'a -> 'b array -> 'c) ->
+  (Bdd.any Bdd.vt -> 'a -> 'b array -> 'c) ->
   'a Vdd.t -> 'b Vdd.t array -> 'd
 val combineleaf2_array :
   default:'e ->
@@ -135,7 +135,7 @@ val combineleaf2_array :
   ?absorbant1:('a -> bool) ->
   ?absorbant2:('b -> bool) ->
   tabsorbant:('c -> bool) option array ->
-  (Bdd.vt -> 'a -> 'b -> 'c array -> 'd) ->
+  (Bdd.any Bdd.vt -> 'a -> 'b -> 'c array -> 'd) ->
   'a Vdd.t -> 'b Vdd.t -> 'c Vdd.t array -> 'e
   (** Functions similar to [combineleaf_array], but in which the
       first (resp. first and second) leaves (and MTBDD) type may be
@@ -145,7 +145,7 @@ val combineleaf2_array :
 (** {3 Internal functions} *)
 (*  ********************************************************************** *)
 
-val combineretractive : Bdd.vt * 'a -> 'a Vdd.t -> 'a Vdd.t
+val combineretractive : Bdd.any Bdd.vt * 'a -> 'a Vdd.t -> 'a Vdd.t
   (** [combinetractive (guard,leaf) vdd = Vdd.ite guard leaf vdd].
       Used in cases where [guard] and the guard of ``interesting
       things'' in [vdd] are disjoint, hence the name.
@@ -154,7 +154,7 @@ val combineretractive : Bdd.vt * 'a -> 'a Vdd.t -> 'a Vdd.t
 val combineexpansive :
   default:'a Vdd.t ->
   merge:('a Vdd.t -> 'b Vdd.t -> 'c Vdd.t) ->
-  Bdd.vt * 'a -> 'b Vdd.t -> 'c Vdd.t
+  Bdd.any Bdd.vt * 'a -> 'b Vdd.t -> 'c Vdd.t
   (** [combineexpansive ~default ~merge (guard,leaf) vdd = merge
       (Vdd.ite guard leaf default) vdd]. Implements in some way an
       ``union'' of [(guard,leaf)] and [vdd]. *)

@@ -1,5 +1,7 @@
 (** Interface to CUDD library *)
 
+(**
+
 {2 Introduction}
 
 User modules:
@@ -14,6 +16,7 @@ User modules:
   on BDDs and MTBDDs, and user operations.
 
 Internal modules:
+- {!Dd}: Interface of Decision Diagrams to C
 - {!Vdd}: MTBDDs on unhashed OCaml values;
 - {!Custom}: for user operations on ADDs and MTBDDs;
 - {!Weakke} and {!PWeakke}: for polymorphic weak hashtables.
@@ -119,3 +122,4 @@ Flags should be properly set in [Makefile.config] (starting from
 
 Also, the Make rules for some [example.ml] file shows how to compile
 a program with the interface.
+*)

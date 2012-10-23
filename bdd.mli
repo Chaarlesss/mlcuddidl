@@ -88,7 +88,7 @@ val inspect: ('a,'b) t -> ('a,'b) bdd
 (** {3  Supports} *)
 (*  ====================================================== *)
 
-val support : ('a,'b) t -> ('a,[<supp]) t
+val support : ('a,'b) t -> ('a,supp) t
 (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_Support}[Cudd_Support]}. Returns
    the support of the BDD *)
 
@@ -100,7 +100,7 @@ val is_var_in : int -> ('a,'b) t -> bool
 (** [Cuddaux_IsVarIn]. Does the given variable belong the support
     of the BDD ? *)
 
-val vectorsupport : ('a,'b) t array -> ('a,[<supp]) t
+val vectorsupport : ('a,'b) t array -> ('a,supp) t
 (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_Cudd_VectorSupport}[Cudd_Cudd_VectorSupport]}. Returns
    the support of the array of BDDs.
 
@@ -113,15 +113,15 @@ val vectorsupport : ('a,'b) t array -> ('a,[<supp]) t
 (** {3  Manipulation of supports} *)
 (*  ====================================================== *)
 
-val support_inter : ('a,[>supp]) t -> ('a,[>supp]) t -> ('a,[<supp]) t
+val support_inter : ('a,[>supp]) t -> ('a,[>supp]) t -> ('a,supp) t
 (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_bddLiteralSetIntersection}[Cudd_bddLiteralSetIntersection]}. Intersection
    of supports *)
 
-val support_union: ('a,[>supp]) t -> ('a,[>supp]) t -> ('a,[<supp]) t
+val support_union: ('a,[>supp]) t -> ('a,[>supp]) t -> ('a,supp) t
 (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_bddAnd}[Cudd_bddAnd]}. Union
    of supports *)
 
-val support_diff: ('a,[>supp]) t -> ('a,[>supp]) t -> ('a,[<supp]) t
+val support_diff: ('a,[>supp]) t -> ('a,[>supp]) t -> ('a,supp) t
 (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_Cofactor}[Cudd_Cofactor]}. Difference
    of supports *)
 
@@ -350,12 +350,12 @@ val existxor : supp:('a,[>supp]) t -> ('a,'c) t -> ('a,'d) t -> ('a,any) t
 (** {3  Cubes} *)
 (*  ====================================================== *)
 
-val cube_of_bdd: ('a,'b) t -> ('a,[<cube]) t
+val cube_of_bdd: ('a,'b) t -> ('a,cube) t
 (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_FindEssential}[Cudd_FindEssential]}. Returns
    the smallest cube (in the sens of inclusion) included in the
    BDD. *)
 
-val cube_of_minterm: 'a Man.t -> Man.tbool array -> ('a,[<cube]) t
+val cube_of_minterm: 'a Man.t -> Man.tbool array -> ('a,cube) t
 (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_CubeArrayToBdd}[Cudd_CubeArrayToBdd]}. Converts
    a minterm to a BDD (which is a cube). *)
 
@@ -363,9 +363,9 @@ val list_of_cube: ('a,[>cube]) t -> (int*bool) list
 (** Converts a cube into a list of pairs of a variable and a
     phase. *)
 
-val cube_and : ('a,[>cube]) t -> ('a,[>cube]) t -> ('a,[<cube]) t
-val cube_or : ('a,[>cube]) t -> ('a,[>cube]) t -> ('a,[<cube]) t
-val cube_union : ('a,[>cube]) t -> ('a,[>cube]) t -> ('a,[<cube]) t
+val cube_and : ('a,[>cube]) t -> ('a,[>cube]) t -> ('a,cube) t
+val cube_or : ('a,[>cube]) t -> ('a,[>cube]) t -> ('a,cube) t
+val cube_union : ('a,[>cube]) t -> ('a,[>cube]) t -> ('a,cube) t
 (** [Cuddaux_bddCubeUnion]. Computes the union of cubes, which is
     the smallest cube containing both the argument cubes. *)
 
@@ -373,7 +373,7 @@ val pick_minterm : ('a,'b) t -> Man.tbool array
 (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_bddPickOneCube}[Cudd_bddPickOneCube]}. Picks
    randomly a minterm in the BDD. *)
 
-val pick_cube_on_support : supp:('a,[>supp]) t -> ('a,'c) t -> ('a,[<cube]) t
+val pick_cube_on_support : supp:('a,[>supp]) t -> ('a,'c) t -> ('a,cube) t
 (**
    {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_bddPickOneMinterm}[Cudd_bddPickOneMinterm]}. [pick_cube_on_support
    ~supp bdd] picks randomly a minterm/cube in the BDD, in which
@@ -382,7 +382,7 @@ val pick_cube_on_support : supp:('a,[>supp]) t -> ('a,'c) t -> ('a,[<cube]) t
    The support argument should contain the support of the BDD
    (otherwise the result may be incorrect). *)
 
-val pick_cubes_on_support : supp:('a,[>supp]) t -> nb:int -> ('a,'c) t -> ('a,[<cube]) t array
+val pick_cubes_on_support : supp:('a,[>supp]) t -> nb:int -> ('a,'c) t -> ('a,cube) t array
 (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_bddPickArbitraryMinterms}[Cudd_bddPickArbitraryMinterms]}. [pick_cubes_on_support
    ~supp ~nb bdd] picks randomly [nb] minterms/cubes in the BDD, in
    which all the variables in the support have a definite value. The

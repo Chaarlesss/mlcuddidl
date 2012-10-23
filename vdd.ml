@@ -5,7 +5,7 @@
 
 (** MTBDDs with OCaml values (INTERNAL) *)
 
-type +'a t = 'a Dd.vdd
+type 'a t = 'a Dd.vdd
 (** Type of VDDs (that are necessarily attached to a manager of
     type [Man.v Man.t]).
 
@@ -15,7 +15,7 @@ type +'a t = 'a Dd.vdd
     automatically garbage collected. *)
 
 (** Public type for exploring the abstract type [t] *)
-type +'a vdd = 'a Dd.V.inspect =
+type 'a vdd = 'a Dd.V.inspect =
 | Leaf of 'a         (** Terminal value *)
 | Ite of int * 'a t * 'a t (** Decision on CUDD variable *)
 

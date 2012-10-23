@@ -91,8 +91,6 @@ uninstall:
 mostlyclean: clean
 	(cd cudd-2.4.2; make clean)
 	/bin/rm -f Makefile.depend TAGS
-	/bin/rm -f $(IDLMODULES:%=%.ml) $(IDLMODULES:%=%.mli) $(IDLMODULES:%=%_caml.c) tmp/* html/*
-	/bin/rm -f mlcuddidl.?? mlcuddidl.??? mlcuddidl.info example example.opt mlcuddidl.tex ocamldoc.tex *.dvi style.css ocamldoc.sty index.html
 
 distclean: mostlyclean
 	(cd cudd-2.4.2; make distclean; /bin/rm -f *.a)
@@ -100,7 +98,7 @@ distclean: mostlyclean
 clean:
 	/bin/rm -f cuddtop *.byte *.opt
 	/bin/rm -f cuddaux.?? cuddaux.??? cuddaux.info
-	/bin/rm -f *.[ao] *.so *.cm[ioxat] *.cmti *.cmxa *.opt *.opt2 *.annot cudd_ocamldoc.mli
+	/bin/rm -f *.[ao] *.so *.cm[ioxat] *.cmti *.cmxa *.opt *.opt2 *.annot
 	/bin/rm -f cmttb*
 	/bin/rm -fr html
 

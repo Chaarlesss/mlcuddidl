@@ -122,7 +122,7 @@ val make_op3 :
 val apply_op3 :
   ('a, 'b, 'c, 'd) op3 -> 'a Vdd.t -> 'b Vdd.t -> 'c Vdd.t -> 'd Vdd.t
 
-v(** {5 Example:}
+(** {5 Example:}
 
     Still assuming [type t = bool Vdd.t]
     and corresponding diagrams [bdd1:t], [bdd2:t], [bdd3:t].
