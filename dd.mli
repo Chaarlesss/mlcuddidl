@@ -19,25 +19,25 @@ type 'a vdd = (Man.v, 'a   ) avdd
 (** {3 Applies to any diagram} *)
 (*  ********************************************************************** *)
 
-external manager : ('a,'b) t -> 'a Man.t = "cudd_caml__manager"
-external is_cst : ('a,'b) t -> bool = "cudd_caml__Cudd_IsConstant" "noalloc"
-external topvar : ('a,'b) t -> int = "cudd_caml__Cudd_NodeReadIndex"
-external support : ('a,'b) t -> ('a,[<supp]) bdd = "cudd_caml__Cuddaux_Support"
-external supportsize : ('a,'b) t -> int = "cudd_caml__Cuddaux_SupportSize"
-external is_var_in : int -> ('a,'b) t -> bool = "cudd_caml__Cuddaux_is_var_in"
-external vectorsupport : ('a,'b) t array -> ('a,[<supp]) bdd = "cudd_caml__vectorsupport"
-external size : ('a,'b) t -> int = "cudd_caml__Cudd_DagSize"
-external nbleaves : ('a,'b) t -> int = "cudd_caml__Cudd_CountLeaves"
-external nbpaths : ('a,'b) t -> float = "cudd_caml__Cudd_CountPath"
-external nbminterms : nbvars:int -> ('a,'b) t -> float = "cudd_caml__Cudd_CountMinterm"
-external density : nbvars:int -> ('a,'b) t -> float = "cudd_caml__Cudd_Density"
-external is_equal : ('a,'b) t -> ('a,'c) t -> bool = "cudd_caml__is_equal"
+external manager : ('a,'b) t -> 'a Man.t = "cudd_caml_dd_manager"
+external is_cst : ('a,'b) t -> bool = "cudd_caml_dd_Cudd_IsConstant" "noalloc"
+external topvar : ('a,'b) t -> int = "cudd_caml_dd_Cudd_NodeReadIndex"
+external support : ('a,'b) t -> ('a,[<supp]) bdd = "cudd_caml_dd_Cuddaux_Support"
+external supportsize : ('a,'b) t -> int = "cudd_caml_dd_Cuddaux_SupportSize"
+external is_var_in : int -> ('a,'b) t -> bool = "cudd_caml_dd_Cuddaux_IsVarIn"
+external vectorsupport : ('a,'b) t array -> ('a,[<supp]) bdd = "cudd_caml_dd_vectorsupport"
+external size : ('a,'b) t -> int = "cudd_caml_dd_Cudd_DagSize"
+external nbleaves : ('a,'b) t -> int = "cudd_caml_dd_Cudd_CountLeaves"
+external nbpaths : ('a,'b) t -> float = "cudd_caml_dd_Cudd_CountPath"
+external nbminterms : nbvars:int -> ('a,'b) t -> float = "cudd_caml_dd_Cudd_CountMinterm"
+external density : nbvars:int -> ('a,'b) t -> float = "cudd_caml_dd_Cudd_Density"
+external is_equal : ('a,'b) t -> ('a,'c) t -> bool = "cudd_caml_dd_is_equal"
 external is_equal_when :
-  ('a,'b) t -> ('a,'c) t -> care:('a,'d) bdd -> bool = "cudd_caml__is_equal_when"
-external list_of_support : ('a,[>supp]) bdd -> int list = "cudd_caml__list_of_support"
-external list_of_cube : ('a,[>cube]) bdd -> (int * bool) list = "cudd_caml__list_of_cube"
-external minterm_of_cube : ('a,[>cube]) bdd -> Man.tbool array = "cudd_caml__minterm_of_cube"
-external cube_of_minterm : 'a Man.t -> Man.tbool array -> ('a,cube) bdd = "cudd_caml__cube_of_minterm"
+  ('a,'b) t -> ('a,'c) t -> care:('a,'d) bdd -> bool = "cudd_caml_dd_is_equal_when"
+external list_of_support : ('a,[>supp]) bdd -> int list = "cudd_caml_dd_list_of_support"
+external list_of_cube : ('a,[>cube]) bdd -> (int * bool) list = "cudd_caml_dd_list_of_cube"
+external minterm_of_cube : ('a,[>cube]) bdd -> Man.tbool array = "cudd_caml_dd_minterm_of_cube"
+external cube_of_minterm : 'a Man.t -> Man.tbool array -> ('a,cube) bdd = "cudd_caml_dd_cube_of_minterm"
 
 (*  ********************************************************************** *)
 (** {3 Applies to BDD} *)
@@ -204,10 +204,10 @@ module AV : sig
   external dthen : ('a,'b) avdd -> ('a,'b) avdd = "cudd_caml_avdd_cuddT"
   external delse : ('a,'b) avdd -> ('a,'b) avdd = "cudd_camla_avdd_cuddE"
   external dval : ('a,'b) avdd -> 'b = "cudd_caml_avdd_dval"
-  external cst : 'a Man.t -> 'b -> ('a,'b) avdd = "camlidl_cudd_avdd_cst"
-  external ite : ('a,'b) bdd -> ('a,'c) avdd -> ('a,'c) avdd -> ('a,'c) avdd = "camlidl_cudd_avdd_Cuddaux_addIte_ite"
-  external eval_cst : care:('a,'c) bdd -> ('a,'b) avdd -> 'b option = "camlidl_cudd_avdd_eval_cst"
-  external is_eval_cst : care:('a,'c) bdd -> ('a,'b) avdd -> bool = "camlidl_cudd_avdd_is_eval_cst"
+  external cst : 'a Man.t -> 'b -> ('a,'b) avdd = "cudd_caml_avdd_cst"
+  external ite : ('a,'b) bdd -> ('a,'c) avdd -> ('a,'c) avdd -> ('a,'c) avdd = "cudd_caml_avdd_Cuddaux_addIte_ite"
+  external eval_cst : care:('a,'c) bdd -> ('a,'b) avdd -> 'b option = "cudd_caml_avdd_eval_cst"
+  external is_eval_cst : care:('a,'c) bdd -> ('a,'b) avdd -> bool = "cudd_caml_avdd_is_eval_cst"
   val cofactors : int -> ('a,'b) avdd -> ('a,'b) avdd * ('a,'b) avdd
   val ite_cst :
     ('a,'b) bdd -> ('a,'c) avdd -> ('a,'c) avdd -> 'c option
@@ -221,10 +221,10 @@ module AV : sig
   external iter_cube : (Man.tbool array -> 'b -> unit) -> ('a,'b) avdd -> unit = "cudd_caml_avbdd_iter_cube"
   val guard_of_node : ('a,'b) avdd -> node:('a,'b) avdd -> ('a,any) bdd
   external guard_of_nonbackground : ('a,'b) avdd -> ('a,any) bdd = "cudd_caml_avdd_guard_of_nonbackground"
-  external nodes_below_level : ?level:int -> ?max:int -> ('a,'b) avdd -> ('a,'b) avdd array = "camlidl_cudd_avdd_nodes_below_level"
-  external guard_of_leaf : ('a,'b) avdd -> 'b -> ('a,any) bdd = "camlidl_cudd_avdd_guard_of_leaf"
-  external leaves : ('a,'b) avdd -> 'b array = "camlidl_cudd_avdd_leaves"
-  external pick_leaf : ('a,'b) avdd -> 'b = "camlidl_cudd_avdd_pick_leaf"
+  external nodes_below_level : ?level:int -> ?max:int -> ('a,'b) avdd -> ('a,'b) avdd array = "cudd_caml_avdd_nodes_below_level"
+  external guard_of_leaf : ('a,'b) avdd -> 'b -> ('a,any) bdd = "cudd_caml_avdd_guard_of_leaf"
+  external leaves : ('a,'b) avdd -> 'b array = "cudd_caml_avdd_leaves"
+  external pick_leaf : ('a,'b) avdd -> 'b = "cudd_caml_avdd_pick_leaf"
   val guardleafs : ('a,'b) avdd -> (('a,any) bdd * 'b) array
 end
 
@@ -256,11 +256,11 @@ module A : sig
   external log : add -> add = "cudd_caml_add_log"
   external is_leq : add -> add -> bool = "cudd_caml_add_Cudd_addLeq"
   external nbnonzeropaths : add -> float = "cudd_caml_bdd_Cudd_CountPathsToNonZero"
-  external of_bdd : (Man.d,'a) bdd -> add = "camlidl_cudd_add_Cudd_BddToAdd"
-  external to_bdd : add -> (Man.d,any) bdd = "camlidl_cudd_add_Cudd_addBddPattern"
-  external to_bdd_threshold : add -> threshold:float -> (Man.d,any) bdd = "camlidl_cudd_add_Cudd_addBddThreshold"
-  external to_bdd_strictthreshold : add -> threshold:float -> (Man.d,any) bdd = "camlidl_cudd_add_Cudd_addBddStrictThreshold"
-  external to_bdd_interval : add -> lower:float -> upper:float -> (Man.d,any) bdd = "camlidl_cudd_add_Cudd_addBddIntervall"
+  external of_bdd : (Man.d,'a) bdd -> add = "cudd_caml_add_Cudd_BddToAdd"
+  external to_bdd : add -> (Man.d,any) bdd = "cudd_caml_add_Cudd_addBddPattern"
+  external to_bdd_threshold : add -> threshold:float -> (Man.d,any) bdd = "cudd_caml_add_Cudd_addBddThreshold"
+  external to_bdd_strictthreshold : add -> threshold:float -> (Man.d,any) bdd = "cudd_caml_add_Cudd_addBddStrictThreshold"
+  external to_bdd_interval : add -> lower:float -> upper:float -> (Man.d,any) bdd = "cudd_caml_add_Cudd_addBddInterval"
 end
 module V : sig
   type 'a inspect =

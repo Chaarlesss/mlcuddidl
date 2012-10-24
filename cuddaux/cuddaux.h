@@ -110,9 +110,9 @@ struct opG {
   struct common commonG;
   int arityGbdd;
   value closureG;
-  DdNode* (*funptrG)(DdManager*, struct opG*,DdNode**);
+  DdNode* (*funptrG)(DdManager*, struct opG*, DdNode**);
   value oclosureBeforeRec;
-  DdNode* (*funptrBeforeRec)(DdManager*, struct opG*, DdNode*, DdNode**);
+  bool (*funptrBeforeRec)(DdManager*, struct opG*, DdNode*, DdNode**);
   value oclosureIte;
   DdNode* (*funptrIte)(DdManager*, struct opG*, int, DdNode*, DdNode*);
 };

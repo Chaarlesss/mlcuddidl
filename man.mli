@@ -60,7 +60,7 @@ external set_gc : heap:int -> gc:(unit -> unit) -> reordering:(unit -> unit) -> 
     them. Default values are [Gc.full_major()] for both hooks.
 *)
 
-external srandom : int -> unit = "cudd_caml_man_srandom"
+external srandom : int -> unit = "cudd_caml_man_Cudd_Srandom"
 (**
    {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_Srandom}[Cudd_Srandom]}.
    Initializes the seed for the CUDD random number generator (used
@@ -301,8 +301,6 @@ type statistics = {
  (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_ReadGarbageCollections}[Cudd_ReadGarbageCollections]}. *)
  keys : int;
  (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_ReadKeys}[Cudd_ReadKeys]}. *)
- linear : int;
-(** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_ReadLinear}[Cudd_ReadLinear]}. *)
   max_cache : int;
  (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_ReadMaxCache}[Cudd_ReadMaxCache]}. *)
 min_dead : int;
@@ -329,6 +327,6 @@ min_dead : int;
 }
 
 external stats : 'a t -> statistics = "cudd_caml_man_stats"
-external error : 'a t -> error = "cudd_caml_man_Cudd_ReadError"
-external get_bddvar_nb : 'a t -> int = "cudd_man_Cudd_ReadSize"
-external get_zddvar_nb : 'a t -> int = "cudd_man_Cudd_ReadZddSize"
+external error : 'a t -> error = "cudd_caml_man_Cudd_ReadErrorCode"
+external get_bddvar_nb : 'a t -> int = "cudd_caml_man_Cudd_ReadSize"
+external get_zddvar_nb : 'a t -> int = "cudd_caml_man_Cudd_ReadZddSize"

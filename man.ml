@@ -22,7 +22,7 @@ type error =
   | INTERNAL_ERROR
 external set_gc : heap:int -> gc:(unit -> unit) -> reordering:(unit -> unit) -> unit
   = "cudd_caml_set_gc"
-external srandom : int -> unit = "cudd_caml_man_srandom"
+external srandom : int -> unit = "cudd_caml_man_Cudd_Srandom"
 external _make : caml:bool -> numVars:int -> numVarsZ:int -> numSlots:int -> cacheSize:int -> maxMemory:int -> 'a t
   = "cudd_caml_man_Cudd_Init_bytecode" "cudd_caml_man_Cudd_Init"
 external debugcheck : 'a t -> bool = "cudd_caml_man_Cudd_DebugCheck"
@@ -120,7 +120,6 @@ type statistics = {
   gc_time : int;
   gc_nb : int;
   keys : int;
-  linear : int;
   max_cache : int;
   min_dead : int;
   node_count : int;
@@ -136,9 +135,9 @@ type statistics = {
 }
 external stats : 'a t -> statistics = "cudd_caml_man_stats"
 
-external error : 'a t -> error = "cudd_caml_man_Cudd_ReadError"
-external get_bddvar_nb : 'a t -> int = "cudd_man_Cudd_ReadSize"
-external get_zddvar_nb : 'a t -> int = "cudd_man_Cudd_ReadZddSize"
+external error : 'a t -> error = "cudd_caml_man_Cudd_ReadErrorCode"
+external get_bddvar_nb : 'a t -> int = "cudd_caml_man_Cudd_ReadSize"
+external get_zddvar_nb : 'a t -> int = "cudd_caml_man_Cudd_ReadZddSize"
 
 (* ********************************************************************** *)
 (* Definitions *)

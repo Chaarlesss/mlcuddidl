@@ -11,6 +11,7 @@
 #include "cuddInt.h"
 #include "cuddaux.h"
 #include "caml/mlvalues.h"
+#include "caml/custom.h"
 
 /* ********************************************************************** */
 /* Standard definitions */
@@ -18,6 +19,8 @@
 
 #define cudd_caml_int_c2ml(x) Val_int(x)
 #define cudd_caml_int_ml2c(x) Int_val(x)
+#define cudd_caml_long_c2ml(x) Val_long(x)
+#define cudd_caml_long_ml2c(x) Long_val(x)
 #define cudd_caml_bool_c2ml(x) Val_bool(x)
 #define cudd_caml_bool_ml2c(x) Bool_val(x)
 #define cudd_caml_double_c2ml(x) copy_double(x)
@@ -26,6 +29,7 @@ typedef struct intarray_t {
   int* array;
   int size;
 } intarray_t;
+intarray_t cudd_caml_intarray_t_ml2c(value v);
 typedef struct doublearray_t {
   double* array;
   int size;
@@ -39,6 +43,7 @@ doublearray_t cudd_caml_doublearray_t_ml2c(value v);
 typedef struct CuddauxHash* hash__t;
 typedef struct CuddauxCache* cache__t;
 typedef struct CuddauxMan* man__t;
+typedef DdManager* man_t;
 typedef struct memo__t memo__t;
 typedef struct node__t node__t;
 typedef struct node__t bdd__t;
@@ -69,6 +74,7 @@ static inline DdManager* cudd_caml_man_t_ml2c(value val)
   man__t man = cudd_caml_man__t_ml2c(val);
   return man->man;
 }
+
 static inline reorder_t cudd_caml_reorder_t_ml2c(value val) { return Int_val(val); }
 static inline value cudd_caml_reorder_t_c2ml(reorder_t x) { return Val_int(x); }
 static inline aggregation_t cudd_caml_aggregation_t_ml2c(value val) { return Int_val(val); }
@@ -191,7 +197,7 @@ DdNode* cudd_caml_custom_op1(DdManager* dd, struct op1* op, DdNode* node);
 DdNode* cudd_caml_custom_op2(DdManager* dd, struct op2* op, DdNode* node1, DdNode* node2);
 DdNode* cudd_caml_custom_op3(DdManager* dd, struct op3* op, DdNode* node1, DdNode* node2, DdNode* node3);
 DdNode* cudd_caml_custom_opNG(DdManager* dd, struct opN* op, DdNode** node);
-int cudd_caml_custom_opGbeforeRec(DdManager* dd, struct opG* op, DdNode* no, DdNode** tnode);
+bool cudd_caml_custom_opGbeforeRec(DdManager* dd, struct opG* op, DdNode* no, DdNode** tnode);
 DdNode* cudd_caml_custom_opGite(DdManager* dd, struct opG* op, int index, DdNode* T, DdNode* E);
 DdNode* cudd_caml_custom_test2(DdManager* dd, struct test2* op, DdNode* node1, DdNode* node2);
 

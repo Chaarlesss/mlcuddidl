@@ -52,7 +52,7 @@
 static int cuddaux_list_add(cuddaux_list_t** const plist, DdNode* node);
 static int cuddauxNodesBelowLevelRecur(DdManager* manager, DdNode* F, int level,
 				       cuddaux_list_t** plist, st_table* visited,
-				       size_t max, int *psize,
+				       int max, int *psize,
 				       bool take_background);
 
 
@@ -499,7 +499,7 @@ cuddauxAddGuardOfNodeRecur(DdManager* manager, DdNode* f, DdNode* h)
 static int
 cuddauxNodesBelowLevelRecur(DdManager* manager, DdNode* F, int level,
 			    cuddaux_list_t** plist, st_table* visited,
-			    size_t max, size_t* psize,
+			    int max, int* psize,
 			    bool take_background)
 {
   int topF,res;

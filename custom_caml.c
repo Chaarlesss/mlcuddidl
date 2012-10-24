@@ -119,7 +119,7 @@ void cudd_caml_custom_existandop1_ml2c(value val, struct existandop1* c)
   v = Field(val, 3); c->bottomexistandop1 = v;
 }
 
-value cudd_caml_newpid(value v)
+value cudd_caml_custom_newpid(value v)
 {
   pid xr=malloc(1);
   value vr = cudd_caml_pid_c2ml(xr);
@@ -146,7 +146,7 @@ value cudd_caml_custom_apply_op1(value vop, value vno)
   return vres;
 }
 
-value camlidl_custom_apply_op2(value vop, value vno1, value vno2)
+value cudd_caml_custom_apply_op2(value vop, value vno1, value vno2)
 {
   struct op2 op; cudd_caml_custom_op2_ml2c(vop,&op);
   node__t no1 = cudd_caml_node__t_ml2c(vno1);
@@ -171,7 +171,7 @@ value camlidl_custom_apply_op2(value vop, value vno1, value vno2)
   return vres;
 }
 
-value camlidl_custom_apply_test2(value vop, value vno1, value vno2)
+value cudd_caml_custom_apply_test2(value vop, value vno1, value vno2)
 {
   struct test2 op; cudd_caml_custom_test2_ml2c(vop,&op);
   node__t no1 = cudd_caml_node__t_ml2c(vno1);
@@ -197,7 +197,7 @@ value camlidl_custom_apply_test2(value vop, value vno1, value vno2)
   return Val_bool(res);
 }
 
-value camlidl_custom_apply_op3(value vop, value vno1, value vno2, value vno3)
+value cudd_caml_custom_apply_op3(value vop, value vno1, value vno2, value vno3)
 {
   struct op3 op; cudd_caml_custom_op3_ml2c(vop,&op);
   node__t no1 = cudd_caml_node__t_ml2c(vno1);
@@ -223,7 +223,7 @@ value camlidl_custom_apply_op3(value vop, value vno1, value vno2, value vno3)
   return vres;
 }
 
-value cudd_caml_apply_opN(value vop, value vvec1, value vvec2)
+value cudd_caml_custom_apply_opN(value vop, value vvec1, value vvec2)
 {
   man__t man,man1,man2;
   struct opN op; cudd_caml_custom_opN_ml2c(vop,&op);
@@ -274,7 +274,7 @@ value cudd_caml_apply_opN(value vop, value vvec1, value vvec2)
   return vres;
 }
 
-value cudd_caml_apply_opG(value vop, value vvec1, value vvec2)
+value cudd_caml_custom_apply_opG(value vop, value vvec1, value vvec2)
 {
   man__t man,man1,man2;
   struct opG op; cudd_caml_custom_opG_ml2c(vop,&op);
@@ -334,7 +334,7 @@ value cudd_caml_apply_opG(value vop, value vvec1, value vvec2)
   return vres;
 }
 
-value camlidl_custom__apply_exist(value vop, value vno1, value vno2)
+value cudd_caml_custom_apply_exist(value vop, value vno1, value vno2)
 {
   struct exist op; cudd_caml_custom_exist_ml2c(vop,&op);
   node__t no1 = cudd_caml_node__t_ml2c(vno1);
@@ -361,7 +361,7 @@ value camlidl_custom__apply_exist(value vop, value vno1, value vno2)
   return vres;
 }
 
-value camlidl_custom__apply_existand(value vop, value vno1, value vno2, value vno3)
+value cudd_caml_custom_apply_existand(value vop, value vno1, value vno2, value vno3)
 {
   struct existand op; cudd_caml_custom_existand_ml2c(vop,&op);
   node__t no1 = cudd_caml_node__t_ml2c(vno1);
@@ -401,7 +401,7 @@ value camlidl_custom__apply_existand(value vop, value vno1, value vno2, value vn
   return vres;
 }
 
-value camlidl_custom__apply_existop1(value vop, value vno1, value vno2)
+value cudd_caml_custom_apply_existop1(value vop, value vno1, value vno2)
 {
   struct existop1 op; cudd_caml_custom_existop1_ml2c(vop,&op);
   node__t no1 = cudd_caml_node__t_ml2c(vno1);
@@ -438,7 +438,7 @@ value camlidl_custom__apply_existop1(value vop, value vno1, value vno2)
   return vres;
 }
 
-value camlidl_custom__apply_existandop1(value vop, value vno1, value vno2, value vno3)
+value cudd_caml_custom_apply_existandop1(value vop, value vno1, value vno2, value vno3)
 {
   struct existandop1 op; cudd_caml_custom_existandop1_ml2c(vop,&op);
   node__t no1 = cudd_caml_node__t_ml2c(vno1);

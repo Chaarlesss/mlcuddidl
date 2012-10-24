@@ -223,7 +223,7 @@ DIRS	= $(BDIRS) nanotrav
 
 build:
 	sh ./setup.sh
-	@for dir in $(DIRS); do \
+	for dir in $(DIRS); do \
 		(cd $$dir; \
 		echo Making $$dir ...; \
 		make CC=$(CC) RANLIB=$(RANLIB) MFLAG= MNEMLIB= ICFLAGS="$(ICFLAGS)" XCFLAGS="$(XCFLAGS)" DDDEBUG="$(DDDEBUG)" MTRDEBUG="$(MTRDEBUG)" LDFLAGS="$(LDFLAGS)" PURE="$(PURE)" EXE="$(EXE)" )\
@@ -287,7 +287,7 @@ nanotrav: build
 
 check_leaks:
 	sh ./setup.sh
-	@for dir in mnemosyne $(DIRS); do \
+	for dir in mnemosyne $(DIRS); do \
 		(cd $$dir; \
 		echo Making $$dir ...; \
 		make CC=$(CC) RANLIB=$(RANLIB) MFLAG=$(MFLAG) MNEMLIB=$(MNEMLIB) ICFLAGS="$(ICFLAGS)" XCFLAGS="$(XCFLAGS)" DDDEBUG="$(DDDEBUG)" MTRDEBUG="$(MTRDEBUG)" LDFLAGS="$(LDFLAGS)" EXE="$(EXE)" )\
@@ -295,7 +295,7 @@ check_leaks:
 
 optimize_dec:
 	sh ./setup.sh
-	@for dir in $(DIRS); do \
+	for dir in $(DIRS); do \
 		(cd $$dir; \
 		echo Making $$dir ...; \
 		make CC=$(CC) RANLIB=$(RANLIB) XCFLAGS="$(XCFLAGS)" LDFLAGS="$(LDFLAGS)" optimize_dec )\
@@ -303,7 +303,7 @@ optimize_dec:
 
 lint:
 	sh ./setup.sh
-	@for dir in $(DIRS) obj; do \
+	for dir in $(DIRS) obj; do \
 		(cd $$dir; \
 		echo Making lint in $$dir ...; \
 		make CC=$(CC) lint )\
@@ -311,7 +311,7 @@ lint:
 
 tags:
 	sh ./setup.sh
-	@for dir in $(DIRS) obj; do \
+	for dir in $(DIRS) obj; do \
 		(cd $$dir; \
 		echo Making tags in $$dir ...; \
 		make CC=$(CC) tags )\
@@ -319,7 +319,7 @@ tags:
 
 all:
 	sh ./setup.sh
-	@for dir in $(DIRS); do \
+	for dir in $(DIRS); do \
 		(cd $$dir; \
 		echo Making all in $$dir ...; \
 		make CC=$(CC) RANLIB=$(RANLIB) MFLAG= MNEMLIB= ICFLAGS="$(ICFLAGS)" XCFLAGS="$(XCFLAGS)" DDDEBUG="$(DDDEBUG)" MTRDEBUG="$(MTRDEBUG)" LDFLAGS="$(LDFLAGS)" PURE="$(PURE)" EXE="$(EXE)" all )\
@@ -327,44 +327,44 @@ all:
 
 testcudd:
 	sh ./setup.sh
-	@for dir in util st mtr epd; do \
+	for dir in util st mtr epd; do \
 		(cd $$dir; \
 		echo Making $$dir ...; \
 		make CC=$(CC) RANLIB=$(RANLIB) MFLAG= MNEMLIB= ICFLAGS="$(ICFLAGS)" XCFLAGS="$(XCFLAGS)" DDDEBUG="$(DDDEBUG)" MTRDEBUG="$(MTRDEBUG)" LDFLAGS="$(LDFLAGS)" PURE="$(PURE)" EXE="$(EXE)" )\
 	done
-	@(cd cudd; \
+	(cd cudd; \
 	echo Making testcudd ...; \
 	make CC=$(CC) RANLIB=$(RANLIB) MFLAG= MNEMLIB= ICFLAGS="$(ICFLAGS)" XCFLAGS="$(XCFLAGS)" DDDEBUG="$(DDDEBUG)" MTRDEBUG="$(MTRDEBUG)" LDFLAGS="$(LDFLAGS)" PURE="$(PURE)" EXE="$(EXE)" testcudd$(EXE) )
 
 objlib:
 	sh ./setup.sh
-	@for dir in $(BDIRS); do \
+	for dir in $(BDIRS); do \
 		(cd $$dir; \
 		echo Making $$dir ...; \
 		make CC=$(CC) RANLIB=$(RANLIB) MFLAG= MNEMLIB= ICFLAGS="$(ICFLAGS)" XCFLAGS="$(XCFLAGS)" DDDEBUG="$(DDDEBUG)" MTRDEBUG="$(MTRDEBUG)" LDFLAGS="$(LDFLAGS)" PURE="$(PURE)" EXE="$(EXE)" )\
 	done
-	@(cd obj; \
+	(cd obj; \
 	echo Making obj ...; \
 	make CPP=$(CPP) CPPFLAGS=$(CPPFLAGS) RANLIB=$(RANLIB) MFLAG= MNEMLIB= ICFLAGS="$(ICFLAGS)" XCFLAGS="$(XCFLAGS)" DDDEBUG="$(DDDEBUG)" MTRDEBUG="$(MTRDEBUG)" LDFLAGS="$(LDFLAGS)" PURE="$(PURE)" EXE="$(EXE)" )
 
 testobj: objlib
-	@(cd obj; \
+	(cd obj; \
 	echo Making testobj ...; \
 	make CPP=$(CPP) CPPFLAGS=$(CPPFLAGS) RANLIB=$(RANLIB) MFLAG= MNEMLIB= ICFLAGS="$(ICFLAGS)" XCFLAGS="$(XCFLAGS)" DDDEBUG="$(DDDEBUG)" MTRDEBUG="$(MTRDEBUG)" LDFLAGS="$(LDFLAGS)" PURE="$(PURE)" EXE="$(EXE)" testobj$(EXE) )
 
 testdddmp: build
-	@(cd dddmp; \
+	(cd dddmp; \
 	echo Making testdddmp ...; \
 	make CC=$(CC) RANLIB=$(RANLIB) MFLAG= MNEMLIB= ICFLAGS="$(ICFLAGS)" XCFLAGS="$(XCFLAGS)" DDDEBUG="$(DDDEBUG)" MTRDEBUG="$(MTRDEBUG)" LDFLAGS="$(LDFLAGS)" PURE="$(PURE)" EXE="$(EXE)" testdddmp$(EXE) )
 
 testmtr: build
-	@(cd mtr; \
+	(cd mtr; \
 	echo Making testmtr ...; \
 	make CC=$(CC) RANLIB=$(RANLIB) MFLAG= MNEMLIB= ICFLAGS="$(ICFLAGS)" XCFLAGS="$(XCFLAGS)" DDDEBUG="$(DDDEBUG)" MTRDEBUG="$(MTRDEBUG)" LDFLAGS="$(LDFLAGS)" PURE="$(PURE)" EXE="$(EXE)" testmtr$(EXE) )
 
 clean:
 	/bin/rm -f *.a
-	@for dir in mnemosyne $(DIRS) obj; do	\
+	for dir in mnemosyne $(DIRS) obj; do	\
 	    (cd $$dir;	\
 	     echo Cleaning $$dir ...; \
 	     make -s clean	) \
@@ -372,7 +372,7 @@ clean:
 
 distclean:
 	/bin/rm -f *.a
-	@for dir in mnemosyne $(DIRS) obj; do	\
+	for dir in mnemosyne $(DIRS) obj; do	\
 	    (cd $$dir;	\
 	     echo Cleaning $$dir ...; \
 	     make -s EXE="$(EXE)" distclean	) \

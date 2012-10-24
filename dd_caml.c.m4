@@ -14,17 +14,17 @@
 /* Generic functions */
 /* ********************************************************************** */
 
-FUN_1(,manager,node__t,man__t,[[xr = x1.man;]])
-FUN_1_unsafe(,Cudd_IsConstant,node_t,int)
-FUN_1_unsafe(,Cudd_NodeReadIndex,node_t,int)
-FUN_node1_node(,Cuddaux_Support,node__t,bdd__t)
-FUN_1(,Cuddaux_SupportSize,node__t,int,[[xr = Cuddaux_SupportSize(x1.man->man,x1.node);]])
-FUN_2(,is_var_in,int,node__t,bool,
+FUN_1(dd,manager,node__t,man__t,[[xr = x1.man;]])
+FUN_1_unsafe(dd,Cudd_IsConstant,node_t,int)
+FUN_1_unsafe(dd,Cudd_NodeReadIndex,node_t,int)
+FUN_node1_node(dd,Cuddaux_Support,node__t,bdd__t)
+FUN_1(dd,Cuddaux_SupportSize,node__t,int,[[xr = Cuddaux_SupportSize(x1.man->man,x1.node);]])
+FUN_2(dd,Cuddaux_IsVarIn,int,node__t,bool,
       [[
 	DdNode* var = Cudd_bddIthVar(x2.man->man,x1);
 	xr = Cuddaux_IsVarIn(x2.man->man, x2.node, var);
       ]])
-CAMLprim value cudd_caml__vectorsupport(value _v_vec)
+CAMLprim value cudd_caml_dd_vectorsupport(value _v_vec)
 {
   CAMLparam1(_v_vec); CAMLlocal2(_v_no,_v_res);
 
@@ -44,32 +44,32 @@ CAMLprim value cudd_caml__vectorsupport(value _v_vec)
   _v_res = cudd_caml_bdd__t_c2ml(_res);
   CAMLreturn(_v_res);
 }
-FUN_1(,Cudd_DagSize,node_t,int)
-FUN_1(,Cudd_CountPath,node_t,double,
+FUN_1(dd,Cudd_DagSize,node_t,int)
+FUN_1(dd,Cudd_CountPath,node_t,double,
       [[
 	xr = Cudd_CountPath(x1);
 	if (xr==(double)CUDD_OUT_OF_MEM)
 	  caml_failwith("Bdd.nbpaths returned CUDD_OUT_OF_MEM");
 	]])
-FUN_2(, Cudd_CountMinterm, int, node__t, int,
+FUN_2(dd, Cudd_CountMinterm, int, node__t, int,
       [[
 	xr = Cudd_CountMinterm(x2.man->man,x2.node,x1);
 	if (xr==(double)CUDD_OUT_OF_MEM)
 	  caml_failwith("Bdd.nbminterms returned CUDD_OUT_OF_MEM");
 	]])
-FUN_2(,Cudd_Density, int, node__t, int,
+FUN_2(dd,Cudd_Density, int, node__t, int,
       [[
 	xr = Cudd_Density(x2.man->man,x2.node,x1);
 	if (xr==(double)CUDD_OUT_OF_MEM)
 	  caml_failwith("Bdd.nbminterms returned CUDD_OUT_OF_MEM");
 	]])
-FUN_2_unsafe(,is_equal,node__t,node__t,bool,
+FUN_2_unsafe(dd,is_equal,node__t,node__t,bool,
 	     [[
 	       if (x1.man!=x2.man) caml_invalid_argument("Cudd: binary function called with nodes belonging to different managers !");
 	       xr = (x1.node == x2.node);
 	       ]])
-FUN_node3(,is_equal_when,node__t,node__t,node__t,bool,[[xr=Cudd_EquivDC(x1.man->man,x1.node,x2.node,Cudd_Not(x3.node));]])
-CAMLprim value cudd_caml__list_of_support(value _v_no)
+FUN_node3(dd,is_equal_when,node__t,node__t,node__t,bool,[[xr=Cudd_EquivDC(x1.man->man,x1.node,x2.node,Cudd_Not(x3.node));]])
+CAMLprim value cudd_caml_dd_list_of_support(value _v_no)
 {
   CAMLparam1(_v_no); CAMLlocal2(res,r);
   node__t node = cudd_caml_node__t_ml2c(_v_no);
@@ -91,7 +91,7 @@ CAMLprim value cudd_caml__list_of_support(value _v_no)
   }
   CAMLreturn(res);
 }
-CAMLprim value cudd_caml__list_of_cube(value _v_node)
+CAMLprim value cudd_caml_dd_list_of_cube(value _v_node)
 {
   CAMLparam1(_v_node); CAMLlocal3(res,r,elt);
   node__t node = cudd_caml_node__t_ml2c(_v_node);
@@ -135,7 +135,7 @@ CAMLprim value cudd_caml__list_of_cube(value _v_node)
   }
   CAMLreturn(res);
 }
-CAMLprim value cudd_caml__minterm_of_cube(value _v_node)
+CAMLprim value cudd_caml_dd_minterm_of_cube(value _v_node)
 {
   CAMLparam1(_v_node); CAMLlocal1(_v_res);
   node__t node = cudd_caml_node__t_ml2c(_v_node);
@@ -178,7 +178,7 @@ CAMLprim value cudd_caml__minterm_of_cube(value _v_node)
   CAMLreturn(_v_res);
 }
 
-CAMLprim value cudd_caml__cube_of_minterm(value _v_man, value _v_array)
+CAMLprim value cudd_caml_dd_cube_of_minterm(value _v_man, value _v_array)
 {
   CAMLparam2(_v_man,_v_array); CAMLlocal1(_v_res);
   man__t man = cudd_caml_man__t_ml2c(_v_man);
@@ -212,7 +212,7 @@ CAMLprim value cudd_caml__cube_of_minterm(value _v_man, value _v_array)
 /* Semi-Generic functions */
 /* ********************************************************************** */
 
-CAMLprim value cudd_caml__cofactors(value v_is_bdd, value v_var, value v_no)
+CAMLprim value cudd_caml_dd_cofactors(value v_is_bdd, value v_var, value v_no)
 {
   CAMLparam2(v_var,v_no); CAMLlocal3(vthen,velse,vres);
   bool is_bdd = Bool_val(v_is_bdd);
@@ -242,7 +242,7 @@ CAMLprim value cudd_caml__cofactors(value v_is_bdd, value v_var, value v_no)
  cudd_caml_cofactors_exit:
   CAMLreturn(vres);
 }
-CAMLprim value cudd_caml__ite_cst(value v_is_bdd, value v1, value v2, value v3)
+CAMLprim value cudd_caml_dd_ite_cst(value v_is_bdd, value v1, value v2, value v3)
 {
   CAMLparam3(v1,v2,v3);
   CAMLlocal2(vr,vres);
@@ -253,7 +253,6 @@ CAMLprim value cudd_caml__ite_cst(value v_is_bdd, value v1, value v2, value v3)
   if (x1.man!=x2.man || x1.man!=x3.man)
     caml_invalid_argument("Cudd: ternary function called with nodes belonging to different managers !");
   DdNode* node = is_bdd ? Cudd_bddIteConstant(x1.man->man,x1.node,x2.node,x3.node) : Cuddaux_addIteConstant(x1.man->man,x1.node,x2.node,x3.node);
-  value vres;
   if (node==DD_NON_CONSTANT || !Cudd_IsConstant(node))
     vres = Val_int(0);
   else {
@@ -267,7 +266,7 @@ CAMLprim value cudd_caml__ite_cst(value v_is_bdd, value v1, value v2, value v3)
   }
   CAMLreturn(vres);
 }
-CAMLprim value cudd_caml__is_ite_cst(value v_is_bdd, value v1, value v2, value v3)
+CAMLprim value cudd_caml_dd_is_ite_cst(value v_is_bdd, value v1, value v2, value v3)
 {
   CAMLparam3(v1,v2,v3);
   bool is_bdd = Bool_val(v_is_bdd);
@@ -281,7 +280,7 @@ CAMLprim value cudd_caml__is_ite_cst(value v_is_bdd, value v1, value v2, value v
   value vres = Val_bool(b);
   CAMLreturn(vres);
 }
-CAMLprim value cudd_caml__varmap(value v_is_bdd, value v1)
+CAMLprim value cudd_caml_dd_varmap(value v_is_bdd, value v1)
 {
   CAMLparam1(v1);
   bool is_bdd = Bool_val(v_is_bdd);
@@ -292,7 +291,7 @@ CAMLprim value cudd_caml__varmap(value v_is_bdd, value v1)
   value vr = cudd_caml_bddnode__t_c2ml(is_bdd,xr);
   CAMLreturn(vr);
 }
-CAMLprim value cudd_caml__permute(value v_is_bdd, value v_omemo, value v_perm, value v_node)
+CAMLprim value cudd_caml_dd_permute(value v_is_bdd, value v_omemo, value v_perm, value v_node)
 {
   CAMLparam3(v_omemo,v_node,v_perm);
   bool is_bdd = Bool_val(v_is_bdd);
@@ -314,7 +313,7 @@ CAMLprim value cudd_caml__permute(value v_is_bdd, value v_omemo, value v_perm, v
   xr.man = node.man;
   if (Is_block(v_omemo)){
     struct common common;
-    common.pid = &cudd_caml__permute;
+    common.pid = &cudd_caml_dd_permute;
     common.arity = 1;
     common.memo = cudd_caml_memo__t_ml2c(Field(v_omemo,0));
     common.man = node.man;
@@ -330,7 +329,7 @@ CAMLprim value cudd_caml__permute(value v_is_bdd, value v_omemo, value v_perm, v
   value vr = cudd_caml_bddnode__t_c2ml(is_bdd,xr);
   CAMLreturn(vr);
 }
-CAMLprim value cudd_caml__compose(value v_is_bdd, value v_var, value v_bdd, value v_node)
+CAMLprim value cudd_caml_dd_compose(value v_is_bdd, value v_var, value v_bdd, value v_node)
 {
   CAMLparam2(v_bdd,v_node);
 
@@ -348,7 +347,7 @@ CAMLprim value cudd_caml__compose(value v_is_bdd, value v_var, value v_bdd, valu
   value vr = cudd_caml_bddnode__t_c2ml(is_bdd,xr);
   CAMLreturn(vr);
 }
-CAMLprim value cudd_caml__vectorcompose(value v_is_bdd, value v_omemo, value v_tnode, value v_node)
+CAMLprim value cudd_caml_dd_vectorcompose(value v_is_bdd, value v_omemo, value v_tnode, value v_node)
 {
   CAMLparam3(v_omemo,v_tnode,v_node);
   bool is_bdd = Bool_val(v_is_bdd);
@@ -373,7 +372,7 @@ CAMLprim value cudd_caml__vectorcompose(value v_is_bdd, value v_omemo, value v_t
   xr.man = node.man;
   if (Is_block(v_omemo)){
     struct common common;
-    common.pid = &cudd_caml__vectorcompose;
+    common.pid = &cudd_caml_dd_vectorcompose;
     common.arity = 1;
     common.memo = cudd_caml_memo__t_ml2c(Field(v_omemo,0));
     common.man = node.man;
@@ -389,7 +388,7 @@ CAMLprim value cudd_caml__vectorcompose(value v_is_bdd, value v_omemo, value v_t
   value vr = cudd_caml_bddnode__t_c2ml(is_bdd,xr);
   CAMLreturn(vr);
 }
-CAMLprim value cudd_caml__iter_node(value v_is_bdd, value v_closure, value v_no)
+CAMLprim value cudd_caml_dd_iter_node(value v_is_bdd, value v_closure, value v_no)
 {
   CAMLparam2(v_closure,v_no); CAMLlocal1(v_snode);
   bool is_bdd = Bool_val(v_is_bdd);
@@ -411,7 +410,7 @@ CAMLprim value cudd_caml__iter_node(value v_is_bdd, value v_closure, value v_no)
   if (autodyn) Cudd_AutodynEnable(no.man->man,CUDD_REORDER_SAME);
   CAMLreturn(Val_unit);
 }
-CAMLprim value cudd_caml__transfer(value v_is_bdd, value v1, value v2)
+CAMLprim value cudd_caml_dd_transfer(value v_is_bdd, value v1, value v2)
 {
   CAMLparam2(v1,v2);
   bool is_bdd = Bool_val(v_is_bdd);

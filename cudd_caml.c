@@ -14,6 +14,40 @@
 #include "caml/callback.h"
 #include "cudd_caml.h"
 
+/* ********************************************************************** */
+/* Standard */
+/* ********************************************************************** */
+
+intarray_t cudd_caml_intarray_t_ml2c(value v)
+{
+  assert(Is_block(v) && Tag_val(v)==0);
+  intarray_t array;
+  array.size = Wosize_val(v);
+  array.array = (int*)malloc(array.size*sizeof(int));
+  for (int i=0;i<array.size;i++){
+    array.array[i] = Int_val(Field(v,i));
+  }
+  return array;
+}
+doublearray_t cudd_caml_doublearray_t_ml2c(value v)
+{
+  assert(Is_block(v));
+  doublearray_t array;
+  array.size = caml_array_length(v);
+    array.array = (double*)malloc(array.size*sizeof(double));
+  if (caml_is_double_array(v)){
+    for (int i=0;i<array.size;i++){
+      array.array[i] = Double_field(v,i);
+    }
+  }
+  else {
+    assert(Tag_val(v)==0);
+    for (int i=0;i<array.size;i++){
+      array.array[i] = Double_val(Field(v,i));
+    }
+  }
+  return array;
+}
 
 /* ********************************************************************** */
 /* Global tuning (Garbage collection) */
@@ -99,6 +133,7 @@ This is done automatically by module Cudd.Mtbddc.");
   }
   CAMLreturn (res);
 }
+
 
 /* ********************************************************************** */
 /* Custom datatypes */
@@ -410,7 +445,7 @@ value cudd_caml_print(value _v_no)
   CAMLreturn(Val_unit);
 }
 
-man__t camlidl_cudd_tnode_ml2c(value _v_vec, int size, DdNode** vec)
+man__t cudd_caml_tnode_ml2c(value _v_vec, int size, DdNode** vec)
 {
   value _v_no;
   node__t no;
@@ -435,7 +470,7 @@ man__t camlidl_cudd_tnode_ml2c(value _v_vec, int size, DdNode** vec)
   else
     return NULL;
 }
-value camlidl_cudd_tnode_c2ml(man__t man,DdNode** vec, int size)
+value cudd_caml_tnode_c2ml(man__t man,DdNode** vec, int size)
 
 {
   value _v_res=0,_v_no=0;
@@ -700,7 +735,7 @@ DdNode* cudd_caml_custom_opNG(DdManager* dd, struct opN* op, DdNode** tnode)
   return res;
 }
 
-int cudd_caml_custom_opGbeforeRec(DdManager* dd, struct opG* op, DdNode* no, DdNode** tnode)
+bool cudd_caml_custom_opGbeforeRec(DdManager* dd, struct opG* op, DdNode* no, DdNode** tnode)
 {
   value _v_index=0,_v_bool=0,_v_pair=0,_v_tno1=0,_v_tno2=0,_v_val=0;
   int arity, arityB, arityV;
