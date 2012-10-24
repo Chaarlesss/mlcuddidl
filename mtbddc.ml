@@ -2,13 +2,12 @@
 
 open Format
 
-type 'a unique = {
+type +'a unique = {
   content : 'a
 }
-
+type +'a t = 'a unique Vdd.t
 type 'a table = 'a unique PWeakke.t
 
-type 'a t = 'a unique Vdd.t
 
 let print_table ?first ?sep ?last print fmt table =
   PWeakke.print ?first ?sep ?last
@@ -77,13 +76,13 @@ let eval_cst_u = Dd.AV.eval_cst
 let compose = Dd.AV.compose
 let vectorcompose = Dd.AV.vectorcompose
 
-let ite_cst f1 f2 f3 = 
-  match ite_cst_u f1 f2 f3 with 
-  | None -> None 
+let ite_cst f1 f2 f3 =
+  match ite_cst_u f1 f2 f3 with
+  | None -> None
   | Some xu -> Some (get xu)
 let eval_cst ~care f =
   match eval_cst_u ~care f with
-  | None -> None 
+  | None -> None
   | Some xu -> Some (get xu)
 
 (* ====================================================== *)
@@ -160,4 +159,3 @@ let print_minterm print_id print_leaf fmt t =
   Vdd.print_minterm print_id (fun fmt x -> print_leaf fmt (get x)) fmt t
 let print print_bdd print_leaf fmt t =
   Vdd.print print_bdd (fun fmt x -> print_leaf fmt (get x)) fmt t
-

@@ -230,51 +230,40 @@ let print_list
     fprintf fmt last;
   end
 
-(*
-let link_C_library clib a libname env build =
-  let clib = env clib and a = env a and libname = env libname in
-  let objs = string_list_of_file clib in
-  let include_dirs = Pathname.include_dirs_of (Pathname.dirname a) in
-  if true then Format.printf "@.*******************@.Here 1@.";
-  let obj_of_o x =
-    if Filename.check_suffix x ".o" && !Options.ext_obj <> "o" then
-      Pathname.update_extension !Options.ext_obj x
-    else x
-  in
-  if true then Format.printf "@.*******************@.Here 2@.";
-  printf "************@.clib=%s, a=%s, libname=%s@.objs = %a@."
-    clib a libname
-    (print_list pp_print_string) objs;
-  let objs =
-    List.map
-      (fun o -> List.map (fun dir -> dir / obj_of_o o) include_dirs)
-      objs
-  in
-  printf "************@.objs = %a@."
-    (print_list (print_list pp_print_string)) objs;
-  let resluts = build objs in
-  if true then Format.printf "@.*******************@.Here 3@.";
-  printf "resluts=%a@."
-    (print_list
-       (fun fmt -> function
-	   | Outcome.Good s-> pp_print_string fmt s
-	   | Outcome.Bad _ -> pp_print_string fmt "bad"
-       )
-    )
-    resluts
-  ;
-  let objs = List.map Outcome.good resluts in
-  if true then Format.printf "@.*******************@.Here 4@.";
-  Cmd(S[!Options.ocamlmklib; A"-o"; Px libname; T(tags_of_pathname a++"c"++"ocamlmklib"); atomize objs])
-
 let c_rules () =
+  let link_C_library clib a libname env build =
+    let clib = env clib and a = env a and libname = env libname in
+    let objs = string_list_of_file clib in
+    if true then
+      printf "************@.clib=%s, a=%s, libname=%s@.objs = %a@."
+	clib a libname (print_list pp_print_string) objs
+    ;
+    let include_dirs = Pathname.include_dirs_of (Pathname.dirname a) in
+    let obj_of_o x =
+      if Filename.check_suffix x ".o" && !Options.ext_obj <> "o" then
+	Pathname.update_extension !Options.ext_obj x
+      else x
+    in
+    let objs =
+      List.map
+	(fun o -> List.map (fun dir -> dir / obj_of_o o) include_dirs)
+	objs
+    in
+    let resluts = build objs in
+    let objs = List.map Outcome.good resluts in
+    Cmd(S[!Options.ocamlmklib; A"-o"; Px libname; T(tags_of_pathname a++"c"++"ocamlmklib"); atomize objs])
+  in
+
   rule "ocaml C stubs (mine): clib & (o|obj)* -> (a|lib) & (so|dll)"
     ~insert:`top
     ~prods:["%(path:<**/>)lib%(libname:<*> and not <*.*>)"-.-(!Options.ext_lib);
 	    "%(path:<**/>)dll%(libname:<*> and not <*.*>)"-.-(!Options.ext_dll)]
     ~dep:"%(path)lib%(libname).clib"
-    (link_C_library "%(path)lib%(libname).clib" ("%(path)lib%(libname)"-.-(!Options.ext_lib)) "%(path)%(libname)");;
-*)
+    (link_C_library
+       "%(path)lib%(libname).clib" ("%(path)lib%(libname)"-.-(!Options.ext_lib))
+       "%(path)%(libname)")
+  ;
+  ()
 
 (* This dispatch call allows to control the execution order of your
    directives. *)
@@ -286,12 +275,15 @@ let _ = dispatch begin function
       ocamldoc_rules ();
       ocamlpack_rules();
       m4_rules();
+(*
+      c_rules();
+*)
        (* C compile flags *)
       flag ["c"; "compile"] & S[Sh ccopts];
       (* libs *)
       ocaml_lib ~extern:true "cudd";
       dep ["link";"use_cudd"] ["libcudd.a"];
-      flag ["c"; "ocamlmklib"; "file:libcudd.a"] & S[A"-L.";];
+      flag ["c"; "ocamlmklib"; "file:libcudd.a"] & S[A"-ccopt";A"-L."];
 (*    flag ["link"; "library"; "ocaml"; "use_cudd"] (S[A"-cclib"; A"-L."]);
 *)
       ()

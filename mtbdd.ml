@@ -2,8 +2,8 @@
 
 open Format
 
-type 'a unique = 'a
-type 'a t = 'a unique Vdd.t
+type +'a unique = 'a
+type +'a t = 'a unique Vdd.t
 
 type 'a table = 'a PWeakke.t
 

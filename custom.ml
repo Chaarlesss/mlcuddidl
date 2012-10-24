@@ -134,16 +134,16 @@ external apply_op3 : ('a,'b,'c,'d,'e) op3 -> ('a,'b) Dd.avdd -> ('a,'c) Dd.avdd 
 external apply_opN : ('a,'b,'c) opN -> ('a,Bdd.any) Bdd.t array -> ('a,'b) Dd.avdd array -> ('a,'c) Dd.avdd = "cudd_caml_custom_apply_opN"
 external apply_opG : ('a,'b,'c) opG -> ('a,Bdd.any) Bdd.t array -> ('a,'b) Dd.avdd array -> ('a,'c) Dd.avdd = "cudd_caml_custom_apply_opG"
 
-external apply_exist : ('a,'b) exist -> supp:('a,[>Bdd.supp]) Bdd.t -> ('a,'b) Dd.avdd -> ('a,'b) Dd.avdd
+external apply_exist : ('a,'b) exist -> supp:('a,[<Bdd.supp]) Bdd.t -> ('a,'b) Dd.avdd -> ('a,'b) Dd.avdd
 	= "cudd_caml_custom_apply_exist"
 
-external apply_existand : ('a,'b) existand -> supp:('a,[>Bdd.supp]) Bdd.t -> guard:('a,[>Bdd.any]) Bdd.t -> ('a,'b) Dd.avdd -> ('a,'b) Dd.avdd
+external apply_existand : ('a,'b) existand -> supp:('a,[<Bdd.supp]) Bdd.t -> guard:('a,[<Bdd.any]) Bdd.t -> ('a,'b) Dd.avdd -> ('a,'b) Dd.avdd
 	= "cudd_caml_custom_apply_existand"
 
-external apply_existop1 : ('a,'b,'c) existop1 -> supp:('a,[>Bdd.supp]) Bdd.t -> ('a,'b) Dd.avdd -> ('a,'c) Dd.avdd
+external apply_existop1 : ('a,'b,'c) existop1 -> supp:('a,[<Bdd.supp]) Bdd.t -> ('a,'b) Dd.avdd -> ('a,'c) Dd.avdd
 	= "cudd_caml_custom_apply_existop1"
 
-external apply_existandop1 : ('a,'b,'c) existandop1 -> supp:('a,[>Bdd.supp]) Bdd.t -> guard:('a,[>Bdd.any]) Bdd.t -> ('a,'b) Dd.avdd -> ('a,'c) Dd.avdd
+external apply_existandop1 : ('a,'b,'c) existandop1 -> supp:('a,[<Bdd.supp]) Bdd.t -> guard:('a,[<Bdd.any]) Bdd.t -> ('a,'b) Dd.avdd -> ('a,'c) Dd.avdd
 	= "cudd_caml_custom_apply_existandop1"
 
 (*  ********************************************************************** *)

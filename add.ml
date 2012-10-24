@@ -257,7 +257,7 @@ let transfer = Dd.AV.transfer
 (*  ====================================================== *)
 
 (** C printing function. The output may mix badly with the OCaml output. *)
-external _print: t -> unit = "camlidl_cudd_print"
+external _print: t -> unit = "cudd_caml_abdd_print"
 
 
 open Format

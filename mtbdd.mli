@@ -3,7 +3,7 @@
 (* This file is part of the MLCUDDIDL Library, released under LGPL license.
    Please read the COPYING file packaged in the distribution  *)
 
-type 'a unique
+type +'a unique
   (** Type of unique representants of MTBDD leaves of type ['a].
 
       For technical reason, type ['a] should not be implemented as
@@ -14,7 +14,7 @@ type 'a unique
       requirement.  [Mtbddc] modules automatically encapsulate the
       value into a ML type. *)
 
-type 'a t = 'a unique Vdd.t
+type +'a t = 'a unique Vdd.t
   (** Type of MTBDDs.
 
       Objects of this type contains both the top node of the MTBDD
@@ -72,7 +72,7 @@ val cofactors : int -> 'a t -> 'a t * 'a t
   (** Returns the positive and negative cofactor of the MTBDD wrt
       the variable *)
 
-val cofactor : 'a t -> cube:[>Bdd.cube] Bdd.vt -> 'a t
+val cofactor : 'a t -> cube:[<Bdd.cube] Bdd.vt -> 'a t
   (** [cofactor mtbdd cube] evaluates [mtbbdd] on the cube [cube] *)
 
 val dval_u : 'a t -> 'a unique
@@ -86,10 +86,10 @@ val inspect_u : 'a t -> 'a unique mtbdd
 (** {3 Supports} *)
 (* ====================================================== *)
 
-val support : 'a t -> Bdd.supp Bdd.vt
+val support : 'a t -> [>Bdd.supp] Bdd.vt
 val supportsize : 'a t -> int
 val is_var_in : int -> 'a t -> bool
-val vectorsupport : 'a t array -> Bdd.supp Bdd.vt
+val vectorsupport : 'a t array -> [>Bdd.supp] Bdd.vt
 
 (* ====================================================== *)
 (** {3 Classical operations} *)
@@ -98,23 +98,23 @@ val vectorsupport : 'a t array -> Bdd.supp Bdd.vt
 val cst_u : Man.vt -> 'a unique -> 'a t
 val cst : Man.vt -> 'a table -> 'a -> 'a t
 
-val ite : [>Bdd.any] Bdd.vt -> 'a t -> 'a t -> 'a t
-val eval_cst_u : care:[>Bdd.any] Bdd.vt -> 'a t -> 'a unique option
-val eval_cst : care:[>Bdd.any] Bdd.vt -> 'a t -> 'a option
-val ite_cst_u : [>Bdd.any] Bdd.vt -> 'a t -> 'a t -> 'a unique option
-val ite_cst : [>Bdd.any] Bdd.vt -> 'a t -> 'a t -> 'a option
-val compose : var:int -> f:[>Bdd.any] Bdd.vt -> 'a t -> 'a t
-val vectorcompose: ?memo:Memo.t -> [>Bdd.any] Bdd.vt array -> 'a t -> 'a t
+val ite : [<Bdd.any] Bdd.vt -> 'a t -> 'a t -> 'a t
+val eval_cst_u : care:[<Bdd.any] Bdd.vt -> 'a t -> 'a unique option
+val eval_cst : care:[<Bdd.any] Bdd.vt -> 'a t -> 'a option
+val ite_cst_u : [<Bdd.any] Bdd.vt -> 'a t -> 'a t -> 'a unique option
+val ite_cst : [<Bdd.any] Bdd.vt -> 'a t -> 'a t -> 'a option
+val compose : var:int -> f:[<Bdd.any] Bdd.vt -> 'a t -> 'a t
+val vectorcompose: ?memo:Memo.t -> [<Bdd.any] Bdd.vt array -> 'a t -> 'a t
 
 (* ====================================================== *)
 (** {3 Logical tests} *)
 (* ====================================================== *)
 
 val is_equal : 'a t -> 'a t -> bool
-val is_equal_when : 'a t -> 'a t -> care:[>Bdd.any] Bdd.vt -> bool
+val is_equal_when : 'a t -> 'a t -> care:[<Bdd.any] Bdd.vt -> bool
 
-val is_eval_cst : care:[>Bdd.any] Bdd.vt -> 'a t -> bool
-val is_ite_cst : [>Bdd.any] Bdd.vt -> 'a t -> 'a t -> bool
+val is_eval_cst : care:[<Bdd.any] Bdd.vt -> 'a t -> bool
+val is_ite_cst : [<Bdd.any] Bdd.vt -> 'a t -> 'a t -> bool
 
 (* ====================================================== *)
 (** {3 Structural information} *)
@@ -169,10 +169,10 @@ val guardleafs : 'a t -> (Bdd.any Bdd.vt * 'a) array
 (** {3 Minimizations} *)
 (* ====================================================== *)
 
-val constrain: 'a t -> care:[>Bdd.any] Bdd.vt -> 'a t
-val tdconstrain: 'a t -> care:[>Bdd.any] Bdd.vt -> 'a t
-val restrict: 'a t -> care:[>Bdd.any] Bdd.vt -> 'a t
-val tdrestrict : 'a t -> care:[>Bdd.any] Bdd.vt -> 'a t
+val constrain: 'a t -> care:[<Bdd.any] Bdd.vt -> 'a t
+val tdconstrain: 'a t -> care:[<Bdd.any] Bdd.vt -> 'a t
+val restrict: 'a t -> care:[<Bdd.any] Bdd.vt -> 'a t
+val tdrestrict : 'a t -> care:[<Bdd.any] Bdd.vt -> 'a t
 
 (* ====================================================== *)
 (** {3 Conversions} *)

@@ -205,7 +205,7 @@ val make_exist : ?memo:Memo.t -> ('a, 'a, 'a) op2 -> 'a exist
       combines the two branch of the diagram when a decision is
       quantified out. *)
 
-val apply_exist : 'a exist -> supp:[>Bdd.supp] Bdd.vt -> 'a Vdd.t -> 'a Vdd.t
+val apply_exist : 'a exist -> supp:[<Bdd.supp] Bdd.vt -> 'a Vdd.t -> 'a Vdd.t
 
 (** {5 Example:}
 
@@ -232,7 +232,7 @@ type 'a existand = (Man.v,'a) Custom.existand
 val make_existand :
   ?memo:Memo.t -> bottom:'a -> ('a, 'a, 'a) op2 -> 'a existand
 val apply_existand :
-  'a existand -> supp:[>Bdd.supp] Bdd.vt -> guard:[>Bdd.any] Bdd.vt -> 'a Vdd.t -> 'a Vdd.t
+  'a existand -> supp:[<Bdd.supp] Bdd.vt -> guard:[<Bdd.any] Bdd.vt -> 'a Vdd.t -> 'a Vdd.t
 
 (** [existand ~bottom op2 ~supp bdd f] is equivalent to
     [exist op2 ~supp (ite bdd f bottom)].
@@ -250,7 +250,7 @@ val make_existop1 :
   ?memo:Memo.t -> op1:('a, 'b) op1 -> ('b, 'b, 'b) op2 -> ('a, 'b) existop1
 
 val apply_existop1 :
-  ('a, 'b) existop1 -> supp:[>Bdd.supp] Bdd.vt -> 'a Vdd.t -> 'b Vdd.t
+  ('a, 'b) existop1 -> supp:[<Bdd.supp] Bdd.vt -> 'a Vdd.t -> 'b Vdd.t
 
 (** Type of unary operation, conjunction and quantification
 
@@ -272,7 +272,7 @@ val make_existandop1 :
   op1:('a, 'b) op1 -> bottom:'b -> ('b, 'b, 'b) op2 -> ('a, 'b) existandop1
 
 val apply_existandop1 :
-  ('a, 'b) existandop1 -> supp:[>Bdd.supp] Bdd.vt -> guard:[>Bdd.any] Bdd.vt -> 'a Vdd.t -> 'b Vdd.t
+  ('a, 'b) existandop1 -> supp:[<Bdd.supp] Bdd.vt -> guard:[<Bdd.any] Bdd.vt -> 'a Vdd.t -> 'b Vdd.t
 
 (**
    [existandop1 ~bottom op op1 supp bdd f] is equivalent to

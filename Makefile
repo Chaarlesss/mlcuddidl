@@ -16,6 +16,8 @@ PKG-NAME = cudd
 # Files
 #---------------------------------------
 
+MLMODULES = cudd
+
 FILES_TOINSTALL = \
 	$(MLMODULES:%=%.ml) $(MLMODULES:%=%.mli) \
 	$(MLMODULES:%=%.cmt) $(MLMODULES:%=%.cmti) \
@@ -56,4 +58,4 @@ homepage: doc
 .PHONY: TAGS
 tags: TAGS
 TAGS: $(MLMODULES:%=%.mli) $(MLMODULES:%=%.ml)
-	ocamltags $^
+	ocamltags *.ml *.mli

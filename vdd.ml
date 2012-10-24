@@ -5,7 +5,7 @@
 
 (** MTBDDs with OCaml values (INTERNAL) *)
 
-type 'a t = 'a Dd.vdd
+type +'a t = 'a Dd.vdd
 (** Type of VDDs (that are necessarily attached to a manager of
     type [Man.v Man.t]).
 
@@ -15,7 +15,7 @@ type 'a t = 'a Dd.vdd
     automatically garbage collected. *)
 
 (** Public type for exploring the abstract type [t] *)
-type 'a vdd = 'a Dd.V.inspect =
+type +'a vdd = 'a Dd.V.inspect =
 | Leaf of 'a         (** Terminal value *)
 | Ite of int * 'a t * 'a t (** Decision on CUDD variable *)
 
@@ -168,7 +168,7 @@ let print__minterm print_leaf fmt dd =
     fprintf fmt "@]"
   end
 
-let print (print_bdd: (Format.formatter -> [>Bdd.any] Bdd.vt -> unit)) print_leaf fmt dd =
+let print (print_bdd: (Format.formatter -> [<Bdd.any] Bdd.vt -> unit)) print_leaf fmt dd =
   if is_cst dd then print_leaf fmt (dval dd)
   else
     let nb = nbpaths dd in
@@ -181,7 +181,7 @@ let print (print_bdd: (Format.formatter -> [>Bdd.any] Bdd.vt -> unit)) print_lea
 	let leaf = leaves.(i) in
 	let bdd = guard_of_leaf dd leaf in
 	fprintf fmt "@[<hv>%a@ IF %a@]"
-	  print_leaf leaf print_bdd (bdd:>[>Bdd.any] Bdd.vt);
+	  print_leaf leaf print_bdd (bdd:>[<Bdd.any] Bdd.vt);
 	if i > 0 then
 	  fprintf fmt ",@ ";
       done;
@@ -189,4 +189,4 @@ let print (print_bdd: (Format.formatter -> [>Bdd.any] Bdd.vt -> unit)) print_lea
     end
 
 let print_minterm print_id print_leaf formatter dd =
-  print (fun fmt bdd -> Bdd.print_minterm print_id fmt (bdd:>[>Bdd.any] Bdd.vt)) print_leaf formatter dd
+  print (fun fmt bdd -> Bdd.print_minterm print_id fmt (bdd:>[<Bdd.any] Bdd.vt)) print_leaf formatter dd

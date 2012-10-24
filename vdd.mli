@@ -4,7 +4,7 @@
    Please read the COPYING file packaged in the distribution  *)
 
 
-type 'a t = 'a Dd.vdd
+type +'a t = 'a Dd.vdd
 (** Type of VDDs (that are necessarily attached to a manager of
     type [Man.vt=Man.v Man.t]).
 
@@ -14,7 +14,7 @@ type 'a t = 'a Dd.vdd
     automatically garbage collected. *)
 
 (** Public type for exploring the abstract type [t] *)
-type 'a vdd = 'a Dd.V.inspect =
+type +'a vdd = 'a Dd.V.inspect =
 | Leaf of 'a               (** Terminal value *)
 | Ite of int * 'a t * 'a t (** Decision on CUDD variable *)
 
@@ -46,7 +46,7 @@ val topvar : 'a t -> int
 val dthen : 'a t -> 'a t
 val delse : 'a t -> 'a t
 val cofactors : int -> 'a t -> 'a t * 'a t
-val cofactor : 'a t -> cube:[>Bdd.cube] Bdd.vt -> 'a t
+val cofactor : 'a t -> cube:[<Bdd.cube] Bdd.vt -> 'a t
 val dval : 'a t -> 'a
 val inspect: 'a t -> 'a vdd
 
@@ -54,10 +54,10 @@ val inspect: 'a t -> 'a vdd
 (** {3 Supports} *)
 (* ====================================================== *)
 
-val support : 'a t -> [<Bdd.supp] Bdd.vt
+val support : 'a t -> [>Bdd.supp] Bdd.vt
 val supportsize : 'a t -> int
 val is_var_in : int -> 'a t -> bool
-val vectorsupport : 'a t array -> [<Bdd.supp] Bdd.vt
+val vectorsupport : 'a t array -> [>Bdd.supp] Bdd.vt
 
 (* ====================================================== *)
 (** {3 Classical operations} *)

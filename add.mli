@@ -46,7 +46,7 @@ val dval : t -> float
 val cofactors : int -> t -> t*t
 (** Returns the positive and negative cofactor of the ADD wrt the variable *)
 
-val cofactor : t -> cube:[>Bdd.cube] Bdd.dt -> t
+val cofactor : t -> cube:[<Bdd.cube] Bdd.dt -> t
 (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_Cofactor}[Cudd_Cofactor]}. [cofactor add cube] evaluates [add] on the cube [cube] *)
 
 val inspect: t -> add
@@ -56,7 +56,7 @@ val inspect: t -> add
 (** {3 Supports} *)
 (*  ====================================================== *)
 
-val support : t -> Bdd.supp Bdd.dt
+val support : t -> [>Bdd.supp] Bdd.dt
 (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_Support}[Cudd_Support]}. Returns the support (positive cube) of the ADD *)
 
 val supportsize : t -> int
@@ -65,7 +65,7 @@ val supportsize : t -> int
 val is_var_in : int -> t -> bool
 (** [Cuddaux_IsVarIn]. Does the given variable belong to the support of the ADD ? *)
 
-val vectorsupport : t array -> Bdd.supp Bdd.dt
+val vectorsupport : t array -> [>Bdd.supp] Bdd.dt
 (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_VectorSupport}[Cudd_VectorSupport]}. Returns the support of the array of ADDs.
 
     Raises a [Failure] exception in case where the array is of size 0 (in such
@@ -233,7 +233,7 @@ val tdrestrict : t -> care:Bdd.any Bdd.dt -> t
 (** {3 Conversions} *)
 (*  ====================================================== *)
 
-val of_bdd : [>Bdd.any] Bdd.dt -> t
+val of_bdd : [<Bdd.any] Bdd.dt -> t
 (**
    {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_BddToAdd}[Cudd_BddToAdd]}. Conversion
    from BDD to 0-1 ADD *)
@@ -266,13 +266,13 @@ val to_bdd_interval : t -> lower:float -> upper:float -> Bdd.any Bdd.dt
 (** {3 Quantifications} *)
 (*  ====================================================== *)
 
-val exist : supp:[>Bdd.supp] Bdd.dt -> t -> t
+val exist : supp:[<Bdd.supp] Bdd.dt -> t -> t
 (** Variation of
     {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_addExistAbstract}[Cudd_addExistAbstract]}. Abstracts
     all the variables in the cube from the ADD by summing over all
     possible values taken by those variables. *)
 
-val forall : supp:[>Bdd.supp] Bdd.dt -> t -> t
+val forall : supp:[<Bdd.supp] Bdd.dt -> t -> t
 (** Variation of
     {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_addUnivAbstract}[Cudd_addUnivAbstract]}. Abstracts
     all the variables in the cube from the ADD by taking the product
@@ -426,10 +426,10 @@ val apply_op3 : op3 -> t -> t -> t -> t
 val apply_opN : opN -> Bdd.any Bdd.dt array -> t array -> t
 val apply_opG : opG -> Bdd.any Bdd.dt array -> t array -> t
 val apply_test2 : test2 -> t -> t -> bool
-val apply_exist : exist -> supp:[>Bdd.supp] Bdd.dt -> t -> t
-val apply_existand : existand -> supp:[>Bdd.supp] Bdd.dt -> guard:[>Bdd.any] Bdd.dt -> t -> t
-val apply_existop1 : existop1 -> supp:[>Bdd.supp] Bdd.dt -> t -> t
-val apply_existandop1 : existandop1 -> supp:[>Bdd.supp] Bdd.dt -> guard:[>Bdd.any] Bdd.dt -> t -> t
+val apply_exist : exist -> supp:[<Bdd.supp] Bdd.dt -> t -> t
+val apply_existand : existand -> supp:[<Bdd.supp] Bdd.dt -> guard:[<Bdd.any] Bdd.dt -> t -> t
+val apply_existop1 : existop1 -> supp:[<Bdd.supp] Bdd.dt -> t -> t
+val apply_existandop1 : existandop1 -> supp:[<Bdd.supp] Bdd.dt -> guard:[<Bdd.any] Bdd.dt -> t -> t
 
 (** {5 Map functions} *)
 

@@ -125,6 +125,10 @@ CAMLprim value cudd_caml_$1_$2(value v1, value v2, value v3, value v4, value v5,
   value vr = ifelse($9,[[unit]],[[Val_unit]],[[cudd_caml_$9_c2ml(xr)]]);
   CAMLreturn(vr);
 }
+CAMLprim value cudd_caml_$1_$2_bytecode(value* argv, int argn)
+{
+  return cudd_caml_$1_$2(argv[0],argv[1],argv[2], argv[3], argv[4], argv[5]);
+}
 ]])dnl
 dnl
 define([[FUN_1_unsafe]],[[

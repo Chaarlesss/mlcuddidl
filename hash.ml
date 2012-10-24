@@ -8,7 +8,7 @@ type t
 
 external _create : int -> int -> t = "cudd_caml_hash__create"
 external arity : t -> int = "cudd_caml_hash_arity"
-external clear : t -> unit = "cudd_caml_hash_clear"
+external clear : t -> unit = "cudd_caml_hash_cuddauxHashClear"
 
 let (table:t Weak.t ref) = ref (Weak.create 32)
 

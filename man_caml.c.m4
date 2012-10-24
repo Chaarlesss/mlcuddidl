@@ -19,7 +19,7 @@ xr->initialsize = x2;
 xr->man = NULL;
 ]])
 
-value camlidl_cudd_hash_arity(value vhash)
+value cudd_caml_hash_arity(value vhash)
 {
   hash__t hash = cudd_caml_hash__t_ml2c(vhash);
   return Val_int(hash->arity);
@@ -130,7 +130,7 @@ FUN_1(man,cuddGarbageCollect,man_t,int,[[xr=cuddGarbageCollect(x1,1);]])
 FUN_1(man,cuddCacheFlush,man_t,unit)
 FUN_2(man,Cudd_AutodynEnable,man_t,reorder_t,unit)
 FUN_1(man,Cudd_AutodynDisable,man_t,unit)
-CAMLprim value cudd_caml_Cudd_ReorderingStatus(value vman)
+CAMLprim value cudd_caml_man_Cudd_ReorderingStatus(value vman)
 {
   man_t man = cudd_caml_man_t_ml2c(vman);
   reorder_t xr;

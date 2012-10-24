@@ -3,7 +3,7 @@
 (* This file is part of the MLCUDDIDL Library, released under LGPL license.
    Please read the COPYING file packaged in the distribution  *)
 
-type ('a,'b) t = ('a,'b) Dd.bdd
+type ('a,+'b) t = ('a,'b) Dd.bdd
   (** Abstract type for BDDs.
 
       Objects of type [('a,'b) t] contain both the top node of the
@@ -23,15 +23,15 @@ type ('a,'b) t = ('a,'b) Dd.bdd
       - [[`lit]]: indicates a literal or a constant
   *)
 
-type any  = [`any]
+type any  = [`atom | `lit | `conj | `any]
 (** Any Boolean formula *)
-type cube = [`any | `cube]
+type cube = [`atom | `lit | `conj]
 (** Conjunction of literals or constant *)
-type lit  = [`any | `cube | `lit]
+type lit  = [`atom | `lit        ]
 (** Single literal or constant *)
-type supp = [`any | `cube | `pos]
+type supp = [`atom        | `conj]
 (** Conjunction of atoms (positive literals) or constant *)
-type atom = [`any | `cube | `lit | `pos]
+type atom = [`atom               ]
 (** Single atom or constant *)
 
 type 'a dt       = (Man.d,'a) t
@@ -77,7 +77,7 @@ val cofactors : int -> ('a,'b) t -> ('a,'b) t * ('a,'b) t
 (** Returns the positive and negative cofactor of the BDD wrt the
     variable *)
 
-val cofactor : ('a,'b) t -> cube:('a,[>cube]) t -> ('a,'b) t
+val cofactor : ('a,'b) t -> cube:('a,[<cube]) t -> ('a,'b) t
 (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_Cofactor}[Cudd_Cofactor]}. [cofactor
    bdd ~cube] evaluates [bdd] on the cube [cube] *)
 
@@ -88,7 +88,7 @@ val inspect: ('a,'b) t -> ('a,'b) bdd
 (** {3  Supports} *)
 (*  ====================================================== *)
 
-val support : ('a,'b) t -> ('a,supp) t
+val support : ('a,'b) t -> ('a,[>supp]) t
 (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_Support}[Cudd_Support]}. Returns
    the support of the BDD *)
 
@@ -100,7 +100,7 @@ val is_var_in : int -> ('a,'b) t -> bool
 (** [Cuddaux_IsVarIn]. Does the given variable belong the support
     of the BDD ? *)
 
-val vectorsupport : ('a,'b) t array -> ('a,supp) t
+val vectorsupport : ('a,'b) t array -> ('a,[>supp]) t
 (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_Cudd_VectorSupport}[Cudd_Cudd_VectorSupport]}. Returns
    the support of the array of BDDs.
 
@@ -113,40 +113,40 @@ val vectorsupport : ('a,'b) t array -> ('a,supp) t
 (** {3  Manipulation of supports} *)
 (*  ====================================================== *)
 
-val support_inter : ('a,[>supp]) t -> ('a,[>supp]) t -> ('a,supp) t
+val support_inter : ('a,[<supp]) t -> ('a,[<supp]) t -> ('a,[>supp]) t
 (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_bddLiteralSetIntersection}[Cudd_bddLiteralSetIntersection]}. Intersection
    of supports *)
 
-val support_union: ('a,[>supp]) t -> ('a,[>supp]) t -> ('a,supp) t
+val support_union: ('a,[<supp]) t -> ('a,[<supp]) t -> ('a,[>supp]) t
 (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_bddAnd}[Cudd_bddAnd]}. Union
    of supports *)
 
-val support_diff: ('a,[>supp]) t -> ('a,[>supp]) t -> ('a,supp) t
+val support_diff: ('a,[<supp]) t -> ('a,[<supp]) t -> ('a,[>supp]) t
 (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_Cofactor}[Cudd_Cofactor]}. Difference
    of supports *)
 
-val list_of_support: ('a,[>supp]) t -> int list
+val list_of_support: ('a,[<supp]) t -> int list
 (** Converts a support into a list of variables *)
 
 (*  ====================================================== *)
 (** {3  Constants and Variables} *)
 (*  ====================================================== *)
 
-val dtrue : 'a Man.t -> ('a,[<atom]) t
+val dtrue : 'a Man.t -> ('a,[>atom]) t
 (** Returns the true BDD *)
 
-val dfalse : 'a Man.t -> ('a,[<atom]) t
+val dfalse : 'a Man.t -> ('a,[>atom]) t
 (** Returns the false BDD *)
 
-val ithvar : 'a Man.t -> int -> ('a,[<atom]) t
+val ithvar : 'a Man.t -> int -> ('a,[>atom]) t
 (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_bddIthVar}[Cudd_bddIthVar]}. Returns
    the BDD equivalent to the variable of the given index. *)
 
-val newvar : 'a Man.t -> ('a,[<atom]) t
+val newvar : 'a Man.t -> ('a,[>atom]) t
 (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_bddNewVar}[Cudd_bddNewVar]}. Returns
    the BDD equivalent to the variable of the next unused index. *)
 
-val newvar_at_level : 'a Man.t -> int -> ('a,[<atom]) t
+val newvar_at_level : 'a Man.t -> int -> ('a,[>atom]) t
 (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_bddNewVarAtLevel}[Cudd_bddNewVarAtLevel]}. Returns
    the BDD equivalent to the variable of the next unused index and
    sets its level. *)
@@ -232,7 +232,7 @@ val density : nbvars:int -> ('a,'b) t -> float
 (*  ====================================================== *)
 
 val dnot : ('a,'b) t -> ('a,any) t
-val vnot : ('a,[>lit]) t -> ('a,lit) t
+val vnot : ('a,[<lit]) t -> ('a,lit) t
 (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_Not}[Cudd_Not]}. Negation *)
 
 val dand : ('a,'b) t -> ('a,'c) t -> ('a,any) t
@@ -326,22 +326,22 @@ val iter_prime: (Man.tbool array -> unit) -> lower:('a,'b) t -> upper:('a,'c) t 
 (** {3  Quantifications} *)
 (*  ====================================================== *)
 
-val exist : supp:('a,[>supp]) t -> ('a,'c) t -> ('a,'c) t
+val exist : supp:('a,[<supp]) t -> ('a,'c) t -> ('a,'c) t
 (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_bddExistAbstract}[Cudd_bddExistAbstract]}. [exist
    supp bdd] quantifies existentially the set of variables defined by
    [supp] in the BDD. *)
 
-val forall : supp:('a,[>supp]) t -> ('a,'c) t -> ('a,'c) t
+val forall : supp:('a,[<supp]) t -> ('a,'c) t -> ('a,'c) t
 (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_bddUnivAbstract}[Cudd_bddUnivAbstract]}. [forall
    supp bdd] quantifies universally the set of variables defined by
    [supp] in the BDD. *)
 
-val existand : supp:('a,[>supp]) t -> ('a,'c) t -> ('a,'d) t -> ('a,any) t
+val existand : supp:('a,[<supp]) t -> ('a,'c) t -> ('a,'d) t -> ('a,any) t
 (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_bddAndAbstract}[Cudd_bddAndAbstract]}. Simultaneous
    existential quantification and intersection of BDDs. Logically,
    [existand ~supp x y = exist supp (dand x y)]. *)
 
-val existxor : supp:('a,[>supp]) t -> ('a,'c) t -> ('a,'d) t -> ('a,any) t
+val existxor : supp:('a,[<supp]) t -> ('a,'c) t -> ('a,'d) t -> ('a,any) t
 (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_bddXorExistAbstract}[Cudd_bddXorExistAbstract]}. Simultaneous
    existential quantification and exclusive or of BDDs. Logically,
    [existxor ~supp x y = exist supp (xor x y)]. *)
@@ -350,22 +350,22 @@ val existxor : supp:('a,[>supp]) t -> ('a,'c) t -> ('a,'d) t -> ('a,any) t
 (** {3  Cubes} *)
 (*  ====================================================== *)
 
-val cube_of_bdd: ('a,'b) t -> ('a,cube) t
+val cube_of_bdd: ('a,'b) t -> ('a,[>cube]) t
 (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_FindEssential}[Cudd_FindEssential]}. Returns
    the smallest cube (in the sens of inclusion) included in the
    BDD. *)
 
-val cube_of_minterm: 'a Man.t -> Man.tbool array -> ('a,cube) t
+val cube_of_minterm: 'a Man.t -> Man.tbool array -> ('a,[>cube]) t
 (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_CubeArrayToBdd}[Cudd_CubeArrayToBdd]}. Converts
    a minterm to a BDD (which is a cube). *)
 
-val list_of_cube: ('a,[>cube]) t -> (int*bool) list
+val list_of_cube: ('a,[<cube]) t -> (int*bool) list
 (** Converts a cube into a list of pairs of a variable and a
     phase. *)
 
-val cube_and : ('a,[>cube]) t -> ('a,[>cube]) t -> ('a,cube) t
-val cube_or : ('a,[>cube]) t -> ('a,[>cube]) t -> ('a,cube) t
-val cube_union : ('a,[>cube]) t -> ('a,[>cube]) t -> ('a,cube) t
+val cube_and : ('a,[<cube]) t -> ('a,[<cube]) t -> ('a,[>cube]) t
+val cube_or : ('a,[<cube]) t -> ('a,[<cube]) t -> ('a,[>cube]) t
+val cube_union : ('a,[<cube]) t -> ('a,[<cube]) t -> ('a,[>cube]) t
 (** [Cuddaux_bddCubeUnion]. Computes the union of cubes, which is
     the smallest cube containing both the argument cubes. *)
 
@@ -373,7 +373,7 @@ val pick_minterm : ('a,'b) t -> Man.tbool array
 (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_bddPickOneCube}[Cudd_bddPickOneCube]}. Picks
    randomly a minterm in the BDD. *)
 
-val pick_cube_on_support : supp:('a,[>supp]) t -> ('a,'c) t -> ('a,cube) t
+val pick_cube_on_support : supp:('a,[<supp]) t -> ('a,'c) t -> ('a,[>cube]) t
 (**
    {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_bddPickOneMinterm}[Cudd_bddPickOneMinterm]}. [pick_cube_on_support
    ~supp bdd] picks randomly a minterm/cube in the BDD, in which
@@ -382,7 +382,7 @@ val pick_cube_on_support : supp:('a,[>supp]) t -> ('a,'c) t -> ('a,cube) t
    The support argument should contain the support of the BDD
    (otherwise the result may be incorrect). *)
 
-val pick_cubes_on_support : supp:('a,[>supp]) t -> nb:int -> ('a,'c) t -> ('a,cube) t array
+val pick_cubes_on_support : supp:('a,[<supp]) t -> nb:int -> ('a,'c) t -> ('a,[>cube]) t array
 (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_bddPickArbitraryMinterms}[Cudd_bddPickArbitraryMinterms]}. [pick_cubes_on_support
    ~supp ~nb bdd] picks randomly [nb] minterms/cubes in the BDD, in
    which all the variables in the support have a definite value. The
@@ -434,7 +434,7 @@ type approx = Under | Over
 val clippingand : depth:int -> approx:approx -> ('a,'b) t -> ('a,'c) t -> ('a,any) t
 (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_bddClippingAnd}[Cudd_bddClippingAnd]}. *)
 
-val clippingexistand : depth:int -> approx:approx -> supp:('a,[>supp]) t -> ('a,'b) t -> ('a,'c) t -> ('a,any) t
+val clippingexistand : depth:int -> approx:approx -> supp:('a,[<supp]) t -> ('a,'b) t -> ('a,'c) t -> ('a,any) t
 (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_bddClippingAndAbstract}[Cudd_bddClippingAndAbstract]}. *)
 
 val underapprox : nbvars:int -> threshold:int -> safe:bool -> quality:float -> ('a,'b) t -> ('a,any) t
@@ -508,15 +508,15 @@ val _print: ('a,'b) t -> unit
 (** Raw (C) printing function.  The output may mix badly with the
     OCAML output. *)
 
-val print__minterm: Format.formatter -> ('a,[>any]) t -> unit
+val print__minterm: Format.formatter -> ('a,[<any]) t -> unit
 (** Prints the minterms of the BDD in the same way as
     {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_Printminterm}[Cudd_Printminterm]}. *)
 
-val print_minterm: (Format.formatter -> int -> unit) -> Format.formatter -> ('a,[>any]) t -> unit
+val print_minterm: (Format.formatter -> int -> unit) -> Format.formatter -> ('a,[<any]) t -> unit
 (** [print_minterm bassoc fmt bdd] prints the minterms of the BDD
     using [bassoc] to convert indices of variables to names. *)
 
-val print: (Format.formatter -> int -> unit) -> Format.formatter -> ('a,[>any]) t -> unit
+val print: (Format.formatter -> int -> unit) -> Format.formatter -> ('a,[<any]) t -> unit
 (** Prints a BDD by recursively decomposing it as monomial
     followed by a tree. *)
 

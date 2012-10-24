@@ -45,6 +45,12 @@ CAMLprim value cudd_caml_dd_vectorsupport(value _v_vec)
   CAMLreturn(_v_res);
 }
 FUN_1(dd,Cudd_DagSize,node_t,int)
+FUN_1(dd,Cudd_CountLeaves,node_t,int,
+      [[
+	xr = Cudd_CountLeaves(x1);
+	if (xr==CUDD_OUT_OF_MEM)
+	  caml_failwith("Bdd.nbpaths returned CUDD_OUT_OF_MEM");
+	]])
 FUN_1(dd,Cudd_CountPath,node_t,double,
       [[
 	xr = Cudd_CountPath(x1);
@@ -1151,3 +1157,13 @@ FUN_node1_node(add,Cudd_addBddPattern,node__t,bdd__t)
 FUN_node1_1_node(add,Cudd_addBddThreshold,node__t,double,bdd__t)
 FUN_node1_1_node(add,Cudd_addBddStrictThreshold,node__t,double,bdd__t)
 FUN_3(add,Cudd_addBddInterval,node__t,double,double,bdd__t,[[xr.man=x1.man; xr.node=Cudd_addBddInterval(x1.man->man,x1.node,x2,x3);]])
+
+value cudd_caml_abdd_print(value vno)
+{
+  CAMLparam1(vno);
+  node__t no = cudd_caml_node__t_ml2c(vno);
+  fflush(stdout);
+  Cudd_PrintMinterm(no.man->man,no.node);
+  fflush(stdout);
+  CAMLreturn(Val_unit);
+}

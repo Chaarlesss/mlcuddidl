@@ -19,7 +19,7 @@ val create : ?size:int -> int -> t
 external arity : t -> int = "cudd_caml_hash_arity"
 
 (** Clears the content of the hashtable *)
-external clear : t -> unit = "cudd_caml_hash_clear"
+external clear : t -> unit = "cudd_caml_hash_cuddauxHashClear"
 
 (** Clears the content of all created hashtables *)
 val clear_all : unit -> unit

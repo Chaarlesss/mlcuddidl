@@ -3,13 +3,13 @@
 (* This file is part of the MLCUDDIDL Library, released under LGPL license.
    Please read the COPYING file packaged in the distribution  *)
 
-type ('a,'b) t = ('a,'b) Dd.bdd
+type ('a,+'b) t = ('a,'b) Dd.bdd
 
-type any  = [`any]
-type cube = [`any | `cube]
-type lit  = [`any | `cube | `lit]
-type supp = [`any | `cube | `pos]
-type atom = [`any | `cube | `lit | `pos]
+type atom = [`atom               ]
+type supp = [`atom |        `conj]
+type lit  = [`atom | `lit        ]
+type cube = [`atom | `lit | `conj]
+type any  = [`atom | `lit | `conj | `any]
 
 type 'a dt       = (Man.d,'a) t
 type 'a vt       = (Man.v,'a) t
@@ -190,7 +190,7 @@ let correlationweights = Dd.B.correlationweights
 (*  ====================================================== *)
 
 (** Raw (C) printing function.  The output may mix badly with the OCAML output. *)
-external _print: ('a,'b) t -> unit = "camlidl_cudd_print"
+external _print: ('a,'b) t -> unit = "cudd_caml_abdd_print"
 
 open Format
 

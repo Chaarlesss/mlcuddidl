@@ -20,7 +20,7 @@ let combineexpansive ~default ~merge (guard,leaf) res =
 let combineleaf1
     ~(default:'c)
     ~(combine : 'b -> 'c -> 'c)
-    (f:[>Bdd.any] Bdd.vt -> 'a -> 'b)
+    (f:[<Bdd.any] Bdd.vt -> 'a -> 'b)
     (vdd:'a Vdd.t)
     :
     'c
@@ -49,7 +49,7 @@ let mapleaf1
 
 let retractivemapleaf1
     ~(default:'b Vdd.t)
-    (f:[>Bdd.any] Bdd.vt -> 'a -> Bdd.any Bdd.vt * 'b)
+    (f:[<Bdd.any] Bdd.vt -> 'a -> Bdd.any Bdd.vt * 'b)
     (vdd:'a Vdd.t)
   :
     'b Vdd.t
@@ -60,7 +60,7 @@ let retractivemapleaf1
 let expansivemapleaf1
     ~(default:'b Vdd.t)
     ~(merge:'b Vdd.t -> 'b Vdd.t -> 'b Vdd.t)
-    (f:[>Bdd.any] Bdd.vt -> 'a -> Bdd.any Bdd.vt * 'b)
+    (f:[<Bdd.any] Bdd.vt -> 'a -> Bdd.any Bdd.vt * 'b)
     (vdd:'a Vdd.t)
   :
     'b Vdd.t
@@ -76,7 +76,7 @@ let expansivemapleaf1
 let combineleaf2
     ~(default:'d)
     ~(combine : 'c -> 'd -> 'd)
-    (f:[>Bdd.any] Bdd.vt -> 'a -> 'b -> 'c)
+    (f:[<Bdd.any] Bdd.vt -> 'a -> 'b -> 'c)
     (vdd1:'a Vdd.t)
     (vdd2:'b Vdd.t)
     :
@@ -120,7 +120,7 @@ let combineleaf2
 
 let retractivemapleaf2
     ~(default:'c Vdd.t)
-    (f:[>Bdd.any] Bdd.vt -> 'a -> 'b -> Bdd.any Bdd.vt * 'c)
+    (f:[<Bdd.any] Bdd.vt -> 'a -> 'b -> Bdd.any Bdd.vt * 'c)
     (vdd1:'a Vdd.t)
     (vdd2:'b Vdd.t)
     :
@@ -132,7 +132,7 @@ let retractivemapleaf2
 let expansivemapleaf2
     ~(default:'c Vdd.t)
     ~(merge:'c Vdd.t -> 'c Vdd.t -> 'c Vdd.t)
-    (f:[>Bdd.any] Bdd.vt -> 'a -> 'b -> Bdd.any Bdd.vt * 'c)
+    (f:[<Bdd.any] Bdd.vt -> 'a -> 'b -> Bdd.any Bdd.vt * 'c)
     (vdd1:'a Vdd.t)
     (vdd2:'b Vdd.t)
     :
@@ -162,7 +162,7 @@ let combineleaf_array
     ~(default:'c)
     ~(combine : 'b -> 'c -> 'c)
     ~(tabsorbant: ('a -> bool) option array)
-    (f:[>Bdd.any] Bdd.vt -> 'a array -> 'b)
+    (f:[<Bdd.any] Bdd.vt -> 'a array -> 'b)
     (tvdd:'a Vdd.t array)
     :
     'c
@@ -237,14 +237,14 @@ let combineleaf1_array
     ~(combine : 'c -> 'd -> 'd)
     ?(absorbant:('a -> bool) option)
     ~(tabsorbant: ('b -> bool) option array)
-    (f:[>Bdd.any] Bdd.vt -> 'a -> 'b array -> 'c)
+    (f:[<Bdd.any] Bdd.vt -> 'a -> 'b array -> 'c)
     (vdd:'a Vdd.t) (tvdd:'b Vdd.t array)
     :
     'd
     =
   let (absorbant :('b -> bool) option) = Obj.magic absorbant in
   let (vdd : 'b Vdd.t) = Obj.magic vdd in
-  let (f : [>Bdd.any] Bdd.vt -> 'b -> 'b array -> 'c) = Obj.magic f in
+  let (f : [<Bdd.any] Bdd.vt -> 'b -> 'b array -> 'c) = Obj.magic f in
   combineleaf_array
     ~default
     ~combine
@@ -262,7 +262,7 @@ let combineleaf2_array
     ?(absorbant1:('a -> bool) option)
     ?(absorbant2:('b -> bool) option)
     ~(tabsorbant: ('c -> bool) option array)
-    (f:[>Bdd.any] Bdd.vt -> 'a -> 'b -> 'c array -> 'd)
+    (f:[<Bdd.any] Bdd.vt -> 'a -> 'b -> 'c array -> 'd)
     (vdd1:'a Vdd.t) (vdd2:'b Vdd.t) (tvdd:'c Vdd.t array)
     :
     'e
@@ -271,7 +271,7 @@ let combineleaf2_array
   let (absorbant2 :('c -> bool) option) = Obj.magic absorbant2 in
   let (vdd1 : 'c Vdd.t) = Obj.magic vdd1 in
   let (vdd2 : 'c Vdd.t) = Obj.magic vdd2 in
-  let (f : [>Bdd.any] Bdd.vt -> 'c -> 'c -> 'c array -> 'd) = Obj.magic f in
+  let (f : [<Bdd.any] Bdd.vt -> 'c -> 'c -> 'c array -> 'd) = Obj.magic f in
   combineleaf_array
     ~default
     ~combine
