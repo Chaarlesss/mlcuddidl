@@ -13,6 +13,17 @@
 
 extern value camlidl_cudd_custom_op_exn;
 
+#define disableReordering(dd, code) do {				\
+    int autodyn = 0;							\
+    Cudd_ReorderingType heuristic;					\
+    if (Cudd_ReorderingStatus(dd,&heuristic)) {				\
+      autodyn = 1;							\
+      Cudd_AutodynDisable(dd);						\
+    }									\
+    code;								\
+    if (autodyn) Cudd_AutodynEnable(dd, CUDD_REORDER_SAME);		\
+  } while (0)
+
 /* ********************************************************************** */
 /* Types */
 /* ********************************************************************** */

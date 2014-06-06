@@ -76,10 +76,12 @@ static int cuddauxNodesBelowLevelRecur(DdManager* manager, DdNode* F, int level,
 DdNode* Cuddaux_Support(DdManager* dd, DdNode* f)
 {
   DdNode* res;
-  do {
-    dd->reordered = 0;
-    res = cuddauxSupportRecur(dd, Cudd_Regular(f));
-  } while (dd->reordered == 1);
+  disableReordering (dd, {
+      do {
+	dd->reordered = 0;
+	res = cuddauxSupportRecur(dd, Cudd_Regular(f));
+      } while (dd->reordered == 1);
+    });
   return res;
 }
 
@@ -281,10 +283,12 @@ void cuddaux_list_free(cuddaux_list_t* list)
 DdNode* Cuddaux_addGuardOfNode(DdManager* manager, DdNode* f, DdNode* h)
 {
   DdNode* res;
-  do {
-    manager->reordered = 0;
-    res = cuddauxAddGuardOfNodeRecur(manager, f, h);
-  } while (manager->reordered == 1);
+  disableReordering (manager, {
+      do {
+	manager->reordered = 0;
+	res = cuddauxAddGuardOfNodeRecur(manager, f, h);
+      } while (manager->reordered == 1);
+    });
   return res;
 }
 
