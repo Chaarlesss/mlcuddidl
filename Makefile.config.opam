@@ -15,15 +15,8 @@ HAS_SHARED=1
 
 # mlcuddidl is installed with ocamlfind as the package "cudd"
 # The installation directory is thus $(shell ocamlfind printconf destdir)/cudd
-
-# Where to find OCAML library
-#
 CAML_DIR = $(shell ocamlc -where)
-
-# Where to find CAMLIDL's library (usually the same as $(CAML_DIR), or
-# the result of `ocamlfind query camlidl`).
-CAMLIDL_DIR = $(CAML_DIR)
-# CAMLIDL_DIR = $(shell $(OCAMLFIND) query camlidl)
+CAMLIDL_DIR = $(shell ocamlfind query camlidl)
 
 ######################################################################
 # Tools and Flags
@@ -41,7 +34,8 @@ OCAMLOPT = ocamlopt.opt
 # ocamlc compilation flags
 OCAMLFLAGS = -annot -g
 # ocamlopt compilation flags
-OCAMLOPTFLAGS = -annot -inline 10 -g
+OCAMLOPTFLAGS = -annot -inline 20 -g
+OCAMLPACK = ./ocamlpack
 
 OCAMLDEP = ocamldep
 OCAMLLEX = ocamllex.opt
@@ -50,7 +44,6 @@ OCAMLDOC = ocamldoc.opt
 OCAMLMKTOP = ocamlmktop
 OCAMLMKLIB = ocamlmklib
 
-
 ##################################################
 # C compiler
 CC = gcc
@@ -58,10 +51,11 @@ CC = gcc
 #
 # FOR CUDD: IMPORTANT
 # GCC on i386
-XCFLAGS = -fPIC -malign-double -DHAVE_IEEE_754 -DBSD
+# XCFLAGS = -fPIC -march=pentium4 -malign-double -DHAVE_IEEE_754 -DBSD
 # GCC on x86_64
-#XCFLAGS = -fPIC -m64 -DHAVE_IEEE_754 -DSIZEOF_VOID_P=8 -DSIZEOF_LONG=8 -DSIZEOF_INT=4
-# For Mac x86_64, add -m64 -flat_namespace -undefined suppress
+# XCFLAGS = -fPIC -m64 -DHAVE_IEEE_754 -DSIZEOF_VOID_P=8 -DSIZEOF_LONG=8 -DSIZEOF_INT=4
+XCFLAGS	= -mtune=native -DHAVE_IEEE_754 -DBSD -DSIZEOF_VOID_P=8 -DSIZEOF_LONG=8 -DSIZEOF_INT=4 -D_GNU_SOURCE
+# XCFLAGS	= -fPIC -DHAVE_IEEE_754 -DBSD -DSIZEOF_VOID_P=8 -DSIZEOF_LONG=8 -DSIZEOF_INT=4 -D_GNU_SOURCE
 
 # C compilation flags
 CFLAGS = \
@@ -69,7 +63,9 @@ CFLAGS = \
 -Wall -Wextra -Wundef -Wbad-function-cast -Wcast-align -Wstrict-prototypes \
 -Wno-unused \
 -std=c99 \
--fPIC -O3 -DNDEBUG
+-O3 -DNDEBUG \
+-fPIC
+# For Mac x86_64, add -m64 -flat_namespace -undefined suppress
 
 # C compilation flags in debug mode
 CFLAGS_DEBUG = \
@@ -77,7 +73,8 @@ CFLAGS_DEBUG = \
 -Wall -Wextra -Wundef -Wbad-function-cast -Wcast-align -Wstrict-prototypes \
 -Wno-unused \
 -std=c99 \
--fPIC -g -O0 -UNDEBUG
+-g -O0 -UNDEBUG \
+-fPIC
 
 # C compilation flags in profiling mode
 CFLAGS_PROF = \
@@ -85,7 +82,11 @@ CFLAGS_PROF = \
 -Wall -Wextra -Wundef -Wbad-function-cast -Wcast-align -Wstrict-prototypes \
 -Wno-unused \
 -std=c99 \
--fPIC -O3 -DNDEBUG -g -pg
+-O3 -pg -DNDEBUG \
+-fPIC
+
+# DDDEBUG = -DDD_DEBUG -DDD_VERBOSE -DDD_COUNT -g
+# MTRDEBUG = -DMTR_DEBUG
 
 ##################################################
 # Other

@@ -6,6 +6,8 @@
 # Beginning of the configuration section. These symbol definitions can
 # be overridden from the command line.
 
+-include config.mk
+
 # C++ compiler
 #CPP	= cpp
 #CPP	= icpc

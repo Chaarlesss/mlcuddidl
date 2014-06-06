@@ -4,21 +4,21 @@
 # command line (very primitive...)
 if test $1 != "-o"; then
     echo "ocamlpack: usage: ocamlpack -o file.ml* (-intro file.odoc) (-level <n>) file1.ml* file2.ml* ..."
-    exit -1
+    exit 1
 fi
 shift
 out=$1
 shift
 introfile=0
-if test $1 == "-intro"; then { shift; introfile=$1; shift; }; fi
+if test $1 = "-intro"; then { shift; introfile=$1; shift; }; fi
 level=-1
-if test $1 == "-level"; then { shift; level=$1; shift; }; fi
+if test $1 = "-level"; then { shift; level=$1; shift; }; fi
 
 # extract suffix of output file
 suffix=`echo "$out" | sed -e 's/.*[.]\(ml\|mli\)$/\1/g'`
 if test $suffix != "ml" && test $suffix != "mli"; then
     echo "suffix of output file should be .ml or .mli";
-    exit -1
+    exit 1
 fi
 
 # prepare output
@@ -33,7 +33,7 @@ for file in $*; do
     echo "" >>$out
     suffixf=`echo "$file" | sed -e 's/.*[.]\(ml\|mli\)$/\1/g'`
     if test $suffix != $suffixf; then
-	{ echo "ocamlpack: suffix .$suffix expected for file $file"; exit -1; };
+	{ echo "ocamlpack: suffix .$suffix expected for file $file"; exit 1; };
     fi
     module=`echo $file | sed -e 's/\([^/]\+[/]\)*\([^/.]*\)[.]\(ml\|mli\)$/\u\2/g'`
     firstline=`head -n 1 $file`

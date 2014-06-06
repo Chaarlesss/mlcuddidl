@@ -1,0 +1,30 @@
+#!/bin/sh
+
+# ---
+
+cudddir="cudd-2.4.2";
+cuddconfig="${cudddir}/config.mk";
+
+# ---
+
+info () { echo "$1" >/dev/stderr; }
+error () { echo "$1" >/dev/stderr; usage; exit 1; }
+
+# ---
+
+# Basic test to guess architecture:
+command -v uname >/dev/null || error "Unable to guess ISA!";
+
+# Note we always assume a decent version of gcc here:
+exec 1>"${cuddconfig}";
+echo -n 'XCFLAGS = -mtune=native -malign-double -DHAVE_IEEE_754 -DBSD -D_GNU_SOURCE';
+# TODO: -fPIC?
+arch=$(uname -m);
+info "Detected ISA: ${arch}"; 
+case "${arch}" in
+    i686)   echo '';;	# <- defaults are ok.
+    x86_64) echo ' -DSIZEOF_VOID_P=8 -DSIZEOF_LONG=8 -DSIZEOF_INT=4';;
+    *) error "Unknown ISA!"
+esac;
+
+cp Makefile.config.opam Makefile.config;

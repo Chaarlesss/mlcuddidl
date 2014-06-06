@@ -1,4 +1,6 @@
 include Makefile.config
+PKGNAME = mlcuddidl
+VERSION_STR = 2.2.0
 
 #---------------------------------------
 # Directories
@@ -17,7 +19,7 @@ SITE-LIB-PKG = $(SITE-LIB)/$(PKG-NAME)
 #---------------------------------------
 
 ICFLAGS = -Icudd-2.4.2/cudd -Icudd-2.4.2/mtr -Icudd-2.4.2/epd -Icudd-2.4.2/st -Icudd-2.4.2/util \
--I$(CAML_PREFIX)/lib/ocaml -I$(CAMLIDL_PREFIX)/lib/ocaml
+-I$(CAML_DIR) -I$(CAMLIDL_DIR)
 
 #---------------------------------------
 # OCaml part
@@ -26,8 +28,8 @@ ICFLAGS = -Icudd-2.4.2/cudd -Icudd-2.4.2/mtr -Icudd-2.4.2/epd -Icudd-2.4.2/st -I
 OCAMLCCOPT = \
 -ccopt -L$(SITE-LIB)/stublibs \
 -ccopt -L$(SITE-LIB-PKG) \
--ccopt -L$(CAMLIDL_PREFIX)/lib/ocaml \
--ccopt -L$(CAML_PREFIX)/lib/ocaml
+-ccopt -L$(CAML_DIR) \
+-ccopt -L$(CAMLIDL_DIR) \
 
 #---------------------------------------
 # Files
@@ -81,6 +83,9 @@ all: $(FILES_TOINSTALL)
 	$(OCAMLFIND) ocamlopt -verbose $(OCAMLOPTFLAGS) $(OCAMLINC) -o $@ $*.ml \
 	-package cudd -linkpkg
 
+META: META.in force
+	sed -e "s!@VERSION@!$(VERSION_STR)!g;" $< > $@;
+
 install: $(FILES_TOINSTALL)
 	$(OCAMLFIND) remove $(PKG-NAME)
 	$(OCAMLFIND) install $(PKG-NAME) $^
@@ -90,7 +95,7 @@ uninstall:
 
 mostlyclean: clean
 	(cd cudd-2.4.2; make clean)
-	/bin/rm -f Makefile.depend TAGS
+	/bin/rm -f Makefile.depend TAGS META
 	/bin/rm -f $(IDLMODULES:%=%.ml) $(IDLMODULES:%=%.mli) $(IDLMODULES:%=%_caml.c) tmp/* html/*
 	/bin/rm -f mlcuddidl.?? mlcuddidl.??? mlcuddidl.info example example.opt mlcuddidl.tex ocamldoc.tex *.dvi style.css ocamldoc.sty index.html
 
@@ -146,7 +151,7 @@ dllcuddcaml.so: libcuddcaml.a
 	mkdir -p tmp
 	(cd tmp; /bin/rm -fr *.o; $(AR) x ../$^)
 	$(CC) $(CFLAGS) $(XCFLAGS) -shared -o $@ tmp/*.o \
-	-L$(CAMLIDL_PREFIX)/lib/ocaml -lcamlidl
+	-L$(CAMLIDL_DIR) -lcamlidl
 	/bin/rm -f tmp/*.o
 
 cudd-2.4.2/libcuddall.a:
@@ -172,7 +177,7 @@ mlcuddidl.dvi: cudd_ocamldoc.mli
 	cp cudd_ocamldoc.mli tmp/cudd.mli
 	(cd tmp; $(OCAMLC) $(OCAMLINC) -c cudd.mli)
 	$(OCAMLDOC) $(OCAMLINC) -I tmp \
--t "MLCUDDIDL: OCaml interface for CUDD library, version 2.2.0, 01/02/11" \
+-t "MLCUDDIDL: OCaml interface for CUDD library, version $(VERSION_STR), 01/02/11" \
 -latextitle 1,part -latextitle 2,chapter -latextitle 3,section -latextitle 4,subsection -latextitle 5,subsubsection -latextitle 6,paragraph -latextitle 7,subparagraph \
 -latex -o ocamldoc.tex tmp/cudd.mli
 	$(SED) -e 's/\\documentclass\[11pt\]{article}/\\documentclass[10pt,twosdie,a4paper]{book}\\usepackage{ae,fullpage,makeidx,fancyhdr}\\usepackage[ps2pdf]{hyperref}\\pagestyle{fancy}\\setlength{\\parindent}{0em}\\setlength{\\parskip}{0.5ex}\\sloppy\\makeindex\\author{Bertrand Jeannet}/' -e 's/\\end{document}/\\appendix\\printindex\\end{document}/' ocamldoc.tex >mlcuddidl.tex
@@ -262,3 +267,28 @@ Makefile.depend: $(IDLMODULES:%=%.ml) $(IDLMODULES:%=%.mli)
 	$(OCAMLDEP) $(MLMODULES:%=%.mli) $(MLMODULES:%=%.ml) >Makefile.depend
 
 -include Makefile.depend
+
+#-----------------------------------
+# OPAM Packaging
+#-----------------------------------
+
+ifneq ($(OPAM_DEVEL_DIR),)
+
+  OPAM_DIR = opam
+  OPAM_FILES = descr opam
+
+  MLSRCS = $(filter-out $(IDLMODULES),$(MLMODULES))
+  DIST_FILES = *.idl *.c *.h *.itarget *.odoci *.mlpack *.mlpacki	\
+   *.mllib *.m4 *.texi *.tex META.in $(MLSRCS:%=%.ml)			\
+   $(MLSRCS:%=%.mli) cudd-2.4.2 Changes README COPYING TODO Makefile	\
+   Makefile.cudd Makefile.config.* sedscript_* _tags ocamlpack		\
+   example.ml session.ml configure
+
+  -include $(OPAM_DEVEL_DIR)/opam-dist.mk
+
+endif
+
+# ---
+
+.PHONY: force
+force:
