@@ -39,8 +39,8 @@ for file in $*; do
     firstline=`head -n 1 $file`
     iscomment=`echo $firstline | sed -e 's/^\(([*][*]\).*/\1/g;s/^\([^(].*\)$/0/g'`
 #    echo "iscomment=$iscomment";
-    if test $iscomment == '(**'; then
-	if test $level != -1; then
+    if test "$iscomment" = '(**'; then
+	if test "$level" != -1; then
 	    content=`echo $firstline | sed -e 's/.*([*][*]\(.*\)[*]).*/\1/g'`
 	    echo '(** {% \\chapter{Module {\\tt' "$module}: $content} %} *)" >>$out;
 	    echo "" >>$out; echo $firstline >>$out;
@@ -48,12 +48,12 @@ for file in $*; do
 	    echo $firstline >>$out;
 	fi;
     fi
-    if test $suffix = "ml"; then
+    if test "$suffix" = "ml"; then
 	echo "module $module = struct" >>$out;
     else
 	echo "module $module : sig" >>$out;
     fi
-    if test $iscomment != "(**"; then
+    if test "$iscomment" != "(**"; then
 	echo $firstline >>$out;
     fi
     tail -n +2 $file >>$out

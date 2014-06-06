@@ -1,5 +1,5 @@
 (** Interface to CUDD library *)
-
+(*
 {2 Introduction}
 
 User modules:
@@ -119,3 +119,4 @@ Flags should be properly set in [Makefile.config] (starting from
 
 Also, the Make rules for some [example.ml] file shows how to compile
 a program with the interface.
+*)
