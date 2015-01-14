@@ -1,6 +1,6 @@
 include Makefile.config
 PKGNAME = mlcuddidl
-VERSION_STR = 2.2.0-1
+VERSION_STR = 2.2.0-2
 
 #---------------------------------------
 # Directories

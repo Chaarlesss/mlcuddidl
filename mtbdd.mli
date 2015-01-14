@@ -170,6 +170,8 @@ val pick_leaf : 'a t -> 'a
 val guardleafs_u : 'a t -> (Man.v Bdd.t * 'a unique) array
 val guardleafs : 'a t -> (Man.v Bdd.t * 'a) array
 
+val fold_guardleaves: (Man.v Bdd.t -> 'a -> 'b -> 'b) -> 'a t -> 'b -> 'b
+
 (* ====================================================== *)
 (** {3 Minimizations} *)
 (* ====================================================== *)

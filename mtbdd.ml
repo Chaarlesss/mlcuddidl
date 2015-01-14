@@ -39,6 +39,7 @@ let guard_of_leaf table dd leaf = guard_of_leaf_u dd (unique table leaf)
 let leaves_u = leaves
 let pick_leaf_u = pick_leaf
 let guardleafs_u = guardleafs
+let fold_guardleaves = fold_guardleaves
 
 let cst_u = cst
 let cst cudd table v = cst cudd (unique table v)

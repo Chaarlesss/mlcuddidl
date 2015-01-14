@@ -1466,6 +1466,50 @@ value camlidl_cudd_avdd_leaves(value _v_no)
   CAMLreturn(res);
 }
 
+/* Folds over the list of leaves of an add or vdd. */
+value camlidl_cudd_avdd_fold_guardleaves(value closure, value node, value init)
+{
+  CAMLparam3(closure, node, init);
+  CAMLlocal1(res);
+  node__t no;
+  cuddaux_list_t *p, *list;
+  int i;
+  size_t size;
+
+  camlidl_cudd_node_ml2c(node, &no);
+  list = Cuddaux_NodesBelowLevel(no.man->man,no.node,CUDD_MAXINDEX,0,&size,!no.man->caml);
+
+  res = init;			/* <- XXX is that really allowed? */
+
+  for (p=list; p!=NULL; p=p->next){
+    value guard, leaf = no.man->caml ? cuddauxCamlV(p->node) : cuddV(p->node);
+
+    Begin_roots2 (res, leaf);
+    CuddauxType type = Type_val (no.man->caml, leaf);
+    DdNode* leaf_node = cuddauxUniqueType (no.man, &type);
+    node__t _guard;
+    cuddRef (leaf_node);
+    _guard.man = no.man;
+    _guard.node = Cuddaux_addGuardOfNode (no.man->man, no.node, leaf_node);
+    cuddDeref (leaf_node);
+    guard = camlidl_cudd_bdd_c2ml (&_guard);
+    End_roots ();
+
+    Begin_roots3 (res, leaf, guard);
+    res = caml_callback3_exn (closure, guard, leaf, res);
+    End_roots ();		/* guard */
+
+    if (Is_exception_result (res)) {
+      cuddaux_list_free(list);
+      caml_raise (Extract_exception (res));
+      break;
+    }
+  }
+
+  cuddaux_list_free(list);
+  CAMLreturn(res);
+}
+
 /* Pick a leaf in an add or vdd. */
 value camlidl_cudd_avdd_pick_leaf(value _v_no)
 {

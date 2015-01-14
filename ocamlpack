@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 # -*- mode: sh -*-
 
 # command line (very primitive...)
@@ -15,7 +15,8 @@ level=-1
 if test $1 = "-level"; then { shift; level=$1; shift; }; fi
 
 # extract suffix of output file
-suffix=`echo "$out" | sed -e 's/.*[.]\(ml\|mli\)$/\1/g'`
+suffix="${out##*.}";
+# suffix=`echo "$out" | sed -e 's/.*[.]\(ml\|mli\)$/\1/g'`
 if test $suffix != "ml" && test $suffix != "mli"; then
     echo "suffix of output file should be .ml or .mli";
     exit 1
@@ -31,11 +32,15 @@ echo "" >>$out
 # iterate on input module,
 for file in $*; do
     echo "" >>$out
-    suffixf=`echo "$file" | sed -e 's/.*[.]\(ml\|mli\)$/\1/g'`
+    # suffixf=`echo "$file" | sed -e 's/.*[.]\(ml\|mli\)$/\1/g'`
+    basef="${file%%.*}";
+    suffixf="${file##*.}";
     if test $suffix != $suffixf; then
 	{ echo "ocamlpack: suffix .$suffix expected for file $file"; exit 1; };
     fi
-    module=`echo $file | sed -e 's/\([^/]\+[/]\)*\([^/.]*\)[.]\(ml\|mli\)$/\u\2/g'`
+    # module=`echo $file | sed -e 's/\([^/]\+[/]\)*\([^/.]*\)[.]\(ml\|mli\)$/\u\2/g'`
+    # module=`echo $basef | sed -e 's/\([^/]\+[/]\)*\([^/.]*\)[.]\(ml\|mli\)$/\u\2/g'`
+    module="$(echo "${basef:0:1}" | tr '[:lower:]' '[:upper:]')${basef:1}"
     firstline=`head -n 1 $file`
     iscomment=`echo $firstline | sed -e 's/^\(([*][*]\).*/\1/g;s/^\([^(].*\)$/0/g'`
 #    echo "iscomment=$iscomment";

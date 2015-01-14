@@ -246,6 +246,11 @@ let guardleafs (vdd:'a t) : (Man.v Bdd.t * 'a) array =
   Array.map (fun leaf -> (guard_of_leaf vdd leaf,leaf)) tab
 ")
 
+quote(MLMLI,"
+(** [fold_guardleaves f d i] applies [f] to the pairs constituted by the leaf values and associated guards in the DD [d]. The initial value for the accumulator is [i], and the visiting order is the same as the one of the array returned by [guardleafs]. *)
+external fold_guardleaves : (Man.v Bdd.t -> 'a -> 'b -> 'b) -> 'a t -> 'b -> 'b = \"camlidl_cudd_avdd_fold_guardleaves\"
+")
+
 /* ********************************************************************** */
 /* Minimizations */
 /* ********************************************************************** */
