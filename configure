@@ -23,7 +23,7 @@ arch=$(uname -m);
 info "Detected ISA: ${arch}"; 
 case "${arch}" in
     i686)   echo '';;	# <- defaults are ok.
-    x86_64) echo ' -DSIZEOF_VOID_P=8 -DSIZEOF_LONG=8 -DSIZEOF_INT=4';;
+    amd64|x86_64) echo ' -DSIZEOF_VOID_P=8 -DSIZEOF_LONG=8 -DSIZEOF_INT=4';;
     *) error "Unknown ISA!"
 esac;
 
