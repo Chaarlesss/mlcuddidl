@@ -63,8 +63,8 @@ CFLAGS = \
 -Wall -Wextra -Wundef -Wbad-function-cast -Wcast-align -Wstrict-prototypes \
 -Wno-unused \
 -std=c99 \
--O3 -DNDEBUG \
--fPIC
+-O3 -DNDEBUG
+# -fPIC
 # For Mac x86_64, add -m64 -flat_namespace -undefined suppress
 
 # C compilation flags in debug mode
@@ -73,8 +73,8 @@ CFLAGS_DEBUG = \
 -Wall -Wextra -Wundef -Wbad-function-cast -Wcast-align -Wstrict-prototypes \
 -Wno-unused \
 -std=c99 \
--g -O0 -UNDEBUG \
--fPIC
+-g -O0 -UNDEBUG
+# -fPIC
 
 # C compilation flags in profiling mode
 CFLAGS_PROF = \
@@ -82,8 +82,8 @@ CFLAGS_PROF = \
 -Wall -Wextra -Wundef -Wbad-function-cast -Wcast-align -Wstrict-prototypes \
 -Wno-unused \
 -std=c99 \
--O3 -pg -DNDEBUG \
--fPIC
+-O3 -pg -DNDEBUG
+# -fPIC
 
 # DDDEBUG = -DDD_DEBUG -DDD_VERBOSE -DDD_COUNT -g
 # MTRDEBUG = -DMTR_DEBUG

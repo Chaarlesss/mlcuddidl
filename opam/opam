@@ -1,6 +1,6 @@
 opam-version: "1"
 maintainer: "Nicolas.Berthier@inria.fr"
-authors: ["Bertrant Jeannet"]
+authors: ["Bertrant Jeannet" "Nicolas Berthier"]
 license: "LGPL-2.1"
 build: [
   ["./configure"]

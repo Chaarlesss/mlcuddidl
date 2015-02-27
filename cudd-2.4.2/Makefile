@@ -228,7 +228,7 @@ build:
 	@for dir in $(DIRS); do \
 		(cd $$dir; \
 		echo Making $$dir ...; \
-		$(MAKE) CC=$(CC) RANLIB=$(RANLIB) MFLAG= MNEMLIB= ICFLAGS="$(ICFLAGS)" XCFLAGS="$(XCFLAGS)" DDDEBUG="$(DDDEBUG)" MTRDEBUG="$(MTRDEBUG)" LDFLAGS="$(LDFLAGS)" PURE="$(PURE)" EXE="$(EXE)" )\
+		$(MAKE) CC="$(CC)" RANLIB="$(RANLIB)" MFLAG= MNEMLIB= ICFLAGS="$(ICFLAGS)" XCFLAGS="$(XCFLAGS)" DDDEBUG="$(DDDEBUG)" MTRDEBUG="$(MTRDEBUG)" LDFLAGS="$(LDFLAGS)" PURE="$(PURE)" EXE="$(EXE)" )\
 	done
 
 CUDDLIBS = \
@@ -240,25 +240,22 @@ libutil.a
 CUDDLIBS.d = $(CUDDLIBS:%.a=%.d.a)
 CUDDLIBS.p = $(CUDDLIBS:%.a=%.p.a)
 
-libcuddall.a: $(CUDDLIBS)
+../cuddall.o: $(CUDDLIBS)
 	rm -f *.o
 	for i in $(CUDDLIBS); do ($(AR) x $$i;); done
-	$(AR) rc $@ *.o
-	$(RANLIB) $@
+	$(LD) -r -o $@ *.o
 	rm -f *.o
 
-libcuddall.d.a: $(CUDDLIBS.d)
+../cuddall.d.o: $(CUDDLIBS.d)
 	rm -f *.o
 	for i in $(CUDDLIBS.d); do ($(AR) x $$i;); done
-	$(AR) rc $@ *.o
-	$(RANLIB) $@
+	$(LD) -r -o $@ *.o
 	rm -f *.o
 
-libcuddall.p.a: $(CUDDLIBS.p)
+../cuddall.p.o: $(CUDDLIBS.p)
 	rm -f *.o
 	for i in $(CUDDLIBS.p); do ($(AR) x $$i;); done
-	$(AR) rc $@ *.o
-	$(RANLIB) $@
+	$(LD) -r -o $@ *.o
 	rm -f *.o
 
 $(CUDDLIBS): lib%.a:

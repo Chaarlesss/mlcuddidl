@@ -1,11 +1,12 @@
-include Makefile.config
+-include Makefile.config
 PKGNAME = mlcuddidl
-VERSION_STR = 2.2.0-2
+VERSION_STR = 2.2.0-3
 
 #---------------------------------------
 # Directories
 #---------------------------------------
 
+CUDDDIR = cudd-2.4.2
 SRCDIR = $(shell pwd)
 #
 # Installation directory
@@ -18,8 +19,9 @@ SITE-LIB-PKG = $(SITE-LIB)/$(PKG-NAME)
 # C part
 #---------------------------------------
 
-ICFLAGS = -Icudd-2.4.2/cudd -Icudd-2.4.2/mtr -Icudd-2.4.2/epd -Icudd-2.4.2/st -Icudd-2.4.2/util \
+ICFLAGS = -I$(CUDDDIR)/cudd -I$(CUDDDIR)/mtr -I$(CUDDDIR)/epd -I$(CUDDDIR)/st -I$(CUDDDIR)/util \
 -I$(CAML_DIR) -I$(CAMLIDL_DIR)
+LDFLAGS = -L$(CAMLIDL_DIR) -lcamlidl
 
 #---------------------------------------
 # OCaml part
@@ -51,11 +53,11 @@ ifneq ($(HAS_SHARED),)
 endif
 
 FILES_TOINSTALL = META \
-	cudd-2.4.2/cudd/cudd.h cudd-2.4.2/cudd/cuddInt.h \
-	cudd-2.4.2/mtr/mtr.h \
-	cudd-2.4.2/epd/epd.h \
-	cudd-2.4.2/st/st.h \
-	cudd-2.4.2/util/util.h \
+	$(CUDDDIR)/cudd/cudd.h $(CUDDDIR)/cudd/cuddInt.h \
+	$(CUDDDIR)/mtr/mtr.h \
+	$(CUDDDIR)/epd/epd.h \
+	$(CUDDDIR)/st/st.h \
+	$(CUDDDIR)/util/util.h \
 	cuddaux.h cudd_caml.h \
 	$(IDLMODULES:%=%.idl) \
 	cudd.cmi cudd.cma \
@@ -83,7 +85,7 @@ all: $(FILES_TOINSTALL)
 	$(OCAMLFIND) ocamlopt -verbose $(OCAMLOPTFLAGS) $(OCAMLINC) -o $@ $*.ml \
 	-package cudd -linkpkg
 
-META: META.in force
+META: META.in
 	sed -e "s!@VERSION@!$(VERSION_STR)!g;" $< > $@;
 
 install: $(FILES_TOINSTALL)
@@ -94,13 +96,14 @@ uninstall:
 	$(OCAMLFIND) remove $(PKG-NAME)
 
 mostlyclean: clean
-	(cd cudd-2.4.2; $(MAKE) clean)
+	(cd $(CUDDDIR); $(MAKE) clean)
 	/bin/rm -f Makefile.depend TAGS META
-	/bin/rm -f $(IDLMODULES:%=%.ml) $(IDLMODULES:%=%.mli) $(IDLMODULES:%=%_caml.c) tmp/* html/*
+	/bin/rm -f $(IDLMODULES:%=%.ml) $(IDLMODULES:%=%.mli) $(IDLMODULES:%=%_caml.c) html/*
+	/bin/rm -f -r tmp
 	/bin/rm -f mlcuddidl.?? mlcuddidl.??? mlcuddidl.info example example.opt mlcuddidl.tex ocamldoc.tex *.dvi style.css ocamldoc.sty index.html
 
 distclean: mostlyclean
-	(cd cudd-2.4.2; $(MAKE) distclean; /bin/rm -f *.a)
+	(cd $(CUDDDIR); $(MAKE) distclean; /bin/rm -f *.a)
 
 clean:
 	/bin/rm -f cuddtop *.byte *.opt
@@ -134,35 +137,31 @@ cudd.p.cmx:  $(MLMODULES:%=%.p.cmx)
 	$(OCAMLOPT) $(OCAMLOPTFLAGS_PROF) -p -pack -o $@ $^
 
 
-# C rules
-libcuddcaml.a: cudd-2.4.2/libcuddall.a $(CCMODULES:%=%.o)
-	cp $< $@
-	$(AR) r $@ $(CCMODULES:%=%.o)
-	$(RANLIB) $@
-libcuddcaml.p.a: cudd-2.4.2/libcuddall.p.a $(CCMODULES:%=%.p.o)
-	cp $< $@
-	$(AR) r $@ $(CCMODULES:%=%.p.o)
-	$(RANLIB) $@
-libcuddcaml.d.a: cudd-2.4.2/libcuddall.d.a $(CCMODULES:%=%.d.o)
-	cp $< $@
-	$(AR) r $@ $(CCMODULES:%=%.d.o)
-	$(RANLIB) $@
-dllcuddcaml.so: libcuddcaml.a
-	mkdir -p tmp
-	(cd tmp; /bin/rm -fr *.o; $(AR) x ../$^)
-	$(CC) $(CFLAGS) $(XCFLAGS) -shared -o $@ tmp/*.o \
-	-L$(CAMLIDL_DIR) -lcamlidl
-	/bin/rm -f tmp/*.o
+# .PRECIOUS: %.o
+EXTRA_OBJs = cuddall
 
-cudd-2.4.2/libcuddall.a:
-	(cd cudd-2.4.2; \
-	$(MAKE) libcuddall.a CPP="$(CC)" CC="$(CC)" XCFLAGS="$(XCFLAGS)" ICFLAGS="$(CFLAGS)" RANLIB="$(RANLIB)" DDDEBUG="" MTRDEBUG="")
-cudd-2.4.2/libcuddall.p.a:
-	(cd cudd-2.4.2; \
-	$(MAKE) libcuddall.p.a CPP="$(CC)" CC="$(CC)" XCFLAGS="$(XCFLAGS)" ICFLAGS="$(CFLAGS_PROF)" RANLIB="$(RANLIB)" DDDEBUG="" MTRDEBUG="")
-cudd-2.4.2/libcuddall.d.a:
-	(cd cudd-2.4.2; \
-	$(MAKE) libcuddall.d.a CPP="$(CC)" CC="$(CC)" XCFLAGS="$(XCFLAGS)" ICFLAGS="$(CFLAGS_DEBUG)" RANLIB="$(RANLIB)" DDDEBUG="-DDD_DEBUG -DDD_VERBOSE -DDD_STATS -DDD_CACHE_PROFILE -DDD_UNIQUE_PROFILE -DDD_COUNT" MTRDEBUG="-DMTR_DEBUG")
+# CAML libraries
+lib%.p.a: $(CCMODULES:%=%.p.o) $(EXTRA_OBJs:%=%.p.o)
+	$(OCAMLMKLIB) -oc $*.p $^ $(LDFLAGS) -custom
+lib%.d.a: $(CCMODULES:%=%.d.o) $(EXTRA_OBJs:%=%.d.o)
+	$(OCAMLMKLIB) -oc $*.d $^ $(LDFLAGS) -custom
+dll%.so lib%.a: $(CCMODULES:%=%.o) $(EXTRA_OBJs:%=%.o)
+	$(OCAMLMKLIB) -verbose -oc $* $^ $(LDFLAGS)
+
+cuddall.o:
+	(cd $(CUDDDIR); $(MAKE) ../cuddall.o CPP="$(CC)" CC="$(CC)"	\
+	  XCFLAGS="$(XCFLAGS)" ICFLAGS="$(CFLAGS)" RANLIB="$(RANLIB)"	\
+	  DDDEBUG="" MTRDEBUG="")
+cuddall.p.o:
+	(cd $(CUDDDIR); $(MAKE) ../cuddall.p.o CPP="$(CC)" CC="$(CC)"	\
+	  XCFLAGS="$(XCFLAGS)" ICFLAGS="$(CFLAGS_PROF)"			\
+	  RANLIB="$(RANLIB)" DDDEBUG="" MTRDEBUG="")
+cuddall.d.o:
+	(cd $(CUDDDIR); $(MAKE) ../cuddall.d.o CPP="$(CC)" CC="$(CC)"	\
+	  XCFLAGS="$(XCFLAGS)" ICFLAGS="$(CFLAGS_DEBUG)"		\
+	  RANLIB="$(RANLIB)" DDDEBUG="-DDD_DEBUG -DDD_VERBOSE		\
+	  -DDD_STATS -DDD_CACHE_PROFILE -DDD_UNIQUE_PROFILE		\
+	  -DDD_COUNT" MTRDEBUG="-DMTR_DEBUG")
 
 # HTML and LATEX rules
 .PHONY: html
@@ -226,7 +225,7 @@ homepage: html mlcuddidl.pdf
 
 tmp: macros.m4
 	mkdir -p tmp;
-	for i in $(IDLMODULES); do m4 macros.m4 $${i}.idl > tmp/$${i}.idl; done;
+	for i in $(IDLMODULES); do $(M4) macros.m4 $${i}.idl > tmp/$${i}.idl; done;
 
 # sedscript_caml sedscript_c
 %_caml.c %.ml %.mli: %.idl tmp sedscript_caml sedscript_c
@@ -251,11 +250,11 @@ tmp: macros.m4
 #-----------------------------------
 
 %.o: %.c cudd_caml.h cuddaux.h
-	$(CC) $(CFLAGS) $(ICFLAGS) $(XCFLAGS) -c -o $@ $<
-%.d.o: %.c cudd_caml.h cuddaux.h
-	$(CC) $(CFLAGS_DEBUG) $(ICFLAGS) $(XCFLAGS) -c -o $@ $<
+	$(OCAMLOPT) -ccopt "$(CFLAGS) $(ICFLAGS) $(XCFLAGS)" -o $@ -c $<
 %.p.o: %.c cudd_caml.h cuddaux.h
-	$(CC) $(CFLAGS_PROF) $(ICFLAGS) $(XCFLAGS) -c -o $@ $<
+	$(OCAMLOPT) -ccopt "$(CFLAGS_PROF) $(ICFLAGS) $(XCFLAGS) -o $@" -c $<
+%.d.o: %.c cudd_caml.h cuddaux.h
+	$(OCAMLOPT) -ccopt "$(CFLAGS_DEBUG) $(ICFLAGS) $(XCFLAGS) -g -o $@" -c $<
 
 #-----------------------------------
 # CAML
@@ -277,9 +276,7 @@ $(MLMODULES:%=%.p.cmx): %.p.cmx: %.ml %.cmi
 # Dependencies
 #-----------------------------------
 
-depend: $(IDLMODULES:%=%.ml) $(IDLMODULES:%=%.mli)
-	$(OCAMLDEP) $(MLMODULES:%=%.mli) $(MLMODULES:%=%.ml) >Makefile.depend
-
+depend: Makefile.depend
 Makefile.depend: $(IDLMODULES:%=%.ml) $(IDLMODULES:%=%.mli)
 	$(OCAMLDEP) $(MLMODULES:%=%.mli) $(MLMODULES:%=%.ml) >Makefile.depend
 
@@ -292,12 +289,12 @@ Makefile.depend: $(IDLMODULES:%=%.ml) $(IDLMODULES:%=%.mli)
 ifneq ($(OPAM_DEVEL_DIR),)
 
   OPAM_DIR = opam
-  OPAM_FILES = descr opam
+  OPAM_FILES = descr opam files
 
   MLSRCS = $(filter-out $(IDLMODULES),$(MLMODULES))
   DIST_FILES = *.idl *.c *.h *.itarget *.odoci *.mlpack *.mlpacki	\
    *.mllib *.m4 *.texi *.tex META.in $(MLSRCS:%=%.ml)			\
-   $(MLSRCS:%=%.mli) cudd-2.4.2 Changes README COPYING TODO Makefile	\
+   $(MLSRCS:%=%.mli) $(CUDDDIR) Changes README COPYING TODO Makefile	\
    Makefile.cudd Makefile.config.* sedscript_* _tags ocamlpack		\
    example.ml session.ml configure
 
@@ -306,6 +303,3 @@ ifneq ($(OPAM_DEVEL_DIR),)
 endif
 
 # ---
-
-.PHONY: force
-force:

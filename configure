@@ -2,29 +2,52 @@
 
 # ---
 
-cudddir="cudd-2.4.2";
-cuddconfig="${cudddir}/config.mk";
-
-# ---
-
 info () { echo "$1" >/dev/stderr; }
-error () { echo "$1" >/dev/stderr; usage; exit 1; }
+warn () { echo "$1" >/dev/stderr; }
+err () { echo "$1" >/dev/stderr; exit 1; }
 
 # ---
 
 # Basic test to guess architecture:
 command -v uname >/dev/null || error "Unable to guess ISA!";
 
+test_cmd () { command -v $1 >/dev/null; }
+maybe_cmd () { test_cmd $2 && echo "$1 = $2" || warn "$3 seems unavailable"; }
+
 # Note we always assume a decent version of gcc here:
-exec 1>"${cuddconfig}";
-echo -n 'XCFLAGS = -mtune=native -malign-double -DHAVE_IEEE_754 -DBSD -D_GNU_SOURCE';
-# TODO: -fPIC?
+exec 1>"Makefile.config";
+cat Makefile.config.in;
+
+basic_xcflags="-fPIC -mtune=native -DHAVE_IEEE_754";
+free_xcflags="-DBSD -D_GNU_SOURCE";
+x86_xcflags="-malign-double";
+amd64_xcflags="-DSIZEOF_VOID_P=8 -DSIZEOF_LONG=8 -DSIZEOF_INT=4";
+
 arch=$(uname -m);
 info "Detected ISA: ${arch}"; 
 case "${arch}" in
-    i686)   echo '';;	# <- defaults are ok.
-    amd64|x86_64) echo ' -DSIZEOF_VOID_P=8 -DSIZEOF_LONG=8 -DSIZEOF_INT=4';;
-    *) error "Unknown ISA!"
+    i686)  
+	xcflags="${basic_xcflags} ${x86_xcflags}";;
+    amd64|x86_64)
+	xcflags="${basic_xcflags} ${amd64_xcflags}";;
+    *)  
+        warn "Unknown ISA: ${arch}!";;
 esac;
 
-cp Makefile.config.opam Makefile.config;
+system=$(uname -s);
+info "Detected System: ${system}"; 
+case "${system}" in
+    Linux)
+	xcflags="${xcflags} ${free_xcflags}";;
+    Darwin)
+    	maybe_cmd "SED" "gsed" "GNU sed";
+    	maybe_cmd "M4" "gm4" "GNU m4";;
+    FreeBSD)
+	xcflags="${xcflags} ${free_xcflags}";
+	maybe_cmd "SED" "gsed" "GNU sed";
+	maybe_cmd "M4" "gm4" "GNU m4";;
+    *)
+	warn "Unknown system: ${system}!";;
+esac;
+
+echo "XCFLAGS = ${xcflags}";
