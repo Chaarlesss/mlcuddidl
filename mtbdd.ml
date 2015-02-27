@@ -39,7 +39,9 @@ let guard_of_leaf table dd leaf = guard_of_leaf_u dd (unique table leaf)
 let leaves_u = leaves
 let pick_leaf_u = pick_leaf
 let guardleafs_u = guardleafs
-let fold_guardleaves = fold_guardleaves
+let guardleafs e = Array.map (fun (g, u) -> g, get u) (guardleafs e)
+let fold_guardleaves_u = fold_guardleaves
+let fold_guardleaves f = fold_guardleaves (fun g u -> f g (get u))
 
 let cst_u = cst
 let cst cudd table v = cst cudd (unique table v)

@@ -111,6 +111,8 @@ let pick_leaf t = get (pick_leaf_u t)
 let guardleafs_u = Vdd.guardleafs
 let guardleafs t =
   Array.map (fun (g,xu) -> (g,get xu)) (guardleafs_u t)
+let fold_guardleaves_u = Vdd.fold_guardleaves
+let fold_guardleaves f = Vdd.fold_guardleaves (fun g xu -> f g (get xu))
 external constrain : 'a t -> Man.v Bdd.t -> 'a t
   = "camlidl_cudd_add_constrain"
 external tdconstrain : 'a t -> Man.v Bdd.t -> 'a t
