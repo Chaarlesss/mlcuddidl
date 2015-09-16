@@ -1,6 +1,6 @@
 -include Makefile.config
 PKGNAME = mlcuddidl
-VERSION_STR = 2.2.0-4
+PKGVERS = 2.2.0-4
 
 #---------------------------------------
 # Directories
@@ -49,7 +49,7 @@ CCMODULES = \
 
 CCLIB = libcuddcaml.a libcuddcaml.d.a libcuddcaml.p.a
 ifneq ($(HAS_SHARED),)
-	CCLIB += dllcuddcaml.so
+	CCLIB += dllcuddcaml.so dllcuddcaml.d.so
 endif
 
 FILES_TOINSTALL = META \
@@ -86,7 +86,7 @@ all: $(FILES_TOINSTALL)
 	-package cudd -linkpkg
 
 META: META.in
-	sed -e "s!@VERSION@!$(VERSION_STR)!g;" $< > $@;
+	sed -e "s!@VERSION@!$(PKGVERS)!g;" $< > $@;
 
 install: $(FILES_TOINSTALL)
 	$(OCAMLFIND) remove $(PKG-NAME)
@@ -150,9 +150,9 @@ EXTRA_OBJs = cuddall
 # CAML libraries
 lib%.p.a: $(CCMODULES:%=%.p.o) $(EXTRA_OBJs:%=%.p.o)
 	$(OCAMLMKLIB) -oc $*.p $^ $(LDFLAGS) -custom
-lib%.d.a: $(CCMODULES:%=%.d.o) $(EXTRA_OBJs:%=%.d.o)
-	$(OCAMLMKLIB) -oc $*.d $^ $(LDFLAGS) -custom
-dll%.so lib%.a: $(CCMODULES:%=%.o) $(EXTRA_OBJs:%=%.o)
+lib%.d.a dll%.d.so: $(CCMODULES:%=%.d.o) $(EXTRA_OBJs:%=%.d.o)
+	$(OCAMLMKLIB) -verbose -g -oc $*.d $^ $(LDFLAGS)
+lib%.a dll%.so: $(CCMODULES:%=%.o) $(EXTRA_OBJs:%=%.o)
 	$(OCAMLMKLIB) -verbose -oc $* $^ $(LDFLAGS)
 
 cuddall.o:
@@ -183,7 +183,7 @@ mlcuddidl.dvi: cudd_ocamldoc.mli
 	cp cudd_ocamldoc.mli tmp/cudd.mli
 	(cd tmp; $(OCAMLC) $(OCAMLINC) -c cudd.mli)
 	$(OCAMLDOC) $(OCAMLINC) -I tmp \
--t "MLCUDDIDL: OCaml interface for CUDD library, version $(VERSION_STR), 01/02/11" \
+-t "MLCUDDIDL: OCaml interface for CUDD library, version $(PKGVERS), 01/02/11" \
 -latextitle 1,part -latextitle 2,chapter -latextitle 3,section -latextitle 4,subsection -latextitle 5,subsubsection -latextitle 6,paragraph -latextitle 7,subparagraph \
 -latex -o ocamldoc.tex tmp/cudd.mli
 	$(SED) -e 's/\\documentclass\[11pt\]{article}/\\documentclass[10pt,twosdie,a4paper]{book}\\usepackage{ae,fullpage,makeidx,fancyhdr}\\usepackage[ps2pdf]{hyperref}\\pagestyle{fancy}\\setlength{\\parindent}{0em}\\setlength{\\parskip}{0.5ex}\\sloppy\\makeindex\\author{Bertrand Jeannet}/' -e 's/\\end{document}/\\appendix\\printindex\\end{document}/' ocamldoc.tex >mlcuddidl.tex
@@ -296,7 +296,8 @@ Makefile.depend: $(IDLMODULES:%=%.ml) $(IDLMODULES:%=%.mli)
 # OPAM Packaging
 #-----------------------------------
 
-ifneq ($(OPAM_DEVEL_DIR),)
+# see `https://github.com/nberth/opam-dist'
+ifneq ($(OPAM_DIST_DIR),)
 
   OPAM_DIR = opam
   OPAM_FILES = descr opam files
@@ -308,7 +309,7 @@ ifneq ($(OPAM_DEVEL_DIR),)
    Makefile.cudd Makefile.config.* sedscript_* _tags ocamlpack		\
    example.ml session.ml configure
 
-  -include $(OPAM_DEVEL_DIR)/opam-dist.mk
+  -include $(OPAM_DIST_DIR)/opam-dist.mk
 
 endif
 
