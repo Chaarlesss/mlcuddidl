@@ -1,6 +1,6 @@
 -include Makefile.config
 PKGNAME = mlcuddidl
-VERSION_STR = 2.2.0-3
+VERSION_STR = 2.2.0-4
 
 #---------------------------------------
 # Directories
@@ -60,7 +60,7 @@ FILES_TOINSTALL = META \
 	$(CUDDDIR)/util/util.h \
 	cuddaux.h cudd_caml.h \
 	$(IDLMODULES:%=%.idl) \
-	cudd.cmi cudd.cma \
+	cudd.cmi cudd.cma cudd.d.cma \
 	cudd.cmx cudd.cmxa cudd.a \
 	cudd.d.cmxa cudd.d.a \
 	cudd.p.cmx cudd.p.cmxa cudd.p.a \
@@ -119,6 +119,11 @@ cudd.cma: cudd.cmo $(CCLIB)
 	-dllib -lcuddcaml \
 	-cclib -lcuddcaml -cclib -lcamlidl $(OCAMLCCOPT)
 
+cudd.d.cma: cudd.d.cmo $(CCLIB)
+	$(OCAMLFIND) ocamlc -verbose -a	-o $@ $< \
+	-dllib -lcuddcaml.d \
+	-cclib -lcuddcaml.d -cclib -lcamlidl $(OCAMLCCOPT)
+
 cudd.cmxa: cudd.cmx $(CCLIB)
 	$(OCAMLFIND) ocamlopt -verbose -a -o $@ $< \
 	-cclib -lcuddcaml -cclib -lcamlidl $(OCAMLCCOPT)
@@ -126,11 +131,13 @@ cudd.p.cmxa: cudd.p.cmx $(CCLIB)
 	$(OCAMLFIND) ocamlopt -verbose -p -a -o $@ $< \
 	-cclib -lcuddcaml.p -cclib -lcamlidl $(OCAMLCCOPT)
 cudd.d.cmxa: cudd.cmx $(CCLIB)
-	$(OCAMLFIND) ocamlopt -verbose -a -o $@ $< \
+	$(OCAMLFIND) ocamlopt -verbose -g -a -o $@ $< \
 	-cclib -lcuddcaml.d -cclib -lcamlidl $(OCAMLCCOPT)
 
 cudd.cmo cudd.cmi: $(MLMODULES:%=%.cmo)
 	$(OCAMLC) $(OCAMLFLAGS) $(OCAMLINC) -pack -o $@ $^
+cudd.d.cmo: $(MLMODULES:%=%.d.cmo)
+	$(OCAMLC) $(OCAMLFLAGS) $(OCAMLINC) -g -pack -o $@ $^
 cudd.cmx: $(MLMODULES:%=%.cmx)
 	$(OCAMLOPT) $(OCAMLOPTFLAGS) -pack -o $@ $^
 cudd.p.cmx:  $(MLMODULES:%=%.p.cmx)
@@ -265,6 +272,9 @@ tmp: macros.m4
 
 %.cmo: %.ml %.cmi
 	$(OCAMLC) $(OCAMLFLAGS) $(OCAMLINC) -c $<
+
+%.d.cmo: %.ml %.cmi %.cmo
+	$(OCAMLC) $(OCAMLFLAGS) $(OCAMLINC) -o $@ -g -c $<
 
 $(MLMODULES:%=%.cmx): %.cmx: %.ml %.cmi
 	$(OCAMLOPT) $(OCAMLOPTFLAGS) $(OCAMLINC) -for-pack Cudd -c $<
