@@ -1,13 +1,13 @@
 -include Makefile.config
 PKGNAME = mlcuddidl
-PKGVERS = 2.2.0-4
+PKGVERS = 2.3.0
 
 #---------------------------------------
 # Directories
 #---------------------------------------
 
-CUDDDIR = cudd-2.4.2
-SRCDIR = $(shell pwd)
+CUDDDIR = cudd-2.5.1
+SRCDIR = $(abspath $(dir $(firstword $(MAKEFILE_LIST))))
 #
 # Installation directory
 #
@@ -19,19 +19,11 @@ SITE-LIB-PKG = $(SITE-LIB)/$(PKG-NAME)
 # C part
 #---------------------------------------
 
-ICFLAGS = -I$(CUDDDIR)/cudd -I$(CUDDDIR)/mtr -I$(CUDDDIR)/epd -I$(CUDDDIR)/st -I$(CUDDDIR)/util \
--I$(CAML_DIR) -I$(CAMLIDL_DIR)
+CUDDLIBS = cudd mtr epd st util
+
+ICFLAGS = $(addprefix -I$(CUDDDIR)/,$(CUDDLIBS)) \
+	  -I$(CAML_DIR) -I$(CAMLIDL_DIR)
 LDFLAGS = -L$(CAMLIDL_DIR) -lcamlidl
-
-#---------------------------------------
-# OCaml part
-#---------------------------------------
-
-OCAMLCCOPT = \
--ccopt -L$(SITE-LIB)/stublibs \
--ccopt -L$(SITE-LIB-PKG) \
--ccopt -L$(CAML_DIR) \
--ccopt -L$(CAMLIDL_DIR) \
 
 #---------------------------------------
 # Files
@@ -47,10 +39,15 @@ CCMODULES = \
 	cuddauxTDGenCof cuddauxAddApply \
 	$(IDLMODULES:%=%_caml) cudd_caml
 
-CCLIB = libcuddcaml.a libcuddcaml.d.a libcuddcaml.p.a
+LIBNAMES = cudd_caml
+BASELIBS = $(addprefix $(LIBNAMES:%=lib%),.a)
+DEBGLIBS = $(addprefix $(LIBNAMES:%=lib%),.d.a)
+PROFLIBS = $(addprefix $(LIBNAMES:%=lib%),.p.a)
 ifneq ($(HAS_SHARED),)
-	CCLIB += dllcuddcaml.so dllcuddcaml.d.so
+  BASELIBS += $(addprefix $(LIBNAMES:%=dll%),.so)
+  DEBGLIBS += $(addprefix $(LIBNAMES:%=dll%),.d.so)
 endif
+CCLIB = $(BASELIBS) $(DEBGLIBS) $(PROFLIBS)
 
 FILES_TOINSTALL = META \
 	$(CUDDDIR)/cudd/cudd.h $(CUDDDIR)/cudd/cuddInt.h \
@@ -112,27 +109,34 @@ clean:
 	/bin/rm -f cmttb*
 	/bin/rm -fr html
 
+# ---
+
+EXTRA_OBJs = cuddall
+BASEOBJS =  $(CCMODULES:%=%.o) $(EXTRA_OBJs:%=%.o)
+DEBGOBJS =  $(CCMODULES:%=%.d.o) $(EXTRA_OBJs:%=%.d.o)
+PROFOBJS =  $(CCMODULES:%=%.p.o) $(EXTRA_OBJs:%=%.p.o)
+
 # CAML rules
 
-cudd.cma: cudd.cmo $(CCLIB)
-	$(OCAMLFIND) ocamlc -verbose -a	-o $@ $< \
-	-dllib -lcuddcaml \
-	-cclib -lcuddcaml -cclib -lcamlidl $(OCAMLCCOPT)
+OCAMLMKLIB := $(OCAMLMKLIB) -verbose
+OCAMLMKLIBd := $(OCAMLMKLIB) -ocamlopt "$(OCAMLOPT) -g" -ccopt -g
+OCAMLMKLIBp := $(OCAMLMKLIB) -ocamlopt "$(OCAMLOPT) -p" -ccopt -p
 
-cudd.d.cma: cudd.d.cmo $(CCLIB)
-	$(OCAMLFIND) ocamlc -verbose -a	-o $@ $< \
-	-dllib -lcuddcaml.d \
-	-cclib -lcuddcaml.d -cclib -lcamlidl $(OCAMLCCOPT)
+$(BASELIBS): cudd.cma cudd.cmxa
+$(DEBGLIBS): cudd.d.cma cudd.d.cmxa
+$(PROFLIBS): cudd.p.cmxa
 
-cudd.cmxa: cudd.cmx $(CCLIB)
-	$(OCAMLFIND) ocamlopt -verbose -a -o $@ $< \
-	-cclib -lcuddcaml -cclib -lcamlidl $(OCAMLCCOPT)
-cudd.p.cmxa: cudd.p.cmx $(CCLIB)
-	$(OCAMLFIND) ocamlopt -verbose -p -a -o $@ $< \
-	-cclib -lcuddcaml.p -cclib -lcamlidl $(OCAMLCCOPT)
-cudd.d.cmxa: cudd.cmx $(CCLIB)
-	$(OCAMLFIND) ocamlopt -verbose -g -a -o $@ $< \
-	-cclib -lcuddcaml.d -cclib -lcamlidl $(OCAMLCCOPT)
+cudd.cma: %.cma: %.cmo $(BASEOBJS)
+	$(OCAMLMKLIB) -o $* -oc $*_caml $^ $(LDFLAGS)
+%.d.cma: %.d.cmo $(DEBGOBJS)
+	$(OCAMLMKLIBd) -o $*.d -oc $*_caml.d $^ $(LDFLAGS)
+
+cudd.cmxa: %.cmxa: %.cmx $(BASEOBJS)
+	$(OCAMLMKLIB) -o $* -oc $*_caml $^ $(LDFLAGS)
+%.d.cmxa: %.cmx $(DEBGOBJS)
+	$(OCAMLMKLIBd) -o $*.d -oc $*_caml.d $^ $(LDFLAGS)
+%.p.cmxa: %.p.cmx $(PROFOBJS)
+	$(OCAMLMKLIBp) -o $*.p -oc $*_caml.p $^ $(LDFLAGS)
 
 cudd.cmo cudd.cmi: $(MLMODULES:%=%.cmo)
 	$(OCAMLC) $(OCAMLFLAGS) $(OCAMLINC) -pack -o $@ $^
@@ -145,30 +149,40 @@ cudd.p.cmx:  $(MLMODULES:%=%.p.cmx)
 
 
 # .PRECIOUS: %.o
-EXTRA_OBJs = cuddall
 
 # CAML libraries
-lib%.p.a: $(CCMODULES:%=%.p.o) $(EXTRA_OBJs:%=%.p.o)
-	$(OCAMLMKLIB) -oc $*.p $^ $(LDFLAGS) -custom
-lib%.d.a dll%.d.so: $(CCMODULES:%=%.d.o) $(EXTRA_OBJs:%=%.d.o)
-	$(OCAMLMKLIB) -verbose -g -oc $*.d $^ $(LDFLAGS)
-lib%.a dll%.so: $(CCMODULES:%=%.o) $(EXTRA_OBJs:%=%.o)
-	$(OCAMLMKLIB) -verbose -oc $* $^ $(LDFLAGS)
+
+define cuddall_make
+	$(MAKE) -C $(CUDDDIR) clean;
+	$(MAKE) -C $(CUDDDIR)						\
+	  CC="$(CC)"							\
+	  CXX="$(CXX)"							\
+	  RANLIB="$(RANLIB)"						\
+	  XCFLAGS="$(XCFLAGS)"						\
+	  $(1)								\
+	  DIRS="$(CUDDLIBS)";
+	tmp=$$(mktemp -d ./tmp.XXXX);					\
+	trap "rm -rf $${tmp};" EXIT QUIT INT;				\
+	abs_cudddir=$(SRCDIR)/$(CUDDDIR);				\
+	(								\
+	 cd "$${tmp}";							\
+	 for i in $(CUDDLIBS); do					\
+	   $(AR) x "$${abs_cudddir}/$$i/lib$$i.a";			\
+	 done;								\
+	 $(LD) -r -o $@ *.o;						\
+	);								\
+	ln "$${tmp}/$@";
+endef
 
 cuddall.o:
-	(cd $(CUDDDIR); $(MAKE) ../cuddall.o CPP="$(CC)" CC="$(CC)"	\
-	  XCFLAGS="$(XCFLAGS)" ICFLAGS="$(CFLAGS)" RANLIB="$(RANLIB)"	\
-	  DDDEBUG="" MTRDEBUG="")
+	$(call cuddall_make,ICFLAGS="$(CFLAGS)",)
 cuddall.p.o:
-	(cd $(CUDDDIR); $(MAKE) ../cuddall.p.o CPP="$(CC)" CC="$(CC)"	\
-	  XCFLAGS="$(XCFLAGS)" ICFLAGS="$(CFLAGS_PROF)"			\
-	  RANLIB="$(RANLIB)" DDDEBUG="" MTRDEBUG="")
+	$(call cuddall_make,ICFLAGS="$(CFLAGS_PROF)",.p)
 cuddall.d.o:
-	(cd $(CUDDDIR); $(MAKE) ../cuddall.d.o CPP="$(CC)" CC="$(CC)"	\
-	  XCFLAGS="$(XCFLAGS)" ICFLAGS="$(CFLAGS_DEBUG)"		\
-	  RANLIB="$(RANLIB)" DDDEBUG="-DDD_DEBUG -DDD_VERBOSE		\
-	  -DDD_STATS -DDD_CACHE_PROFILE -DDD_UNIQUE_PROFILE		\
-	  -DDD_COUNT" MTRDEBUG="-DMTR_DEBUG")
+	$(call cuddall_make,ICFLAGS="$(CFLAGS_DEBUG)"			\
+	       DDDEBUG="-DDD_DEBUG -DDD_VERBOSE -DDD_STATS		\
+			-DDD_CACHE_PROFILE -DDD_UNIQUE_PROFILE		\
+			-DDD_COUNT" MTRDEBUG="-DMTR_DEBUG",.d)
 
 # HTML and LATEX rules
 .PHONY: html
@@ -312,5 +326,10 @@ ifneq ($(OPAM_DIST_DIR),)
   -include $(OPAM_DIST_DIR)/opam-dist.mk
 
 endif
+
+# ---
+
+# Disable parallel builds
+.NOTPARALLEL:
 
 # ---
