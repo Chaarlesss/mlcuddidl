@@ -46,7 +46,7 @@ OCAMLMKLIB = ocamlmklib
 
 ##################################################
 # C compiler
-CC = gcc
+CC ?= gcc
 
 #
 # FOR CUDD: IMPORTANT

@@ -13,6 +13,7 @@ command -v uname >/dev/null || error "Unable to guess ISA!";
 
 test_cmd () { command -v $1 >/dev/null; }
 maybe_cmd () { test_cmd $2 && echo "$1 = $2" || warn "$3 seems unavailable"; }
+maybe_cme () { test -z "$4" && maybe_cmd "$@" || echo "$1 = $4"; }
 
 # Note we always assume a decent version of gcc here:
 exec 1>"Makefile.config";
@@ -45,7 +46,8 @@ case "${system}" in
     FreeBSD)
 	xcflags="${xcflags} ${free_xcflags}";
 	maybe_cmd "SED" "gsed" "GNU sed";
-	maybe_cmd "M4" "gm4" "GNU m4";;
+	maybe_cmd "M4" "gm4" "GNU m4";
+	maybe_cme "CC" "clang" "LLVM/clang" "$CC";;
     *)
 	warn "Unknown system: ${system}!";;
 esac;
