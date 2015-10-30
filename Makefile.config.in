@@ -35,7 +35,7 @@ OCAMLOPT = ocamlopt.opt
 OCAMLFLAGS = -annot
 # ocamlopt compilation flags
 OCAMLOPTFLAGS = -annot -inline 20
-OCAMLPACK = ./ocamlpack
+# OCAMLPACK = ./ocamlpack
 
 OCAMLDEP = ocamldep
 OCAMLLEX = ocamllex.opt

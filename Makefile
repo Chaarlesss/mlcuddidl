@@ -187,8 +187,11 @@ cuddall.d.o:
 # HTML and LATEX rules
 .PHONY: html
 
+ifneq ($(OCAMLPACK),)
+
 cudd_ocamldoc.mli: cudd.mlpacki $(MLMODULES:%=%.mli)
-	$(OCAMLPACK) -o $@ -intro cudd.mlpacki -level 2 $(MLMODULES:%=%.mli)
+	sh $(OCAMLPACK) -o $@ -title "Interface to CUDD library"	\
+	   -intro cudd.mlpacki $(MLMODULES)
 
 mlcuddidl.pdf: mlcuddidl.dvi
 	$(DVIPDF) mlcuddidl.dvi
@@ -222,6 +225,7 @@ homepage: html mlcuddidl.pdf
 		avedon:/home/wwwpop-art/people/bjeannet/mlxxxidl-forge/mlcuddidl
 	ssh avedon chmod -R ugoa+rx /home/wwwpop-art/people/bjeannet/mlxxxidl-forge/mlcuddidl
 
+endif
 
 #--------------------------------------------------------------
 # IMPLICIT RULES AND DEPENDENCIES
