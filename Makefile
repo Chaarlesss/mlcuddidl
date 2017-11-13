@@ -1,6 +1,6 @@
 include Makefile.config
 PKGNAME = mlcuddidl
-PKGVERS = 3.0.0
+PKGVERS = 3.0.1
 
 #---------------------------------------
 # Directories
