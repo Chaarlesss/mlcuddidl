@@ -80,10 +80,10 @@ esac;
 
 overs=$(ocamlc -version);
 case "${overs}" in
-    [123].* | 4.0[1-5].*)
-	info "OCaml version found is ${overs}.";;
+    [1-3].* | 4.01.*)
+	err "OCaml version found is ${overs}: OCaml >= 4.02 is required.";;
     *)
-	err "OCaml version found is ${overs}: OCaml < 4.06 is required.";;
+	:;;
 esac
 
 test_cmd awk && {

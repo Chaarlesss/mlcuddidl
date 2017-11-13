@@ -344,7 +344,7 @@ let print__minterm print_leaf fmt dd =
 	      | Man.True -> '1'
 	      | Man.Top -> '-'))
 	  cube;
-	fprintf fmt \"%s -> %a\" str print_leaf leaf
+	fprintf fmt \"%s -> %a\" (Bytes.unsafe_to_string str) print_leaf leaf
       end)
       dd;
     fprintf fmt \"@]\"
