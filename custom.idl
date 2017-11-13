@@ -275,10 +275,10 @@ value camlidl_cudd_apply_opG(value _v_op, value _v_vec1, value _v_vec2)
   op.commonG.man = man;
   op.commonG.exn = Val_unit;
   op.funptrG = (DdNode* (*)(DdManager*, struct opG*, DdNode**))(&camlidl_cudd_custom_opNG);
-  op.funptrBeforeRec =
-    Is_block(op.oclosureBeforeRec) ?
+  op.funptrBeforeRec = (void*)
+   (Is_block(op.oclosureBeforeRec) ?
     &camlidl_cudd_custom_opGbeforeRec :
-    NULL;
+    NULL);
   op.funptrIte =
     Is_block(op.oclosureIte) ?
     &camlidl_cudd_custom_opGite :
