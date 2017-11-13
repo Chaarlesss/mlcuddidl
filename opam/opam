@@ -18,3 +18,4 @@ depends: [
   "camlidl"
   "ocamlbuild" {build}
 ]
+available: [ ocaml-version >= "4.02.0" ]
