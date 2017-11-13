@@ -171,7 +171,7 @@ DEBGOBJS = $(CCMODULES:%=%.d.o) cuddall-dbug.o
 PROFOBJS = $(CCMODULES:%=%.p.o) cuddall-prof.o
 
 OCAMLMKLIB := $(OCAMLMKLIB) -verbose
-OCAMLMKLIBd := $(OCAMLMKLIB) -ocamlopt "$(OCAMLOPT) -g" -ccopt -g
+OCAMLMKLIBd := $(OCAMLMKLIB) -ocamlopt "$(OCAMLOPT)" -g -ccopt -g
 OCAMLMKLIBp := $(OCAMLMKLIB) -ocamlopt "$(OCAMLOPT) -p" -ccopt -p
 
 cudd.a: cudd.cmxa
@@ -280,9 +280,9 @@ CUDDAUX_INC = $(CUDDINC) $(IDLINC)
 $(CCMODULES:%=%.o): %.o: %.c cudd_caml.h cuddaux.h $(call CUDD_SRCDIR,base)/config.h
 	$(OCAMLOPT) $(call CUDDAUX_INC,base) -ccopt "$(CFLAGS_base) -o $@"  -c $<
 $(CCMODULES:%=%.p.o): %.p.o: %.c cudd_caml.h cuddaux.h $(call CUDD_SRCDIR,prof)/config.h
-	$(OCAMLOPT) $(call CUDDAUX_INC,prof) -ccopt "$(CFLAGS_prof) -w -o $@" -c $<
+	$(OCAMLOPT) $(call CUDDAUX_INC,prof) -p -ccopt "$(CFLAGS_prof) -w -o $@" -c $<
 $(CCMODULES:%=%.d.o): %.d.o: %.c cudd_caml.h cuddaux.h $(call CUDD_SRCDIR,dbug)/config.h
-	$(OCAMLOPT) $(call CUDDAUX_INC,dbug) -ccopt "$(CFLAGS_dbug) -w -o $@" -c $<
+	$(OCAMLOPT) $(call CUDDAUX_INC,dbug) -g -ccopt "$(CFLAGS_dbug) -w -o $@" -c $<
 
 #-----------------------------------
 # CAML
