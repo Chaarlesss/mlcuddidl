@@ -1,7 +1,6 @@
 #!/bin/sh
 
 # ------------------------------------------------------------------------------
-
 # data
 
 cudddir="cudd-3.0.0";
@@ -78,6 +77,14 @@ case "${system}" in
     *)
 	warn "Unknown system: ${system}!";;
 esac;
+
+overs=$(ocamlc -version);
+case "${overs}" in
+    [123].* | 4.0[1-5].*)
+	info "OCaml version found is ${overs}.";;
+    *)
+	err "OCaml version found is ${overs}: OCaml < 4.06 is required.";;
+esac
 
 test_cmd awk && {
     echo "OCAMLPACK = ./ocamlpack";
