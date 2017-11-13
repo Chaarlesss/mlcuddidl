@@ -49,11 +49,13 @@ CCMODULES = $(CUDDAUX_C:%.c=%) $(IDLMODULES:%=%_caml) cudd_caml
 
 LIBNAMES = cudd_caml
 BASELIBS = $(addprefix $(LIBNAMES:%=lib%),.a)
-DEBGLIBS = $(addprefix $(LIBNAMES:%=lib%),.d.a)
+DEBGLIBS = $(addprefix $(LIBNAMES:%=lib%),.d.a)				\
+           $(addprefix $(LIBNAMES:%=lib%),.nd.a)
 PROFLIBS = $(addprefix $(LIBNAMES:%=lib%),.p.a)
 ifneq ($(HAS_SHARED),)
   BASELIBS += $(addprefix $(LIBNAMES:%=dll%),.so)
-  DEBGLIBS += $(addprefix $(LIBNAMES:%=dll%),.d.so)
+  DEBGLIBS += $(addprefix $(LIBNAMES:%=dll%),.d.so)			\
+              $(addprefix $(LIBNAMES:%=dll%),.nd.so)
 endif
 CCLIB = $(BASELIBS) $(DEBGLIBS) $(PROFLIBS)
 
@@ -184,7 +186,7 @@ cudd.cma: %.cma: %.cmo $(BASEOBJS)
 cudd.cmxa: %.cmxa: %.cmx $(BASEOBJS)
 	$(OCAMLMKLIB) -o $* -oc $*_caml $^ $(LDFLAGS)
 %.d.cmxa: %.cmx $(DEBGOBJS)
-	$(OCAMLMKLIBd) -o $*.d -oc $*_caml.d $^ $(LDFLAGS)
+	$(OCAMLMKLIBd) -o $*.d -oc $*_caml.nd $^ $(LDFLAGS)
 %.p.cmxa: %.p.cmx $(PROFOBJS)
 	$(OCAMLMKLIBp) -o $*.p -oc $*_caml.p $^ $(LDFLAGS)
 
