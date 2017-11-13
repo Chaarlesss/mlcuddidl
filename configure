@@ -82,3 +82,6 @@ esac;
 test_cmd awk && {
     echo "OCAMLPACK = ./ocamlpack";
 } || warn "awk not found: documentation will not be built";
+
+# NB: Ugly hack to avoid weird errors with auto{conf,make} and the likes:
+( cd "${cudddir}" && touch configure.ac aclocal.m4 configure Makefile.am Makefile.in config.h.in; )
