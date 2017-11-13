@@ -465,7 +465,7 @@ quote(MLI,"(** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_Read
 double get_max_growth(man__t man) VAL_OF_MAN(Cudd_ReadMaxGrowth);
 
 quote(MLI,"(** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_SetMaxGrowth}[Cudd_SetMaxGrowth]}. *)")
-void   set_max_growth(man__t man, int v) UNIT_OF_MAN_VAL(Cudd_SetMaxGrowth);
+void   set_max_growth(man__t man, double v) UNIT_OF_MAN_VAL(Cudd_SetMaxGrowth);
 
 quote(MLI,"(** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_ReadMaxGrowthAlternate}[Cudd_ReadMaxGrowthAlternate]}. *)")
 double get_max_growth_alt(man__t man) VAL_OF_MAN(Cudd_ReadMaxGrowthAlternate);

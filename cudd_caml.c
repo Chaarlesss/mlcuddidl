@@ -544,7 +544,6 @@ value camlidl_cudd_avdd_dval(value vno)
 {
   CAMLparam1(vno); CAMLlocal1(vres);
   add__t no;
-  int ddtype;
 
   camlidl_cudd_node_ml2c(vno, &no);
   if (!cuddIsConstant(no.node))
@@ -723,7 +722,6 @@ value camlidl_cudd_bdd_vectorsupport(value _v_vec)
   int size; /*in*/
   bdd__t _res;
   man__t man;
-  int i;
 
   size = Wosize_val(_v_vec);
   if (size==0)
@@ -748,7 +746,6 @@ value camlidl_cudd_add_vectorsupport2(value _v_vec1, value _v_vec2)
   int size1,size2,size; /*in*/
   bdd__t _res;
   man__t man1,man2,man;
-  int i,index;
 
   size1 = Wosize_val(_v_vec1);
   size2 = Wosize_val(_v_vec2);
@@ -1097,7 +1094,6 @@ value camlidl_cudd_bdd_iter_prime(value _v_closure, value _v_lower, value _v_upp
   bdd__t lower,upper;
   DdGen* gen;
   int* array;
-  double val;
   int size,i;
   int autodyn;
   Cudd_ReorderingType heuristic;
@@ -1464,7 +1460,6 @@ value camlidl_cudd_avdd_fold_guardleaves(value closure, value node, value init)
   CAMLlocal1(res);
   node__t no;
   cuddaux_list_t *p, *list;
-  int i;
   size_t size;
 
   camlidl_cudd_node_ml2c(node, &no);
@@ -1582,7 +1577,6 @@ DdNode* camlidl_cudd_custom_op1(DdManager* dd, struct op1* op, DdNode* f)
 
   assert (f->ref>=1);
   if (cuddIsConstant(f)){
-    CuddauxType type;
     _v_f = Val_DdNode(op->common1.man->caml,f);
     _v_val = caml_callback_exn(op->closure1, _v_f);
     res = camlidl_cudd_custom_result(&op->common1,_v_val);
@@ -1732,7 +1726,6 @@ DdNode* camlidl_cudd_custom_test2(DdManager* dd, struct test2* op, DdNode* F, Dd
 	  op->common2t.exn = Extract_exception(_v_val);
 	}
 	else if (Is_block(_v_val)){
-	  node__t no;
 	  _v_val = Field(_v_val,0);
 	  res = DD_ONE(op->common2t.man->man);
 	  if (_v_val==Val_false) res = Cudd_Not(res);
@@ -1787,7 +1780,7 @@ DdNode* camlidl_cudd_custom_opNG(DdManager* dd, struct opN* op, DdNode** tnode)
 int camlidl_cudd_custom_opGbeforeRec(DdManager* dd, struct opG* op, DdNode* no, DdNode** tnode)
 {
   value _v_index=0,_v_bool=0,_v_pair=0,_v_tno1=0,_v_tno2=0,_v_val=0;
-  int arity, arityB, arityV, i;
+  int arity, arityB, arityV;
   man__t man1=NULL,man2=NULL;
   int res = 0;
 
