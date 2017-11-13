@@ -479,6 +479,12 @@ int    get_reordering_cycle(man__t man) VAL_OF_MAN(Cudd_ReadReorderingCycle);
 quote(MLI,"(** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_SetReorderingCycle}[Cudd_SetReorderingCycle]}. *)")
 void   set_reordering_cycle(man__t man, int v) UNIT_OF_MAN_VAL(Cudd_SetReorderingCycle);
 
+quote(MLI,"(** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_ReadMaxReorderings}[Cudd_ReadMaxReorderings]}. *)")
+int    get_max_reorderings(man__t man) VAL_OF_MAN(Cudd_ReadMaxReorderings);
+
+quote(MLI,"(** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_SetMaxReorderings}[Cudd_SetMaxReorderings]}. *)")
+void   set_max_reorderings(man__t man, int v) UNIT_OF_MAN_VAL(Cudd_SetMaxReorderings);
+
 quote(MLI,"(** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_ReadNextReordering}[Cudd_ReadNextReordering]}. *)")
 int    get_next_autodyn(man__t man) VAL_OF_MAN(Cudd_ReadNextReordering);
 
