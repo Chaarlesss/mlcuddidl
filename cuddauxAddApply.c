@@ -479,7 +479,6 @@ cuddauxAddApply2Recur(DdManager * dd,
     *T, *E;
   unsigned int ford, gord;
   unsigned int index;
-  DD_CTFP cacheOp;
 
   statLine(dd);
   assert (f->ref>=1);
@@ -564,8 +563,6 @@ cuddauxAddTest2Recur(DdManager * dd,
   DdNode *res,*one,
     *fv, *fvn, *gv, *gvn;
   unsigned int ford, gord;
-  unsigned int index;
-  DD_CTFP cacheOp;
 
   /* Check terminal cases. Op may swap f and g to increase the
    * cache hit rate.
@@ -595,11 +592,9 @@ cuddauxAddTest2Recur(DdManager * dd,
   ford = cuddI(dd,f->index);
   gord = cuddI(dd,g->index);
   if (ford <= gord) {
-    index = f->index;
     fv = cuddT(f);
     fvn = cuddE(f);
   } else {
-    index = g->index;
     fv = fvn = f;
   }
   if (gord <= ford) {
@@ -721,7 +716,7 @@ cuddauxAddApply3Recur(
 static inline unsigned int array_topindex(DdManager*dd, DdNode** tab, int size)
 {
   int i;
-  unsigned int index,level,leveli;
+  unsigned int index,level;
 
   index = CUDD_CONST_INDEX;
   level = CUDD_CONST_INDEX;
@@ -788,7 +783,6 @@ cuddauxAddApplyNRecur(DdManager * dd,
 {
   DdNode *res,*T,*E;
   DdNode** tab2 = NULL;
-  int i;
   unsigned int index;
 
   statLine(dd);
@@ -949,12 +943,11 @@ cuddauxAddAbstractRecur(DdManager * dd,
 			DdNode * cube /* BDD (cube) */)
 {
   DdNode *gt, *ge, *cube2;
-  DdNode *one, *zero, *res, *T, *E;
-  unsigned int topf, topcube, top, index;
+  DdNode *one, *res, *T, *E;
+  unsigned int topcube, top;
 
   statLine(dd);
   one = DD_ONE(dd);
-  zero = Cudd_Not(one);
 
   /* Terminal cases. */
   if (cube==one || cuddIsConstant(G)) return G;
@@ -1049,12 +1042,11 @@ cuddauxAddApplyAbstractRecur(DdManager * dd,
 			     DdNode * cube /* BDD (cube) */)
 {
   DdNode *gt, *ge, *cube2;
-  DdNode *one, *zero, *res, *T, *E;
-  unsigned int topf, topcube, top, index;
+  DdNode *one, *res, *T, *E;
+  unsigned int topcube, top;
 
   statLine(dd);
   one = DD_ONE(dd);
-  zero = Cudd_Not(one);
 
   /* Terminal cases. */
   if (cube==one || cuddIsConstant(G)){
@@ -1154,7 +1146,7 @@ cuddauxAddBddAndAbstractRecur(DdManager * dd,
 {
   DdNode *F, *ft, *fe, *gt, *ge, *cube2;
   DdNode *one, *zero, *res, *T, *E;
-  unsigned int topf, topg, topcube, top, index;
+  unsigned int topf, topg, topcube, top;
 
   statLine(dd);
   one = DD_ONE(dd);
@@ -1194,7 +1186,6 @@ cuddauxAddBddAndAbstractRecur(DdManager * dd,
 
   /* Decompose */
   if (topf == top) {
-    index = F->index;
     ft = cuddT(F);
     fe = cuddE(F);
     if (Cudd_IsComplement(f)) {
@@ -1202,7 +1193,6 @@ cuddauxAddBddAndAbstractRecur(DdManager * dd,
       fe = Cudd_Not(fe);
     }
   } else {
-    index = G->index;
     ft = fe = f;
   }
   if (topg == top) {
@@ -1289,7 +1279,7 @@ cuddauxAddApplyBddAndAbstractRecur(DdManager * dd,
 {
   DdNode *F, *ft, *fe, *gt, *ge, *cube2;
   DdNode *one, *zero, *res, *T, *E;
-  unsigned int topf, topg, topcube, top, index;
+  unsigned int topf, topg, topcube, top;
 
   statLine(dd);
   one = DD_ONE(dd);
@@ -1339,7 +1329,6 @@ cuddauxAddApplyBddAndAbstractRecur(DdManager * dd,
 
   /* Decompose */
   if (topf == top) {
-    index = F->index;
     ft = cuddT(F);
     fe = cuddE(F);
     if (Cudd_IsComplement(f)) {
@@ -1347,7 +1336,6 @@ cuddauxAddApplyBddAndAbstractRecur(DdManager * dd,
       fe = Cudd_Not(fe);
     }
   } else {
-    index = G->index;
     ft = fe = f;
   }
   if (topg == top) {
@@ -1402,7 +1390,6 @@ cuddauxAddApplyBddAndAbstractRecur(DdManager * dd,
       cuddDeref(T);
     }
   }
- cuddauxAddApplyBddAndAbstractRecur_end:
   return cuddauxCommonInsert3(&op->commonexistandop1,f,G,cube,res);
 } /* end of cuddauxAddApplyBddAndAbstractRecur */
 

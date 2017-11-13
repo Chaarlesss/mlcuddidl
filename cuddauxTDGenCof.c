@@ -67,7 +67,6 @@ DdNode* Cuddaux_bddTDRestrict(DdManager* dd, DdNode* f, DdNode* c)
   DdNode *cplus, *res;
   DdNode *zero,*one;
   DdNode *inf,*sup;
-  int retval;
 
   one = DD_ONE(dd);
   zero = Cudd_Not(one);
@@ -93,12 +92,12 @@ DdNode* Cuddaux_bddTDRestrict(DdManager* dd, DdNode* f, DdNode* c)
   commonSupp = Cudd_bddLiteralSetIntersection(dd,suppF,suppC);
   if (commonSupp==NULL){
     Cudd_IterDerefBdd(dd,suppF);
-    Cudd_IterDerefBdd(dd,suppC); 
+    Cudd_IterDerefBdd(dd,suppC);
     return(NULL);
   }
   if (commonSupp == one) {
     Cudd_IterDerefBdd(dd,suppF);
-    Cudd_IterDerefBdd(dd,suppC); 
+    Cudd_IterDerefBdd(dd,suppC);
     return(f);
   }
   cuddRef(commonSupp);
@@ -106,29 +105,29 @@ DdNode* Cuddaux_bddTDRestrict(DdManager* dd, DdNode* f, DdNode* c)
   /* Abstract from c the variables that do not appear in f. */
   onlyC = Cudd_Cofactor(dd,suppC,commonSupp);
   if (onlyC == NULL) {
-    Cudd_IterDerefBdd(dd,suppC); 
-    Cudd_IterDerefBdd(dd,commonSupp); 
+    Cudd_IterDerefBdd(dd,suppC);
+    Cudd_IterDerefBdd(dd,commonSupp);
     return(NULL);
   }
   cuddRef(onlyC);
-  Cudd_IterDerefBdd(dd,suppC); 
-  Cudd_IterDerefBdd(dd,commonSupp); 
+  Cudd_IterDerefBdd(dd,suppC);
+  Cudd_IterDerefBdd(dd,commonSupp);
   cplus = Cudd_bddExistAbstract(dd, c, onlyC);
   if (cplus == NULL) {
-    Cudd_IterDerefBdd(dd,onlyC); 
+    Cudd_IterDerefBdd(dd,onlyC);
     return(NULL);
   }
   cuddRef(cplus);
   Cudd_IterDerefBdd(dd,onlyC);
-  
+
   /* Computes the initial interval */
-  inf = Cudd_bddAnd(dd,f,cplus); 
+  inf = Cudd_bddAnd(dd,f,cplus);
   if (inf == NULL){
     Cudd_IterDerefBdd(dd,cplus);
     return(NULL);
   }
   cuddRef(inf);
-  sup = Cudd_bddOr(dd,f,Cudd_Not(cplus)); 
+  sup = Cudd_bddOr(dd,f,Cudd_Not(cplus));
   if (sup == NULL){
     Cudd_IterDerefBdd(dd,cplus);
     Cudd_IterDerefBdd(dd,inf);
@@ -136,10 +135,10 @@ DdNode* Cuddaux_bddTDRestrict(DdManager* dd, DdNode* f, DdNode* c)
   }
   cuddRef(sup);
   Cudd_IterDerefBdd(dd,cplus);
-  
+
   res = Cuddaux_bddTDSimplify(dd,inf,sup);
   cuddRef(res);
-  Cudd_IterDerefBdd(dd,inf); 
+  Cudd_IterDerefBdd(dd,inf);
   Cudd_IterDerefBdd(dd,sup);
   cuddDeref(res);
   return(res);
@@ -176,10 +175,10 @@ DdNode* Cuddaux_bddTDConstrain(DdManager* dd, DdNode* f, DdNode* c)
   if (f == c) return(one);
   if (f == Cudd_Not(c)) return(zero);
 
-  inf = Cudd_bddAnd(dd,f,c); 
+  inf = Cudd_bddAnd(dd,f,c);
   if (inf == NULL) return(NULL);
   cuddRef(inf);
-  sup = Cudd_bddOr(dd,f,Cudd_Not(c)); 
+  sup = Cudd_bddOr(dd,f,Cudd_Not(c));
   if (sup == NULL){
     Cudd_IterDerefBdd(dd,inf);
     return(NULL);
@@ -187,7 +186,7 @@ DdNode* Cuddaux_bddTDConstrain(DdManager* dd, DdNode* f, DdNode* c)
   cuddRef(sup);
   res = Cuddaux_bddTDSimplify(dd,inf,sup);
   cuddRef(res);
-  Cudd_IterDerefBdd(dd,inf); 
+  Cudd_IterDerefBdd(dd,inf);
   Cudd_IterDerefBdd(dd,sup);
   cuddDeref(res);
   return(res);
@@ -213,7 +212,6 @@ DdNode* Cuddaux_addTDRestrict(DdManager* dd, DdNode* f, DdNode* c)
   DdNode *suppF, *suppC, *commonSupp, *onlyC;
   DdNode *cplus, *phi, *res;
   DdNode *zero,*one;
-  int retval;
 
   one = DD_ONE(dd);
   zero = Cudd_Not(one);
@@ -223,7 +221,7 @@ DdNode* Cuddaux_addTDRestrict(DdManager* dd, DdNode* f, DdNode* c)
     return(NULL);
   }
   if (cuddIsConstant(f)) return f;
-  
+
   /* Check if supports intersect. */
   suppF = Cuddaux_Support(dd,f);
   if (suppF==NULL) return(NULL);
@@ -237,12 +235,12 @@ DdNode* Cuddaux_addTDRestrict(DdManager* dd, DdNode* f, DdNode* c)
   commonSupp = Cudd_bddLiteralSetIntersection(dd,suppF,suppC);
   if (commonSupp==NULL){
     Cudd_IterDerefBdd(dd,suppF);
-    Cudd_IterDerefBdd(dd,suppC); 
+    Cudd_IterDerefBdd(dd,suppC);
     return(NULL);
   }
   if (commonSupp == one) {
     Cudd_IterDerefBdd(dd,suppF);
-    Cudd_IterDerefBdd(dd,suppC); 
+    Cudd_IterDerefBdd(dd,suppC);
     return(f);
   }
   cuddRef(commonSupp);
@@ -250,21 +248,21 @@ DdNode* Cuddaux_addTDRestrict(DdManager* dd, DdNode* f, DdNode* c)
   /* Abstract from c the variables that do not appear in f. */
   onlyC = Cudd_Cofactor(dd,suppC,commonSupp);
   if (onlyC == NULL) {
-    Cudd_IterDerefBdd(dd,suppC); 
-    Cudd_IterDerefBdd(dd,commonSupp); 
+    Cudd_IterDerefBdd(dd,suppC);
+    Cudd_IterDerefBdd(dd,commonSupp);
     return(NULL);
   }
   cuddRef(onlyC);
-  Cudd_IterDerefBdd(dd,suppC); 
-  Cudd_IterDerefBdd(dd,commonSupp); 
+  Cudd_IterDerefBdd(dd,suppC);
+  Cudd_IterDerefBdd(dd,commonSupp);
   cplus = Cudd_bddExistAbstract(dd, c, onlyC);
   if (cplus == NULL) {
-    Cudd_IterDerefBdd(dd,onlyC); 
+    Cudd_IterDerefBdd(dd,onlyC);
     return(NULL);
   }
   cuddRef(cplus);
   Cudd_IterDerefBdd(dd,onlyC);
-  
+
   /* Build the phi-ADD */
   phi = Cuddaux_addBddAnd(dd,cplus,f);
   if (phi == NULL){
@@ -294,7 +292,7 @@ DdNode* Cuddaux_addTDRestrict(DdManager* dd, DdNode* f, DdNode* c)
   SeeAlso     []
 
 ******************************************************************************/
-DdNode* 
+DdNode*
 Cuddaux_addTDConstrain(DdManager* dd, DdNode* f, DdNode* c)
 {
   DdNode *zero,*one, *res;
@@ -352,7 +350,7 @@ Cuddaux_bddTDSimplify(DdManager * dd, DdNode * inf, DdNode * sup)
   Synopsis [ADD TDSimplify according to P. Raymond algorithm.]
 
   Description [ADD TDSimplify according to P. Raymond algorithm.
-  f is a phi-ADD, i.e. an ADD with background values corresponding 
+  f is a phi-ADD, i.e. an ADD with background values corresponding
   to irrelevant paths.
   Returns an ADD without background if successfull; otherwise NULL.]
 
@@ -390,13 +388,13 @@ Cuddaux_addTDSimplify(DdManager * dd, DdNode * phi)
   SeeAlso     [Cuddaux_bddTDSimplify]
 
 ******************************************************************************/
-DdNode* 
+DdNode*
 cuddauxBddTDSimplifyRecur(DdManager* dd, DdNode* inf, DdNode* sup)
 {
   DdNode *zero,*one;
   DdNode *ninf,*nsup,*Iv,*Inv,*Sv,*Snv,*res;
   int topI, topS, compl;
-  
+
   one = DD_ONE(dd);
   zero = Cudd_Not(one);
 
@@ -545,14 +543,14 @@ cuddauxAddTDSimplifyRecur(DdManager* dd, DdNode* f)
 {
   DdNode *res;
   DdNode *U,*T,*E;
-  
+
   if (cuddIsConstant(f))
     return f;
 
   res = cuddCacheLookup1(dd,Cuddaux_addTDSimplify,f);
-  if (res != NULL) 
+  if (res != NULL)
     return res;
-  
+
   U = cuddauxAddTDUnify(dd,cuddT(f),cuddE(f));
   if (U == NULL)
     return(NULL);
@@ -590,13 +588,13 @@ cuddauxAddTDSimplifyRecur(DdManager* dd, DdNode* f)
   return res;
 }
 
-DdNode* 
+DdNode*
 cuddauxAddTDUnify(DdManager* dd, DdNode* f, DdNode* g)
 {
   DdNode *fv,*fnv,*gv,*gnv,*res;
   DdNode *T,*E;
   int topf,topg,index;
-  
+
   if (f==g) return f;
   if (f==DD_BACKGROUND(dd)) return g;
   if (g==DD_BACKGROUND(dd)) return f;
@@ -606,7 +604,7 @@ cuddauxAddTDUnify(DdManager* dd, DdNode* f, DdNode* g)
     DdNode* t=f; f=g; g=t;
   }
   res = cuddCacheLookup2(dd,cuddauxAddTDUnify,f,g);
-  if (res != NULL) 
+  if (res != NULL)
     return res;
 
   topf = cuddI(dd,f->index);
@@ -643,4 +641,3 @@ cuddauxAddTDUnify(DdManager* dd, DdNode* f, DdNode* g)
   cuddCacheInsert2(dd,cuddauxAddTDUnify,f,g,res);
   return res;
 }
-

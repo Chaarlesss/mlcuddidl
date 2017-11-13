@@ -213,7 +213,6 @@ void cuddauxAddCamlConstRehash(DdManager* unique, int offset)
   int j, pos;
   DdNodePtr *nodelist, *oldnodelist;
   DdNode *node, *next;
-  DdNode *sentinel = &(unique->sentinel);
   myhack split;
   extern DD_OOMFP MMoutOfMemory;
   DD_OOMFP saveHandler;

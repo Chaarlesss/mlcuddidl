@@ -65,8 +65,7 @@ Cuddaux_bddRestrict(DdManager * dd, DdNode * f, DdNode * c)
   DdNode *one,*zero;
   DdNode *suppF, *suppC, *commonSupp, *onlyC;
   DdNode *cplus, *res;
-  int retval;
-  
+
   one = DD_ONE(dd);
   zero = Cudd_Not(one);
   /* Check terminal cases here to avoid computing supports in trivial cases.
@@ -80,7 +79,7 @@ Cuddaux_bddRestrict(DdManager * dd, DdNode * f, DdNode * c)
   if (Cudd_IsConstant(f)) return(f);
   if (f == c) return(one);
   if (f == Cudd_Not(c)) return(zero);
-  
+
   /* Check if supports intersect. */
   suppF = Cuddaux_Support(dd,f);
   if (suppF==NULL) return(NULL);
@@ -96,12 +95,12 @@ Cuddaux_bddRestrict(DdManager * dd, DdNode * f, DdNode * c)
   commonSupp = Cudd_bddLiteralSetIntersection(dd,suppF,suppC);
   if (commonSupp==NULL){
     Cudd_IterDerefBdd(dd,suppF);
-    Cudd_IterDerefBdd(dd,suppC); 
+    Cudd_IterDerefBdd(dd,suppC);
     return(NULL);
   }
   if (commonSupp == one) {
     Cudd_IterDerefBdd(dd,suppF);
-    Cudd_IterDerefBdd(dd,suppC); 
+    Cudd_IterDerefBdd(dd,suppC);
     return(f);
   }
   cuddRef(commonSupp);
@@ -110,21 +109,21 @@ Cuddaux_bddRestrict(DdManager * dd, DdNode * f, DdNode * c)
   /* Abstract from c the variables that do not appear in f. */
   onlyC = Cudd_Cofactor(dd,suppC,commonSupp);
   if (onlyC == NULL) {
-    Cudd_IterDerefBdd(dd,suppC); 
-    Cudd_IterDerefBdd(dd,commonSupp); 
+    Cudd_IterDerefBdd(dd,suppC);
+    Cudd_IterDerefBdd(dd,commonSupp);
     return(NULL);
   }
   cuddRef(onlyC);
-  Cudd_IterDerefBdd(dd,suppC); 
-  Cudd_IterDerefBdd(dd,commonSupp); 
+  Cudd_IterDerefBdd(dd,suppC);
+  Cudd_IterDerefBdd(dd,commonSupp);
   cplus = Cudd_bddExistAbstract(dd, c, onlyC);
   if (cplus == NULL) {
-    Cudd_IterDerefBdd(dd,onlyC); 
+    Cudd_IterDerefBdd(dd,onlyC);
     return(NULL);
   }
   cuddRef(cplus);
   Cudd_IterDerefBdd(dd,onlyC);
-  
+
   do {
     dd->reordered = 0;
     res = cuddBddRestrictRecur(dd, f, cplus);
@@ -145,7 +144,7 @@ Cuddaux_bddRestrict(DdManager * dd, DdNode * f, DdNode * c)
   (ICCAD90).]
 
   Description [ADD restrict according to Coudert and Madre's algorithm
-  (ICCAD90). f is an ADD, g a BDD. 
+  (ICCAD90). f is an ADD, g a BDD.
   Returns the restricted ADD if successful; otherwise NULL.]
 
   SideEffects [None]
@@ -159,8 +158,7 @@ Cuddaux_addRestrict(DdManager* dd, DdNode* f, DdNode* c)
   DdNode *one,*zero;
   DdNode *suppF, *suppC, *commonSupp, *onlyC;
   DdNode *cplus, *res;
-  int retval;
-  
+
   one = DD_ONE(dd);
   zero = Cudd_Not(one);
   /* Check terminal cases here to avoid computing supports in trivial cases.
@@ -172,7 +170,7 @@ Cuddaux_addRestrict(DdManager* dd, DdNode* f, DdNode* c)
     return(DD_BACKGROUND(dd));
   }
   if (Cudd_IsConstant(f)) return(f);
-  
+
   /* Check if supports intersect. */
   suppF = Cuddaux_Support(dd,f);
   if (suppF==NULL) return(NULL);
@@ -186,12 +184,12 @@ Cuddaux_addRestrict(DdManager* dd, DdNode* f, DdNode* c)
   commonSupp = Cudd_bddLiteralSetIntersection(dd,suppF,suppC);
   if (commonSupp==NULL){
     Cudd_IterDerefBdd(dd,suppF);
-    Cudd_IterDerefBdd(dd,suppC); 
+    Cudd_IterDerefBdd(dd,suppC);
     return(NULL);
   }
   if (commonSupp == one) {
     Cudd_IterDerefBdd(dd,suppF);
-    Cudd_IterDerefBdd(dd,suppC); 
+    Cudd_IterDerefBdd(dd,suppC);
     return(f);
   }
   cuddRef(commonSupp);
@@ -199,21 +197,21 @@ Cuddaux_addRestrict(DdManager* dd, DdNode* f, DdNode* c)
   /* Abstract from c the variables that do not appear in f. */
   onlyC = Cudd_Cofactor(dd,suppC,commonSupp);
   if (onlyC == NULL) {
-    Cudd_IterDerefBdd(dd,suppC); 
-    Cudd_IterDerefBdd(dd,commonSupp); 
+    Cudd_IterDerefBdd(dd,suppC);
+    Cudd_IterDerefBdd(dd,commonSupp);
     return(NULL);
   }
   cuddRef(onlyC);
-  Cudd_IterDerefBdd(dd,suppC); 
-  Cudd_IterDerefBdd(dd,commonSupp); 
+  Cudd_IterDerefBdd(dd,suppC);
+  Cudd_IterDerefBdd(dd,commonSupp);
   cplus = Cudd_bddExistAbstract(dd, c, onlyC);
   if (cplus == NULL) {
-    Cudd_IterDerefBdd(dd,onlyC); 
+    Cudd_IterDerefBdd(dd,onlyC);
     return(NULL);
   }
   cuddRef(cplus);
   Cudd_IterDerefBdd(dd,onlyC);
-  
+
   do {
     dd->reordered = 0;
     res = cuddauxAddRestrictRecur(dd, f, cplus);
@@ -355,14 +353,14 @@ cuddauxAddRestrictRecur(
   if (!Cudd_IsConstant(Cv)) {
     t = cuddauxAddRestrictRecur(dd, Fv, Cv);
     if (t == NULL) return(NULL);
-  } 
+  }
   else if (Cv == one) {
     t = Fv;
-  } 
+  }
   else {		/* Cv == zero: return(Fnv @ Cnv) */
     if (Cnv == one) {
       res = Fnv;
-    } 
+    }
     else {
       res = cuddauxAddRestrictRecur(dd, Fnv, Cnv);
       if (res == NULL) return(NULL);
@@ -421,10 +419,10 @@ cuddauxAddConstrainRecur(
   DdNode	 *one, *zero;
   unsigned int topf, topc;
   int		 index;
-  
+
   one = DD_ONE(dd);
   zero = Cudd_Not(one);
-  
+
   /* Trivial cases. */
   if (c == one)		return(f);
   if (c == zero){
@@ -432,15 +430,15 @@ cuddauxAddConstrainRecur(
     return(DD_BACKGROUND(dd));
   }
   if (Cudd_IsConstant(f))	return(f);
-  
+
   /* Now f and c are non-constant. */
-  
+
   /* Check the cache. */
   res = cuddCacheLookup2(dd, Cuddaux_addConstrain, f, c);
   if (res != NULL) {
     return(res);
   }
-  
+
   /* Recursive step. */
   topf = dd->perm[f->index];
   topc = dd->perm[Cudd_Regular(c)->index];
@@ -459,19 +457,19 @@ cuddauxAddConstrainRecur(
   } else {
     Cv = Cnv = c;
   }
-  
+
   if (!Cudd_IsConstant(Cv)) {
     t = cuddauxAddConstrainRecur(dd, Fv, Cv);
     if (t == NULL)
       return(NULL);
-  } 
+  }
   else if (Cv == one) {
     t = Fv;
-  } 
+  }
   else {		/* Cv == zero: return Fnv @ Cnv */
     if (Cnv == one) {
       res = Fnv;
-    } 
+    }
     else {
       res = cuddauxAddConstrainRecur(dd, Fnv, Cnv);
       if (res == NULL)
@@ -480,23 +478,23 @@ cuddauxAddConstrainRecur(
     return(res);
   }
   cuddRef(t);
-  
+
   if (!Cudd_IsConstant(Cnv)) {
     e = cuddauxAddConstrainRecur(dd, Fnv, Cnv);
     if (e == NULL) {
       Cudd_RecursiveDeref(dd, t);
       return(NULL);
     }
-  } 
+  }
   else if (Cnv == one) {
     e = Fnv;
-  } 
+  }
   else {		/* Cnv == zero: return Fv @ Cv previously computed */
     cuddDeref(t);
     return(t);
   }
   cuddRef(e);
-  
+
   res = (t == e) ? t : cuddUniqueInter(dd, index, t, e);
   if (res == NULL) {
     Cudd_RecursiveDeref(dd, e);
@@ -505,8 +503,8 @@ cuddauxAddConstrainRecur(
   }
   cuddDeref(t);
   cuddDeref(e);
-  
+
   cuddCacheInsert2(dd, Cuddaux_addConstrain, f, c, res);
   return(res);
-  
+
 } /* end of cuddauxAddConstrainRecur */

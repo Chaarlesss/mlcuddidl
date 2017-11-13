@@ -49,10 +49,10 @@
 /* Static function prototypes                                                */
 /*---------------------------------------------------------------------------*/
 
-static DdNode* cuddauxAddTransferRecur(DdManager *ddS, DdManager *ddD, 
+static DdNode* cuddauxAddTransferRecur(DdManager *ddS, DdManager *ddD,
 				       DdNode *f, st_table *table);
 
-static DdNode* cuddauxAddCamlTransferRecur(DdManager *ddS, DdManager *ddD, 
+static DdNode* cuddauxAddCamlTransferRecur(DdManager *ddS, DdManager *ddD,
 					   DdNode *f, st_table *table);
 
 /**AutomaticEnd***************************************************************/
@@ -102,7 +102,7 @@ Cuddaux_addCamlTransfer(
       res = cuddauxAddCamlTransfer(ddSource, ddDestination, f);
     } while (ddDestination->reordered == 1);
     return(res);
-} 
+}
 
 /*---------------------------------------------------------------------------*/
 /* Definition of internal functions                                          */
@@ -142,7 +142,7 @@ cuddauxAddTransfer(
     ** reordering. */
     gen = st_init_gen(table);
     if (gen == NULL) goto failure;
-    while (st_gen(gen, &key, &value)) {
+    while (st_gen(gen, (void**)&key, (void**)&value)) {
 	Cudd_RecursiveDeref(ddD, value);
     }
     st_free_gen(gen); gen = NULL;
@@ -179,7 +179,7 @@ cuddauxAddCamlTransfer(
     ** reordering. */
     gen = st_init_gen(table);
     if (gen == NULL) goto failure;
-    while (st_gen(gen, &key, &value)) {
+    while (st_gen(gen, (void**)&key, (void**)&value)) {
 	Cudd_RecursiveDeref(ddD, value);
     }
     st_free_gen(gen); gen = NULL;
@@ -227,9 +227,9 @@ cuddauxAddTransferRecur(
     return (cuddUniqueConst(ddD,v));
   }
   /* Check the cache. */
-  if(st_lookup(table, f, &res))
+  if(st_lookup(table, f, (void**)&res))
     return(res);
-    
+
   /* Recursive step. */
   index = f->index;
   ft = cuddT(f); fe = cuddE(f);
@@ -290,9 +290,9 @@ cuddauxAddCamlTransferRecur(
     return (Cuddaux_addCamlConst(ddD,value));
   }
   /* Check the cache. */
-  if(st_lookup(table, f, &res))
+  if(st_lookup(table, f, (void**)&res))
     return(res);
-    
+
   /* Recursive step. */
   index = f->index;
   ft = cuddT(f); fe = cuddE(f);
