@@ -148,7 +148,7 @@ $(call CUDD_LIB,%): $(call CUDD_SRCDIR,%)/config.h
 	+$(MAKE) -C $(call CUDD_SRCDIR,$*) install;
 
 define cuddall
-	tmpdir=$$(mktemp -d); trap "rm -rf $${tmpdir};" EXIT QUIT INT;	\
+	tmpdir=$$(mktemp -d tmp.XXX); trap "rm -rf $${tmpdir};" EXIT QUIT INT;	\
 	( cd "$${tmpdir}"; $(AR) x $(SRCDIR)/$<; $(LD) -r -o $(2) *.o; )
 endef
 
