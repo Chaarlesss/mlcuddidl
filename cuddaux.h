@@ -308,6 +308,7 @@ void cuddauxAddCamlConstRehash(DdManager* unique, int offset);
 #define DDAUX_ADD_ITE_TAG            0xee
 #define DDAUX_ADD_ITE_CONSTANT_TAG   0xea
 #define DDAUX_ADD_COMPOSE_RECUR_TAG  0xe6
+#define DDAUX_ADD_EVAL_CONST_TAG     0xe2
 
 /* ********************************************************************** */
 /* Inline Functions */

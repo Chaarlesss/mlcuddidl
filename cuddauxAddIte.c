@@ -250,8 +250,9 @@ Cuddaux_addEvalConst(
 #ifdef DD_DEBUG
   assert(!cuddIsConstant(F));
 #endif
+
   /* Check cache. */
-  r = cuddCacheLookup2(dd, Cuddaux_addEvalConst ,f, g);
+  r = cuddConstantLookup(dd,DDAUX_ADD_EVAL_CONST_TAG,F,g,g);
   if (r != NULL) {
     return(r);
   }
@@ -280,21 +281,21 @@ Cuddaux_addEvalConst(
   if (Fv != zero) {
     t = Cuddaux_addEvalConst(dd,Fv,Gv);
     if (t == DD_NON_CONSTANT || !cuddIsConstant(t)) {
-      cuddCacheInsert2(dd, Cuddaux_addEvalConst, f, g, DD_NON_CONSTANT);
+      cuddCacheInsert(dd, DDAUX_ADD_EVAL_CONST_TAG, f, g, g, DD_NON_CONSTANT);
       return(DD_NON_CONSTANT);
     }
     if (Fnv != zero) {
       e = Cuddaux_addEvalConst(dd,Fnv,Gnv);
       if (e == DD_NON_CONSTANT || !cuddIsConstant(e) || t != e) {
-	cuddCacheInsert2(dd, Cuddaux_addEvalConst, f, g, DD_NON_CONSTANT);
+	cuddCacheInsert(dd, DDAUX_ADD_EVAL_CONST_TAG, f, g, g, DD_NON_CONSTANT);
 	return(DD_NON_CONSTANT);
       }
     }
-    cuddCacheInsert2(dd,Cuddaux_addEvalConst,f,g,t);
+    cuddCacheInsert(dd, DDAUX_ADD_EVAL_CONST_TAG, f, g, g, t);
     return(t);
   } else { /* Fnv must be != zero */
     e = Cuddaux_addEvalConst(dd,Fnv,Gnv);
-    cuddCacheInsert2(dd, Cuddaux_addEvalConst, f, g, e);
+    cuddCacheInsert(dd, DDAUX_ADD_EVAL_CONST_TAG, f, g, g, e);
     return(e);
   }
 

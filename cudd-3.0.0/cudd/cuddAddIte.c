@@ -1,5 +1,5 @@
 /**
-  @file 
+  @file
 
   @ingroup cudd
 
@@ -200,7 +200,7 @@ Cudd_addIteConstant(
     } else {
         Hv = Hnv = h;
     }
-    
+
     /* Recursive step. */
     t = Cudd_addIteConstant(dd,Fv,Gv,Hv);
     if (t == DD_NON_CONSTANT || !cuddIsConstant(t)) {
@@ -281,26 +281,26 @@ Cudd_addEvalConst(
     } else {
         Gv = Gnv = g;
     }
-    
+
     /* Recursive step. */
     if (Fv != zero) {
 	t = Cudd_addEvalConst(dd,Fv,Gv);
 	if (t == DD_NON_CONSTANT || !cuddIsConstant(t)) {
-	    cuddCacheInsert2(dd, Cudd_addEvalConst, f, g, DD_NON_CONSTANT);
+	    cuddCacheInsert(dd, DD_ADD_EVAL_CONST_TAG, f, g, g, DD_NON_CONSTANT);
 	    return(DD_NON_CONSTANT);
 	}
 	if (Fnv != zero) {
 	    e = Cudd_addEvalConst(dd,Fnv,Gnv);
 	    if (e == DD_NON_CONSTANT || !cuddIsConstant(e) || t != e) {
-		cuddCacheInsert2(dd, Cudd_addEvalConst, f, g, DD_NON_CONSTANT);
+		cuddCacheInsert(dd, DD_ADD_EVAL_CONST_TAG, f, g, g, DD_NON_CONSTANT);
 		return(DD_NON_CONSTANT);
 	    }
 	}
-	cuddCacheInsert2(dd,Cudd_addEvalConst,f,g,t);
+	cuddCacheInsert(dd, DD_ADD_EVAL_CONST_TAG, f, g, g, t);
 	return(t);
     } else { /* Fnv must be != zero */
 	e = Cudd_addEvalConst(dd,Fnv,Gnv);
-	cuddCacheInsert2(dd, Cudd_addEvalConst, f, g, e);
+	cuddCacheInsert(dd, DD_ADD_EVAL_CONST_TAG, f, g, g, e);
 	return(e);
     }
 
@@ -497,7 +497,7 @@ cuddAddIteRecur(
     } else {
         Hv = Hnv = h;
     }
-    
+
     /* Recursive step. */
     t = cuddAddIteRecur(dd,Fv,Gv,Hv);
     if (t == NULL) return(NULL);
@@ -547,7 +547,7 @@ cuddAddCmplRecur(
 
     statLine(dd);
     one = DD_ONE(dd);
-    zero = DD_ZERO(dd); 
+    zero = DD_ZERO(dd);
 
     if (cuddIsConstant(f)) {
         if (f == zero) {
