@@ -346,15 +346,6 @@ value camlidl_cudd_pid_c2ml(pid* ppid)
 
 /* \subsubsection{Standard nodes (BDDs \& ADDs)} */
 
-#ifndef NDEBUG
-int node_compteur = 0;
-int bdd_compteur=0;
-#define START_node 0
-#define START_bdd 0
-#define FREQ_node 500
-#define FREQ_bdd 5000
-#endif
-
 value camlidl_cudd_node_c2ml(struct node__t* no)
 {
   value val;

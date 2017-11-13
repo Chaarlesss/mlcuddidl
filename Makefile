@@ -1,28 +1,39 @@
--include Makefile.config
+include Makefile.config
 PKGNAME = mlcuddidl
-PKGVERS = 2.3.0
+PKGVERS = 3.0.0
 
 #---------------------------------------
 # Directories
 #---------------------------------------
 
-CUDDDIR = cudd-2.5.1
+CUDDDIR = cudd-3.0.0
 SRCDIR = $(abspath $(dir $(firstword $(MAKEFILE_LIST))))
 #
 # Installation directory
 #
-SITE-LIB = $(shell $(OCAMLFIND) printconf destdir)
 PKG-NAME = cudd
-SITE-LIB-PKG = $(SITE-LIB)/$(PKG-NAME)
+
+# CUDD temporary directories:
+
+CUDDFLAVORS = base dbug prof
+CUDD_SRCDIR = cuddsrc-$(1)
+CUDD_BLDDIR = cuddbld-$(1)
+CUDD_LIBDIR = $(call CUDD_BLDDIR,$(1))/lib
+CUDD_LIB = $(call CUDD_LIBDIR,$(1))/libcudd.a
 
 #---------------------------------------
 # C part
 #---------------------------------------
 
-CUDDLIBS = cudd mtr epd st util
+# Various flags for building CUDD itself with multiple flavors
+CFLAGS_base = -fPIC -O3
+CFLAGS_dbug = -fPIC -O0 -g
+CFLAGS_prof = -fPIC -O3 -p -pg
+CPPFLAGS_base =
+CPPFLAGS_dbug = -DDD_CACHE_PROFILE -DDD_UNIQUE_PROFILE -DDD_VERBOSE	\
+		-DDD_DEBUG -DDD_STATS -DDD_COUNT -DMTR_DEBUG
+CPPFLAGS_prof =
 
-ICFLAGS = $(addprefix -I$(CUDDDIR)/,$(CUDDLIBS)) \
-	  -I$(CAML_DIR) -I$(CAMLIDL_DIR)
 LDFLAGS = -L$(CAMLIDL_DIR) -lcamlidl
 
 #---------------------------------------
@@ -33,11 +44,8 @@ IDLMODULES = hash cache memo man bdd vdd custom add
 
 MLMODULES = hash cache memo man bdd vdd custom weakke pWeakke mtbdd mtbddc user mapleaf add
 
-CCMODULES = \
-	cuddauxAddCamlTable cuddauxAddIte cuddauxBridge cuddauxCompose \
-	cuddauxGenCof cuddauxMisc cuddauxUtil \
-	cuddauxTDGenCof cuddauxAddApply \
-	$(IDLMODULES:%=%_caml) cudd_caml
+CUDDAUX_C = $(wildcard cuddaux*.c)
+CCMODULES = $(CUDDAUX_C:%.c=%) $(IDLMODULES:%=%_caml) cudd_caml
 
 LIBNAMES = cudd_caml
 BASELIBS = $(addprefix $(LIBNAMES:%=lib%),.a)
@@ -93,14 +101,23 @@ uninstall:
 	$(OCAMLFIND) remove $(PKG-NAME)
 
 mostlyclean: clean
-	(cd $(CUDDDIR); $(MAKE) clean)
 	/bin/rm -f Makefile.depend TAGS META
 	/bin/rm -f $(IDLMODULES:%=%.ml) $(IDLMODULES:%=%.mli) $(IDLMODULES:%=%_caml.c) html/*
 	/bin/rm -f -r tmp
 	/bin/rm -f mlcuddidl.?? mlcuddidl.??? mlcuddidl.info example example.opt mlcuddidl.tex ocamldoc.tex *.dvi style.css ocamldoc.sty index.html
+	for x in $(CUDDFLAVORS); do						\
+	  if test -f "$(call CUDD_SRCDIR,$$x)/config.h"; then 			\
+	    if test -f "$(call CUDD_LIB,$$x)"; then 				\
+	      $(MAKE) -C "$(call CUDD_SRCDIR,$$x)" uninstall || true;		\
+	    fi;									\
+	    $(MAKE) -C "$(call CUDD_SRCDIR,$$x)" clean || true;			\
+	  fi;									\
+	  rm -f -r cuddbld-$$x;							\
+	done;
 
 distclean: mostlyclean
-	(cd $(CUDDDIR); $(MAKE) distclean; /bin/rm -f *.a)
+	rm -f -r Makefile.config;
+	for x in $(CUDDFLAVORS); do rm -f -r cuddsrc-$$x; done;
 
 clean:
 	/bin/rm -f cuddtop *.byte *.opt
@@ -111,20 +128,53 @@ clean:
 
 # ---
 
-EXTRA_OBJs = cuddall
-BASEOBJS =  $(CCMODULES:%=%.o) $(EXTRA_OBJs:%=%.o)
-DEBGOBJS =  $(CCMODULES:%=%.d.o) $(EXTRA_OBJs:%=%.d.o)
-PROFOBJS =  $(CCMODULES:%=%.p.o) $(EXTRA_OBJs:%=%.p.o)
+define cudddir
+	mkdir -p $(2);
+	( srcdir="$(SRCDIR)/$(CUDDDIR)"; 					\
+	  cd $(2) && CPPFLAGS="$(CPPFLAGS_$(1))" CFLAGS="$(CFLAGS_$(1))"	\
+	  "$${srcdir}/configure" DOXYGEN=					\
+		--prefix "$(SRCDIR)/$(call CUDD_BLDDIR,$(1))"			\
+	 	--srcdir="$${srcdir}" --disable-dependency-tracking		\
+		--disable-shared --enable-static $(3); ) ||			\
+	  { rm -rf $(2); false; }
+endef
 
-# CAML rules
+.PRECIOUS: $(call CUDD_SRCDIR,%)/config.h
+$(call CUDD_SRCDIR,%)/config.h:
+	$(call cudddir,$*,$(call CUDD_SRCDIR,$*));
+
+.PRECIOUS: $(call CUDD_LIB,%)
+$(call CUDD_LIB,%): $(call CUDD_SRCDIR,%)/config.h
+	+$(MAKE) -C $(call CUDD_SRCDIR,$*) install;
+
+define cuddall
+	tmpdir=$$(mktemp -d); trap "rm -rf $${tmpdir};" EXIT QUIT INT;	\
+	( cd "$${tmpdir}"; $(AR) x $(SRCDIR)/$<; $(LD) -r -o $(2) *.o; )
+endef
+
+.PRECIOUS: cuddall-%.o
+cuddall-%.o: $(call CUDD_LIB,%)
+	$(call cuddall,$*,$(SRCDIR)/$@)
+
+# ---
+
+# CAML libraries
+
+$(BASELIBS): cudd.cma cudd.cmxa
+$(DEBGLIBS): cudd.d.cma cudd.d.cmxa
+$(PROFLIBS): cudd.p.cmxa
+
+BASEOBJS = $(CCMODULES:%=%.o) cuddall-base.o
+DEBGOBJS = $(CCMODULES:%=%.d.o) cuddall-dbug.o
+PROFOBJS = $(CCMODULES:%=%.p.o) cuddall-prof.o
 
 OCAMLMKLIB := $(OCAMLMKLIB) -verbose
 OCAMLMKLIBd := $(OCAMLMKLIB) -ocamlopt "$(OCAMLOPT) -g" -ccopt -g
 OCAMLMKLIBp := $(OCAMLMKLIB) -ocamlopt "$(OCAMLOPT) -p" -ccopt -p
 
-$(BASELIBS): cudd.cma cudd.cmxa
-$(DEBGLIBS): cudd.d.cma cudd.d.cmxa
-$(PROFLIBS): cudd.p.cmxa
+cudd.a: cudd.cmxa
+cudd.d.a: cudd.d.cmxa
+cudd.p.a: cudd.p.cmxa
 
 cudd.cma: %.cma: %.cmo $(BASEOBJS)
 	$(OCAMLMKLIB) -o $* -oc $*_caml $^ $(LDFLAGS)
@@ -146,43 +196,6 @@ cudd.cmx: $(MLMODULES:%=%.cmx)
 	$(OCAMLOPT) $(OCAMLOPTFLAGS) -pack -o $@ $^
 cudd.p.cmx:  $(MLMODULES:%=%.p.cmx)
 	$(OCAMLOPT) $(OCAMLOPTFLAGS_PROF) -p -pack -o $@ $^
-
-
-# .PRECIOUS: %.o
-
-# CAML libraries
-
-define cuddall_make
-	$(MAKE) -C $(CUDDDIR) clean;
-	$(MAKE) -C $(CUDDDIR)						\
-	  CC="$(CC)"							\
-	  CXX="$(CXX)"							\
-	  RANLIB="$(RANLIB)"						\
-	  XCFLAGS="$(XCFLAGS)"						\
-	  $(1)								\
-	  DIRS="$(CUDDLIBS)";
-	tmp=$$(mktemp -d ./tmp.XXXX);					\
-	trap "rm -rf $${tmp};" EXIT QUIT INT;				\
-	abs_cudddir=$(SRCDIR)/$(CUDDDIR);				\
-	(								\
-	 cd "$${tmp}";							\
-	 for i in $(CUDDLIBS); do					\
-	   $(AR) x "$${abs_cudddir}/$$i/lib$$i.a";			\
-	 done;								\
-	 $(LD) -r -o $@ *.o;						\
-	);								\
-	ln "$${tmp}/$@";
-endef
-
-cuddall.o:
-	$(call cuddall_make,ICFLAGS="$(CFLAGS)",)
-cuddall.p.o:
-	$(call cuddall_make,ICFLAGS="$(CFLAGS_PROF)",.p)
-cuddall.d.o:
-	$(call cuddall_make,ICFLAGS="$(CFLAGS_DEBUG)"			\
-	       DDDEBUG="-DDD_DEBUG -DDD_VERBOSE -DDD_STATS		\
-			-DDD_CACHE_PROFILE -DDD_UNIQUE_PROFILE		\
-			-DDD_COUNT" MTRDEBUG="-DMTR_DEBUG",.d)
 
 # HTML and LATEX rules
 .PHONY: html
@@ -210,20 +223,19 @@ mlcuddidl.dvi: cudd_ocamldoc.mli
 	$(LATEX) mlcuddidl
 
 dot: $(MLMODULES:%=%.ml)
-	$(OCAMLDOC) -dot -dot-reduce -o cudd.dot $(MLMODULES:%=%.ml)
+	$(OCAMLDOC) -dot -dot-reduce -o cudd.dot $^
 
 html: mlcuddidl.odoci cudd_ocamldoc.mli
-	mkdir -p tmp
-	cp cudd_ocamldoc.mli tmp/cudd.mli
-	(cd tmp; $(OCAMLC) $(OCAMLINC) -c cudd.mli)
-	mkdir -p html
-	$(OCAMLDOC) $(OCAMLINC) -I tmp -html -d html -colorize-code -intro mlcuddidl.odoci tmp/cudd.mli
+	mkdir -p tmp html;
+	cp cudd_ocamldoc.mli tmp/cudd.mli;
+	$(OCAMLDOC) $(OCAMLINC) -I tmp -html -d html -colorize-code \
+	  -intro mlcuddidl.odoci tmp/cudd.mli || { rm -rf html; false; }
 
-homepage: html mlcuddidl.pdf
-	hyperlatex index
-	scp -r index.html html mlcuddidl.pdf Changes \
-		avedon:/home/wwwpop-art/people/bjeannet/mlxxxidl-forge/mlcuddidl
-	ssh avedon chmod -R ugoa+rx /home/wwwpop-art/people/bjeannet/mlxxxidl-forge/mlcuddidl
+# homepage: html mlcuddidl.pdf
+# 	hyperlatex index
+# 	scp -r index.html html mlcuddidl.pdf Changes \
+# 		avedon:/home/wwwpop-art/people/bjeannet/mlxxxidl-forge/mlcuddidl
+# 	ssh avedon chmod -R ugoa+rx /home/wwwpop-art/people/bjeannet/mlxxxidl-forge/mlcuddidl
 
 endif
 
@@ -231,55 +243,44 @@ endif
 # IMPLICIT RULES AND DEPENDENCIES
 #--------------------------------------------------------------
 
-.SUFFIXES: .c .h .o .ml .mli .cmi .cmo .cmx .idl .d.o _caml.c
+.SUFFIXES: .c .h .o .ml .mli .cmi .cmo .cmx .idl .p.o .d.o _caml.c
 
 #-----------------------------------
 # IDL
 #-----------------------------------
 
-# Generates X_caml.c, X.ml, X.mli from X.idl
+M4 ?= m4
+SED ?= sed
+CAMLIDL ?= camlidl
 
-# sed -f sedscript_caml allows to remove prefixes generated by camlidl
-# grep --extended-regexp '^(.)+$$' removes blanks lines
+.PRECIOUS: tmp/%.idl
+tmp/%.idl: %.idl macros.m4 Makefile.config
+	@mkdir -p tmp;
+	$(M4) macros.m4 $< > $@
 
-# tmp: $(IDLMODULES:%=%.idl) macros.m4
-# 	mkdir -p tmp
-# 	for i in $(IDLMODULES); do \
-# 		$(M4) macros.m4 $${i}.idl > tmp/$${i}.idl; \
-# 	done;
-
-tmp: macros.m4
-	mkdir -p tmp;
-	for i in $(IDLMODULES); do $(M4) macros.m4 $${i}.idl > tmp/$${i}.idl; done;
-
-# sedscript_caml sedscript_c
-%_caml.c %.ml %.mli: %.idl tmp sedscript_caml sedscript_c
-	@echo "module $*";
+$(IDLMODULES:%=%.mli): %.mli: %.ml
+$(IDLMODULES:%=%_caml.c): %_caml.c: %.ml
+$(IDLMODULES:%=%.ml): %.ml: %.idl $(IDLMODULES:%=tmp/%.idl) sedscript_caml sedscript_c
 	(cd tmp; $(CAMLIDL) -no-include -nocpp -I . $*.idl);
-	$(SED) -f sedscript_c tmp/$*_stubs.c >$*_caml.c;
-	$(SED) -f sedscript_caml tmp/$*.ml >$*.ml;
-	$(SED) -f sedscript_caml tmp/$*.mli >$*.mli;
-
-# $(IDLMODULES:%=%_caml.c) $(IDLMODULES:%=%.ml) $(IDLMODULES:%=%.mli): $(addprefix tmp/,$(IDLMODULES)) sedscript_caml sedscript_c
-# 	for i in $(IDLMODULES); do \
-# 		echo "module $$i"; \
-# 		(cd tmp; $(CAMLIDL) -no-include -nocpp -I . $${i}.idl ); \
-# 		$(SED) -f sedscript_c tmp/$${i}_stubs.c >$${i}_caml.c; \
-# 		$(SED) -f sedscript_caml tmp/$${i}.ml >$${i}.ml; \
-# 		$(SED) -f sedscript_caml tmp/$${i}.mli >$${i}.mli; \
-# 	done
-# #		$(CAMLIDL) -no-include -prepro "$(M4) macros.m4" -I $(SRCDIR) tmp/$${i}.idl; 
+	$(SED) -f sedscript_c tmp/$*_stubs.c > $*_caml.c;
+	$(SED) -f sedscript_caml tmp/$*.ml > $*.ml;
+	$(SED) -f sedscript_caml tmp/$*.mli > $*.mli;
 
 #-----------------------------------
 # C
 #-----------------------------------
 
-%.o: %.c cudd_caml.h cuddaux.h
-	$(OCAMLOPT) -ccopt "$(CFLAGS) $(ICFLAGS) $(XCFLAGS)" -o $@ -c $<
-%.p.o: %.c cudd_caml.h cuddaux.h
-	$(OCAMLOPT) -ccopt "$(CFLAGS_PROF) $(ICFLAGS) $(XCFLAGS) -o $@" -c $<
-%.d.o: %.c cudd_caml.h cuddaux.h
-	$(OCAMLOPT) -ccopt "$(CFLAGS_DEBUG) $(ICFLAGS) $(XCFLAGS) -g -o $@" -c $<
+IDLINC = -I $(CAML_DIR) -I $(CAMLIDL_DIR)
+CUDDINC = -I $(CUDDDIR) -I $(CUDDDIR)/st -I $(CUDDDIR)/mtr -I $(CUDDDIR)/epd \
+	  -I $(CUDDDIR)/util -I $(CUDDDIR)/cudd -I $(call CUDD_SRCDIR,$(1))
+CUDDAUX_INC = $(CUDDINC) $(IDLINC)
+
+$(CCMODULES:%=%.o): %.o: %.c cudd_caml.h cuddaux.h $(call CUDD_SRCDIR,base)/config.h
+	$(OCAMLOPT) $(call CUDDAUX_INC,base) -ccopt "$(CFLAGS_base) -o $@"  -c $<
+$(CCMODULES:%=%.p.o): %.p.o: %.c cudd_caml.h cuddaux.h $(call CUDD_SRCDIR,prof)/config.h
+	$(OCAMLOPT) $(call CUDDAUX_INC,prof) -ccopt "$(CFLAGS_prof) -w -o $@" -c $<
+$(CCMODULES:%=%.d.o): %.d.o: %.c cudd_caml.h cuddaux.h $(call CUDD_SRCDIR,dbug)/config.h
+	$(OCAMLOPT) $(call CUDDAUX_INC,dbug) -ccopt "$(CFLAGS_dbug) -w -o $@" -c $<
 
 #-----------------------------------
 # CAML
@@ -304,11 +305,17 @@ $(MLMODULES:%=%.p.cmx): %.p.cmx: %.ml %.cmi
 # Dependencies
 #-----------------------------------
 
-depend: Makefile.depend
-Makefile.depend: $(IDLMODULES:%=%.ml) $(IDLMODULES:%=%.mli)
-	$(OCAMLDEP) $(MLMODULES:%=%.mli) $(MLMODULES:%=%.ml) >Makefile.depend
+OCAMLDEP ?= ocamldep
 
--include Makefile.depend
+.PHONY: depend
+depend: Makefile.depend
+Makefile.depend: $(MLMODULES:%=%.mli) $(MLMODULES:%=%.ml)
+	$(OCAMLDEP) -one-line $+ |						\
+	  $(SED) -e '/\.cm[ox]/ { p; s/\.cmo/.d.cmo/; s/\.cmx/.p.cmx/; }' > $@
+
+ifeq ($(findstring distclean,$(MAKECMDGOALS))$(findstring mostlyclean,$(MAKECMDGOALS)),)
+  -include Makefile.depend
+endif
 
 #-----------------------------------
 # OPAM Packaging
@@ -330,10 +337,5 @@ ifneq ($(OPAM_DIST_DIR),)
   -include $(OPAM_DIST_DIR)/opam-dist.mk
 
 endif
-
-# ---
-
-# Disable parallel builds
-.NOTPARALLEL:
 
 # ---

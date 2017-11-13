@@ -132,18 +132,18 @@ Cuddaux_addIteConstant(
   DdNode *one,*zero;
   DdNode *Fv,*Fnv,*Gv,*Gnv,*Hv,*Hnv,*r,*t,*e;
   unsigned int topf,topg,toph,top;
-  
+
   /* Trivial cases. */
   one = DD_ONE(dd);
   zero = Cudd_Not(one);
- 
+
   if (f == one) {	/* ITE(1,G,H) = G */
     return(g);
   }
   if (f == zero){	/* ITE(0,G,H) = H */
     return(h);
   }
-  
+
   /* Check remaining one variable cases. */
   if (g == h) { 			/* ITE(F,G,G) = G */
     return(g);
@@ -151,7 +151,7 @@ Cuddaux_addIteConstant(
   if (cuddIsConstant(g) && cuddIsConstant(h)) {
     return(DD_NON_CONSTANT);
   }
-  
+
   /* Put into canonical form */
   if (Cudd_IsComplement(f)){
     DdNode* t = g; g = h; h = t;
@@ -161,18 +161,18 @@ Cuddaux_addIteConstant(
   topg = cuddI(dd,g->index);
   toph = cuddI(dd,h->index);
   top = ddMin(topg,toph);
-  
+
   /* ITE(F,G,H) = (x,G,H) (non constant) if F = (x,1,0), x < top(G,H). */
   if (topf < top && cuddT(f) == one && cuddE(f) == zero) {
     return(DD_NON_CONSTANT);
   }
-  
+
   /* Check cache. */
   r = cuddConstantLookup(dd,DDAUX_ADD_ITE_CONSTANT_TAG,f,g,h);
   if (r != NULL) {
     return(r);
   }
-  
+
   /* Compute cofactors. */
   top = ddMin(topf,top);
   if (topf == top) {
@@ -190,7 +190,7 @@ Cuddaux_addIteConstant(
   } else {
     Hv = Hnv = h;
   }
-  
+
   /* Recursive step. */
   t = Cuddaux_addIteConstant(dd,Fv,Gv,Hv);
   if (t == DD_NON_CONSTANT || !cuddIsConstant(t)) {
@@ -204,7 +204,7 @@ Cuddaux_addIteConstant(
   }
   cuddCacheInsert(dd, DDAUX_ADD_ITE_CONSTANT_TAG, f, g, h, t);
   return(t);
-  
+
 } /* end of Cuddaux_addIteConstant */
 
 /**Function********************************************************************
@@ -239,7 +239,7 @@ Cuddaux_addEvalConst(
   /* Trivial cases. */
   one = DD_ONE(dd);
   zero = Cudd_Not(one);
- 
+
   if (f == one || cuddIsConstant(g)) {
     return(g);
   }
@@ -264,7 +264,7 @@ Cuddaux_addEvalConst(
   if (topf <= topg) {
     Fv = cuddT(F); Fnv = cuddE(F);
     if (Cudd_IsComplement(f)) {
-      Fv = Cudd_Not(Fv); 
+      Fv = Cudd_Not(Fv);
       Fnv = Cudd_Not(Fnv);
     }
   } else {
@@ -275,7 +275,7 @@ Cuddaux_addEvalConst(
   } else {
     Gv = Gnv = g;
   }
-    
+
   /* Recursive step. */
   if (Fv != zero) {
     t = Cuddaux_addEvalConst(dd,Fv,Gv);
@@ -332,7 +332,7 @@ cuddauxAddIteRecur(
   /* Trivial cases. */
   one = DD_ONE(dd);
   zero = Cudd_Not(one);
-    
+
   /* One variable cases. */
   if (f == one) {	/* ITE(1,G,H) = G */
     return(g);
@@ -400,7 +400,7 @@ cuddauxAddIteRecur(
   t = cuddauxAddIteRecur(dd,Fv,Gv,Hv);
   if (t == NULL) return(NULL);
   cuddRef(t);
-  
+
   e = cuddauxAddIteRecur(dd,Fnv,Gnv,Hnv);
   if (e == NULL) {
     Cudd_RecursiveDeref(dd,t);
@@ -420,7 +420,7 @@ cuddauxAddIteRecur(
   cuddCacheInsert(dd,DDAUX_ADD_ITE_TAG,f,g,h,r);
 
   return(r);
-  
+
 } /* end of cuddauxAddIteRecur */
 
 /**Function********************************************************************
@@ -450,7 +450,7 @@ cuddauxAddBddAndRecur(
   /* Trivial cases. */
   one = DD_ONE(dd);
   zero = Cudd_Not(one);
-    
+
   if (f == one) {
     return(g);
   }
@@ -463,7 +463,7 @@ cuddauxAddBddAndRecur(
   if (Cudd_IsComplement(f)){
     Fv = Cudd_Not(Fv); Fnv = Cudd_Not(Fnv);
   }
-  
+
   /* From now on, f is known to not be a constant. */
   topf = cuddI(dd,F->index);
   topg = cuddI(dd,g->index);
@@ -503,7 +503,7 @@ cuddauxAddBddAndRecur(
   t = cuddauxAddBddAndRecur(dd,Fv,Gv);
   if (t == NULL) return(NULL);
   cuddRef(t);
-  
+
   e = cuddauxAddBddAndRecur(dd,Fnv,Gnv);
   if (e == NULL) {
     Cudd_RecursiveDeref(dd,t);
@@ -522,8 +522,7 @@ cuddauxAddBddAndRecur(
 
   if (F->ref != 1 || g->ref != 1)
     cuddCacheInsert2(dd,Cuddaux_addBddAnd,f,g,r);
-  
-  return(r);
-  
-} /* end of cuddauxAddBddAndRecur */
 
+  return(r);
+
+} /* end of cuddauxAddBddAndRecur */

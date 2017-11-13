@@ -43,7 +43,6 @@
 #include <stdlib.h>
 #include <limits.h>
 #include "cuddInt.h"
-#include "util.h"
 #include "st.h"
 
 #include "cuddaux.h"

@@ -5,7 +5,6 @@ tmp
 *.cm[oiax]
 *.cmxa
 *.annot
-cudd-2.5.1/include
 cudd_ocamldoc.mli
 META
 Makefile.config
@@ -34,3 +33,6 @@ memo_caml.c
 vdd.ml
 vdd.mli
 vdd_caml.c
+/cuddsrc-*
+/cuddbld-*
+autom4te.cache

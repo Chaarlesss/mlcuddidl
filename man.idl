@@ -160,8 +160,8 @@ unit = \"camlidl_cudd_set_gc\"")
 
 quote(MLI,"\n
 (** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddExtDet.html#Cudd_Srandom}[Cudd_Srandom]}. Initializes the seed for the CUDD rnadom number generator (used in a number of functions, like {!Bdd.pick_cubes_on_support}. *)")
-void srandom(long int seed)
-  quote(call,"Cudd_Srandom(seed);");
+  void srandom(man__t man, long int seed)
+  quote(call,"Cudd_Srandom(man->man, seed);");
 
 
 /* ====================================================================== */

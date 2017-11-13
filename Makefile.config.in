@@ -7,7 +7,7 @@
 # If defined to non-empty value, generates dynamic libraries.
 # Do not forget to add -fPIC to CFLAGS and CFLAGS_DEBUG.
 
-HAS_SHARED=1
+HAS_SHARED=0
 
 ######################################################################
 # Directories
@@ -35,7 +35,6 @@ OCAMLOPT = ocamlopt.opt
 OCAMLFLAGS = -annot
 # ocamlopt compilation flags
 OCAMLOPTFLAGS = -annot -inline 20
-# OCAMLPACK = ./ocamlpack
 
 OCAMLDEP = ocamldep
 OCAMLLEX = ocamllex.opt
@@ -47,46 +46,6 @@ OCAMLMKLIB = ocamlmklib
 ##################################################
 # C compiler
 CC ?= gcc
-
-#
-# FOR CUDD: IMPORTANT
-# GCC on i386
-# XCFLAGS = -fPIC -march=pentium4 -malign-double -DHAVE_IEEE_754 -DBSD
-# GCC on x86_64
-# XCFLAGS = -fPIC -m64 -DHAVE_IEEE_754 -DSIZEOF_VOID_P=8 -DSIZEOF_LONG=8 -DSIZEOF_INT=4
-XCFLAGS	= -mtune=native -DHAVE_IEEE_754 -DBSD -DSIZEOF_VOID_P=8 -DSIZEOF_LONG=8 -DSIZEOF_INT=4 -D_GNU_SOURCE
-# XCFLAGS	= -fPIC -DHAVE_IEEE_754 -DBSD -DSIZEOF_VOID_P=8 -DSIZEOF_LONG=8 -DSIZEOF_INT=4 -D_GNU_SOURCE
-
-# C compilation flags
-CFLAGS = \
--Wcast-qual -Wswitch -Werror-implicit-function-declaration \
--Wall -Wextra -Wundef -Wbad-function-cast -Wcast-align -Wstrict-prototypes \
--Wno-unused \
--std=c99 \
--O3 -DNDEBUG
-# -fPIC
-# For Mac x86_64, add -m64 -flat_namespace -undefined suppress
-
-# C compilation flags in debug mode
-CFLAGS_DEBUG = \
--Wcast-qual -Wswitch -Werror-implicit-function-declaration \
--Wall -Wextra -Wundef -Wbad-function-cast -Wcast-align -Wstrict-prototypes \
--Wno-unused \
--std=c99 \
--g -O0 -UNDEBUG
-# -fPIC
-
-# C compilation flags in profiling mode
-CFLAGS_PROF = \
--Wcast-qual -Wswitch -Werror-implicit-function-declaration \
--Wall -Wextra -Wundef -Wbad-function-cast -Wcast-align -Wstrict-prototypes \
--Wno-unused \
--std=c99 \
--O3 -pg -DNDEBUG
-# -fPIC
-
-# DDDEBUG = -DDD_DEBUG -DDD_VERBOSE -DDD_COUNT -g
-# MTRDEBUG = -DMTR_DEBUG
 
 ##################################################
 # Other
