@@ -787,16 +787,13 @@ let print__minterm fmt bdd =
     iter_cube
       (begin fun cube ->
 	if not !first then fprintf fmt \"@ \" else first := false;
-	let str = String.create (Array.length cube) in
+	let str = Bytes.create (Array.length cube) in
 	Array.iteri
-	  (begin fun i elt ->
-	    str.[i] <-
-	      begin match elt with
+	  (fun i elt ->
+	    Bytes.set str i (match elt with
 	      | Man.False -> '0'
 	      | Man.True -> '1'
-	      | Man.Top -> '-'
-	      end
-	  end)
+	      | Man.Top -> '-'))
 	  cube;
 	pp_print_string fmt str
       end)
