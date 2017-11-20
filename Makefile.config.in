@@ -49,10 +49,6 @@ CC ?= gcc
 
 ##################################################
 # Other
-AR = ar
-RANLIB = ranlib
-SED = sed
-M4 = m4
 LATEX=latex
 DVIPS=dvips
 DVIPDF=dvipdf
