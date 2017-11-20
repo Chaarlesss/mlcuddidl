@@ -49,13 +49,12 @@ CCMODULES = $(CUDDAUX_C:%.c=%) $(IDLMODULES:%=%_caml) cudd_caml
 
 LIBNAMES = cudd_caml
 BASELIBS = $(addprefix $(LIBNAMES:%=lib%),.a)
-DEBGLIBS = $(addprefix $(LIBNAMES:%=lib%),.d.a)				\
-           $(addprefix $(LIBNAMES:%=lib%),.nd.a)
+DEBGLIBS = $(addprefix $(LIBNAMES:%=lib%),.d.a)
 PROFLIBS = $(addprefix $(LIBNAMES:%=lib%),.p.a)
 ifneq ($(HAS_SHARED),)
   BASELIBS += $(addprefix $(LIBNAMES:%=dll%),.so)
-  DEBGLIBS += $(addprefix $(LIBNAMES:%=dll%),.d.so)			\
-              $(addprefix $(LIBNAMES:%=dll%),.nd.so)
+  DEBGLIBS += $(addprefix $(LIBNAMES:%=dll%),.d.so)
+  PROFLIBS += $(addprefix $(LIBNAMES:%=dll%),.p.so)
 endif
 CCLIB = $(BASELIBS) $(DEBGLIBS) $(if $(ENABLE_PROF),$(PROFLIBS))
 
@@ -177,22 +176,20 @@ DEBGOBJS = $(CCMODULES:%=%.d.o) cuddall-dbug.o
 PROFOBJS = $(CCMODULES:%=%.p.o) cuddall-prof.o
 
 OCAMLMKLIB := $(OCAMLMKLIB) -verbose
-OCAMLMKLIBd := $(OCAMLMKLIB) -ocamlopt "$(OCAMLOPT)" -g -ccopt -g
+OCAMLMKLIBo := $(OCAMLMKLIB) -ocamlopt "$(OCAMLOPT)"
+OCAMLMKLIBd := $(OCAMLMKLIBo) -g -ccopt -g
 OCAMLMKLIBp := $(OCAMLMKLIB) -ocamlopt "$(OCAMLOPT) -p" -ccopt -p
 
 cudd.a: cudd.cmxa
 cudd.d.a: cudd.d.cmxa
 cudd.p.a: cudd.p.cmxa
+cudd.cmxa: cudd.cma
+cudd.d.cmxa: cudd.d.cma
 
-cudd.cma: %.cma: %.cmo $(BASEOBJS)
-	$(OCAMLMKLIB) -o $* -oc $*_caml $^ $(LDFLAGS)
-%.d.cma: %.d.cmo $(DEBGOBJS)
+cudd.cma: %.cma: %.cmo %.cmx $(BASEOBJS)
+	$(OCAMLMKLIBo) -o $* -oc $*_caml $^ $(LDFLAGS)
+%.d.cma: %.d.cmo %.d.cmx $(DEBGOBJS)
 	$(OCAMLMKLIBd) -o $*.d -oc $*_caml.d $^ $(LDFLAGS)
-
-cudd.cmxa: %.cmxa: %.cmx $(BASEOBJS)
-	$(OCAMLMKLIB) -o $* -oc $*_caml $^ $(LDFLAGS)
-%.d.cmxa: %.cmx $(DEBGOBJS)
-	$(OCAMLMKLIBd) -o $*.d -oc $*_caml.nd $^ $(LDFLAGS)
 %.p.cmxa: %.p.cmx $(PROFOBJS)
 	$(OCAMLMKLIBp) -o $*.p -oc $*_caml.p $^ $(LDFLAGS)
 
@@ -202,7 +199,9 @@ cudd.d.cmo: $(MLMODULES:%=%.d.cmo)
 	$(OCAMLC) $(OCAMLFLAGS) $(OCAMLINC) -g -pack -o $@ $^
 cudd.cmx: $(MLMODULES:%=%.cmx)
 	$(OCAMLOPT) $(OCAMLOPTFLAGS) -pack -o $@ $^
-cudd.p.cmx:  $(MLMODULES:%=%.p.cmx)
+cudd.d.cmx: $(MLMODULES:%=%.d.cmx)
+	$(OCAMLOPT) $(OCAMLOPTFLAGS) -g -pack -o $@ $^
+cudd.p.cmx: $(MLMODULES:%=%.p.cmx)
 	$(OCAMLOPT) $(OCAMLOPTFLAGS_PROF) -p -pack -o $@ $^
 
 # HTML and LATEX rules
@@ -251,7 +250,7 @@ endif
 # IMPLICIT RULES AND DEPENDENCIES
 #--------------------------------------------------------------
 
-.SUFFIXES: .c .h .o .ml .mli .cmi .cmo .cmx .idl .p.o .d.o _caml.c
+.SUFFIXES: .c .h .o .ml .mli .cmi .cmo .d.cmo .cmx .d.cmx .p.cmx .idl .p.o .d.o _caml.c
 
 #-----------------------------------
 # IDL
@@ -294,17 +293,20 @@ $(CCMODULES:%=%.d.o): %.d.o: %.c cudd_caml.h cuddaux.h $(call CUDD_SRCDIR,dbug)/
 # CAML
 #-----------------------------------
 
-%.cmi: %.mli
+$(MLMODULES:%=%.cmi): %.cmi: %.mli
 	$(OCAMLC) $(OCAMLFLAGS) $(OCAMLINC) -c $<
 
-%.cmo: %.ml %.cmi
+$(MLMODULES:%=%.cmo): %.cmo: %.ml %.cmi
 	$(OCAMLC) $(OCAMLFLAGS) $(OCAMLINC) -c $<
 
-%.d.cmo: %.ml %.cmi %.cmo
+$(MLMODULES:%=%.d.cmo): %.d.cmo: %.ml %.cmi %.cmo
 	$(OCAMLC) $(OCAMLFLAGS) $(OCAMLINC) -o $@ -g -c $<
 
 $(MLMODULES:%=%.cmx): %.cmx: %.ml %.cmi
 	$(OCAMLOPT) $(OCAMLOPTFLAGS) $(OCAMLINC) -for-pack Cudd -c $<
+
+$(MLMODULES:%=%.d.cmx): %.d.cmx: %.ml %.cmi
+	$(OCAMLOPT) -g $(OCAMLOPTFLAGS) $(OCAMLINC) -for-pack Cudd -c -o $@ $<
 
 $(MLMODULES:%=%.p.cmx): %.p.cmx: %.ml %.cmi
 	$(OCAMLOPT) -p $(OCAMLOPTFLAGS) $(OCAMLINC) -for-pack Cudd -c -o $@ $<
@@ -319,7 +321,7 @@ OCAMLDEP ?= ocamldep
 depend: Makefile.depend
 Makefile.depend: $(MLMODULES:%=%.mli) $(MLMODULES:%=%.ml)
 	$(OCAMLDEP) -one-line $+ |						\
-	  $(SED) -e '/\.cm[ox]/ { p; s/\.cmo/.d.cmo/; s/\.cmx/.p.cmx/; }' > $@
+	  $(SED) -e '/\.cm[ox]/ { p; s/\.cmo/.d.cmo/; s/\.cmx/.p.cmx/; p; s/\.p\.cmx/.d.cmx/; }' > $@
 
 ifeq ($(findstring distclean,$(MAKECMDGOALS))$(findstring mostlyclean,$(MAKECMDGOALS)),)
   -include Makefile.depend
