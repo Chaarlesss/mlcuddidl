@@ -57,7 +57,7 @@ ifneq ($(HAS_SHARED),)
   DEBGLIBS += $(addprefix $(LIBNAMES:%=dll%),.d.so)			\
               $(addprefix $(LIBNAMES:%=dll%),.nd.so)
 endif
-CCLIB = $(BASELIBS) $(DEBGLIBS) $(PROFLIBS)
+CCLIB = $(BASELIBS) $(DEBGLIBS) $(if $(ENABLE_PROF),$(PROFLIBS))
 
 FILES_TOINSTALL = META \
 	$(CUDDDIR)/cudd/cudd.h $(CUDDDIR)/cudd/cuddInt.h \
@@ -70,7 +70,7 @@ FILES_TOINSTALL = META \
 	cudd.cmi cudd.cma cudd.d.cma \
 	cudd.cmx cudd.cmxa cudd.a \
 	cudd.d.cmxa cudd.d.a \
-	cudd.p.cmx cudd.p.cmxa cudd.p.a \
+	$(if $(ENABLE_PROF),cudd.p.cmx cudd.p.cmxa cudd.p.a) \
 	$(CCLIB)
 
 ifneq ($(OCAMLPACK),)
@@ -92,8 +92,13 @@ all: $(FILES_TOINSTALL)
 	$(OCAMLFIND) ocamlopt -verbose $(OCAMLOPTFLAGS) $(OCAMLINC) -o $@ $*.ml \
 	-package cudd -linkpkg
 
+STRIP_PROFS =
+ifneq ($(ENABLE_PROF),yes)
+  STRIP_PROFS = -e "/gprof/d"
+endif
+
 META: META.in
-	sed -e "s!@VERSION@!$(PKGVERS)!g;" $< > $@;
+	sed -e "s!@VERSION@!$(PKGVERS)!g;" $(STRIP_PROFS) $< > $@;
 
 install: $(FILES_TOINSTALL)
 	$(OCAMLFIND) remove $(PKG-NAME)

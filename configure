@@ -8,6 +8,7 @@ cudddir="cudd-3.0.0";
 # defaults
 
 prefix="/usr/local";
+enable_prof=yes;
 
 # usage
 
@@ -19,6 +20,9 @@ where available options are:
                      ("$prefix" by default)
   --docdir <docdir>  Specify documentation installation directory
                      ("\$prefix/share/doc" by default)
+  --{enable|disable}-profiling
+                     Enable/disable compilation of profiling version
+                     (enabled by default)
   --help             Display this help and exit
 EOF
     exit 0
@@ -26,9 +30,9 @@ EOF
 
 # ---
 
-info () { echo "$1" >/dev/stderr; return 0; }
-warn () { echo "$1" >/dev/stderr; return 0; }
-err () { echo "$1" >/dev/stderr; exit 1; }
+info () { echo "$@" >/dev/stderr; return 0; }
+warn () { echo "$@" >/dev/stderr; return 0; }
+err () { echo "$@" >/dev/stderr; exit 1; }
 arr () { echo "Missing argument for \`$1'!" >/dev/stderr; usage; exit 1; }
 arg () { test "x$2" != "x" && echo "$2" || arr "$1"; }
 drg () { d="$(arg "$@")"; test -d "$d" && echo "$d" || \
@@ -39,6 +43,8 @@ drg () { d="$(arg "$@")"; test -d "$d" && echo "$d" || \
 while test $# '>' 0; do
     case "$1" in
 	--prefix) prefix="$(arg "$1" "$2")"; shift; shift;;
+	--enable-profiling) enable_prof=yes; shift;;
+	--disable-profiling) enable_prof=no; shift;;
 	-h | --help) usage;;
 	*) warn "Ignoring argument \`$1'!"; shift;;
     esac;
@@ -49,21 +55,37 @@ done;
 # ( cd "${cudddir}" && ./configure --prefix "${prefix}"; )
 
 out () { echo "$*"; return 0; }
+assign () { eval "$1=\"$2\""; out "$1 = $2"; }
 test_cmd () { command -v $1 >/dev/null; }
 find_cmd () {
+    # info "test_cmd $1";
     if test_cmd $1; then
 	cmd=$(command -v $1);
-	test "x$2" != "x" && test "x$2" != "x_" && out "$1 = $cmd";
+	test "x$2" != "x" && test "x$2" != "x_" && assign "$2" "$cmd";
 	test "x$3" != "x" && info "$3 found: $cmd" || info "$1 found: $cmd";
     else
 	test "x$3" != "x" && err "$3 not found" || err "$1 not found";
     fi
 }
-maybe_cmd () { find_cmd $2 $3 $1 || warn "$3 seems unavailable"; }
-maybe_cme () { test -z "$4" && maybe_cmd "$@" || out "$1 = $4"; }
+maybe_cmd () { find_cmd "$@" || warn "$3 seems unavailable"; }
+maybe_cme () { test "x$4" = "x" && maybe_cmd "$@" || find_cmd "$4" "$2"; }
 
 # Basic test to guess architecture:
 test_cmd uname || err "Unable to guess ISA!";
+
+check_compile_args () {
+    tmpdir=$(mktemp -d);
+    trap "rm -rf ${tmpdir};" EXIT QUIT INT;
+    (
+	cd ${tmpdir};
+	echo "int main() { return 1; }" > tmp.c;
+	${OCAMLFIND} ocamlopt -ccopt "$*" -c tmp.c 2&>1 >/dev/null && \
+	    err "not working!";
+	${CC} tmp.o -o a.out 2&>1 >/dev/null || \
+	    err "not working!";
+	info "working";
+    )
+}
 
 # Note we always assume a decent version of gcc here:
 exec 1>"Makefile.config";
@@ -72,27 +94,30 @@ cat Makefile.config.in;
 system=$(uname -s);
 info "Detected System: ${system}";
 
+# General Utilities
+
 find_cmd mktemp;
 find_cmd ar AR;
 find_cmd ranlib RANLIB;
-find_cmd camlidl CAMLIDL;
 case "${system}" in
     Linux)
         find_cmd sed SED;
         find_cmd m4 M4;;
-    Darwin)
+    Darwin|FreeBSD)
         find_cmd gsed SED "GNU sed";
         find_cmd gm4 M4 "GNU m4";;
-    FreeBSD)
-        find_cmd gsed SED "GNU sed";
-        find_cmd gm4 M4 "GNU m4";
-        maybe_cme clang CC "LLVM/clang" "$CC";
-        # NB: not used actually:
-        maybe_cme clang++ CXX "LLVM/clang++" "$CXX";;
     *)
         warn "Unknown system: ${system}!";;
 esac;
+if test_cmd awk; then
+    find_cmd awk;
+    info "awk found: documentation will be built";
+    echo "OCAMLPACK = ./ocamlpack";
+else
+    warn "awk not found: documentation will not be built";
+fi
 
+# OCaml
 
 overs=$(ocamlc -version);
 case "${overs}" in
@@ -102,14 +127,41 @@ case "${overs}" in
 	:;;
 esac
 
-test_cmd awk && {
-    find_cmd awk;
-    echo "OCAMLPACK = ./ocamlpack";
-} || warn "awk not found: documentation will not be built";
+find_cmd ocamlfind OCAMLFIND;
+find_cmd camlidl CAMLIDL;
 
-cprof_flags="$(ocamlc -config | sed -e '/^cc_profile:/!d; s/^[^:]*://;')";
-info "Profiling flags: ${cprof_flags}";
-echo "CPROF_FLAGS = ${cprof_flags}";
+# C
+
+case "${system}" in
+    Linux|Darwin)
+	maybe_cme gcc CC gcc "$CC";
+	maybe_cme g++ CXX g++ "$CXX";;
+    FreeBSD)
+        maybe_cme clang CC "LLVM/clang" "$CC";
+        # NB: not used actually:
+        maybe_cme clang++ CXX "LLVM/clang++" "$CXX";;
+    *)
+	:;;
+esac;
+
+info -n "Checking compilation of C file with ocamlopt: "
+check_compile_args;
+
+if test "x${enable_prof}" = "xyes"; then
+    cprof_flags="$(ocamlc -config | sed -e '/^cc_profile:/!d; s/^[^:]*://;')";
+    info "Profiling flags found: ${cprof_flags}";
+    info -n "Checking compilation of C file with ocamlopt -ccopt \"${cprof_flags}\": "
+    if check_compile_args "${cprof_flags}"; then
+	info "Profiling-enabled version will be built";
+	echo "ENABLE_PROF = yes";
+	echo "CPROF_FLAGS = ${cprof_flags}";
+    else
+	warn "Profiling-enabled version will not be built";
+    fi;
+else
+    info "Profiling-enabled version will not be built (as requested)";
+    echo "ENABLE_PROF = ";	# in case...
+fi;
 
 # NB: Ugly hack to avoid weird errors with auto{conf,make} and the likes:
 ( cd "${cudddir}" && touch configure.ac aclocal.m4 configure Makefile.am Makefile.in config.h.in; )
