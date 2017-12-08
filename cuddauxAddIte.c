@@ -66,12 +66,10 @@ Cuddaux_addIte(
 {
   DdNode *res;
 
-  disableReordering (dd, {
-      do {
-	dd->reordered = 0;
-	res = cuddauxAddIteRecur(dd,f,g,h);
-      } while (dd->reordered == 1);
-    });
+  do {
+    dd->reordered = 0;
+    res = cuddauxAddIteRecur(dd,f,g,h);
+  } while (dd->reordered == 1);
   return(res);
 } /* end of Cuddaux_addIte */
 
@@ -96,14 +94,11 @@ Cuddaux_addBddAnd(
 {
   DdNode *res;
 
-  disableReordering (dd, {
-      do {
-	dd->reordered = 0;
-	res = cuddauxAddBddAndRecur(dd,f,g);
-      } while (dd->reordered == 1);
-    });
+  do {
+    dd->reordered = 0;
+    res = cuddauxAddBddAndRecur(dd,f,g);
+  } while (dd->reordered == 1);
   return(res);
-
 } /* end of Cudd_addBddAnd */
 
 /**Function********************************************************************
