@@ -378,9 +378,7 @@ static inline void cuddauxHashClear(struct CuddauxHash* hash)
   }
 }
 static inline void cuddauxHashFree(struct CuddauxHash* hash)
-{ cuddauxHashClear(hash);
-  /* free(hash); */		/* <- XXX TEMPORARY MEMORY LEAK!!! */
-}
+{ cuddauxHashClear(hash); free(hash); }
 
 static inline void cuddauxCommonClear(struct common* common)
 {
