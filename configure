@@ -9,6 +9,7 @@ cudddir="cudd-3.0.0";
 
 prefix="/usr/local";
 enable_prof=yes;
+force_prof=no;
 
 # usage
 
@@ -22,7 +23,7 @@ where available options are:
                      ("\$prefix/share/doc" by default)
   --{enable|disable}-profiling
                      Enable/disable compilation of profiling version
-                     (enabled by default)
+                     (enabled by default, when OCaml supports it)
   --help             Display this help and exit
 EOF
     exit 0
@@ -50,8 +51,8 @@ drg () { d="$(arg "$@")"; test -d "$d" && echo "$d" || \
 while test $# '>' 0; do
     case "$1" in
 	--prefix) prefix="$(arg "$1" "$2")"; shift; shift;;
-	--enable-profiling) enable_prof=yes; shift;;
-	--disable-profiling) enable_prof=no; shift;;
+	--enable-profiling) enable_prof=yes; force_prof=yes; shift;;
+	--disable-profiling) enable_prof=no; force_prof=no;  shift;;
 	-h | --help) usage;;
 	*) warn "Ignoring argument \`$1'!"; shift;;
     esac;
@@ -142,22 +143,26 @@ find_xcmd CXX "$CXX" g++ clang++;
 info -n "Checking compilation of C file with ocamlopt: "
 check_compile_args;
 
+_enable_prof="";
 if test "x${enable_prof}" = "xyes"; then
-    cprof_flags="$(${OCAMLC} -config | ${SED} -e '/^cc_profile:/!d; s/^[^:]*://;')";
-    info "Profiling flags found: ${cprof_flags}";
-    info -n "Checking compilation of C file with ocamlopt -ccopt \"${cprof_flags}\": "
-    if check_compile_args "${cprof_flags}"; then
-	info "Profiling-enabled version will be built";
-	echo "ENABLE_PROF = yes";
-	echo "CPROF_FLAGS = ${cprof_flags}";
+    cprof_flags="$(${OCAMLC} -config | ${SED} -e '/^cc_profile:/!d; s/^[^:]*: *//;')";
+    if test "x${cprof_flags}" != "x" -o "x${force_prof}" = "xyes"; then
+	info "Profiling flags found: ${cprof_flags}";
+	info -n "Checking compilation of C file with ocamlopt -ccopt \"${cprof_flags}\": "
+	if check_compile_args "${cprof_flags}"; then
+	    info "Profiling-enabled version will be built";
+	    echo "CPROF_FLAGS = ${cprof_flags}";
+	    _enable_prof=yes;
+	else
+	    warn "Profiling-enabled version will not be built";
+	fi;
     else
-	warn "Profiling-enabled version will not be built";
-	echo "ENABLE_PROF = ";	# in case...
+	warn "Profiling-enabled version will not be built as no specific flag was found";
     fi;
 else
     info "Profiling-enabled version will not be built (as requested)";
-    echo "ENABLE_PROF = ";	# in case...
 fi;
+echo "ENABLE_PROF = ${_enable_prof}";	# in case...
 
 if test "x${AWK}" != "x"; then
     info "awk found: documentation will be built";
