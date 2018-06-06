@@ -50,34 +50,49 @@ done;
 
 out () { echo "$*"; return 0; }
 test_cmd () { command -v $1 >/dev/null; }
-maybe_cmd () { test_cmd $2 && echo "$1 = $2" || warn "$3 seems unavailable"; }
+find_cmd () {
+    if test_cmd $1; then
+	cmd=$(command -v $1);
+	test "x$2" != "x" && test "x$2" != "x_" && out "$1 = $cmd";
+	test "x$3" != "x" && info "$3 found: $cmd" || info "$1 found: $cmd";
+    else
+	test "x$3" != "x" && err "$3 not found" || err "$1 not found";
+    fi
+}
+maybe_cmd () { find_cmd $2 $3 $1 || warn "$3 seems unavailable"; }
 maybe_cme () { test -z "$4" && maybe_cmd "$@" || out "$1 = $4"; }
 
 # Basic test to guess architecture:
 test_cmd uname || err "Unable to guess ISA!";
-test_cmd mktemp || err "Command \`mktemp' not found!";
 
 # Note we always assume a decent version of gcc here:
 exec 1>"Makefile.config";
 cat Makefile.config.in;
 
 system=$(uname -s);
-info "Detected System: ${system}"; 
+info "Detected System: ${system}";
+
+find_cmd mktemp;
+find_cmd ar AR;
+find_cmd ranlib RANLIB;
+find_cmd camlidl CAMLIDL;
 case "${system}" in
     Linux)
-	:;;
+        find_cmd sed SED;
+        find_cmd m4 M4;;
     Darwin)
-    	maybe_cmd "SED" "gsed" "GNU sed";
-    	maybe_cmd "M4" "gm4" "GNU m4";;
+        find_cmd gsed SED "GNU sed";
+        find_cmd gm4 M4 "GNU m4";;
     FreeBSD)
-	maybe_cmd "SED" "gsed" "GNU sed";
-	maybe_cmd "M4" "gm4" "GNU m4";
-	maybe_cme "CC" "clang" "LLVM/clang" "$CC";
-	# NB: not used actually:
-	maybe_cme "CXX" "clang++" "LLVM/clang++" "$CXX";;
+        find_cmd gsed SED "GNU sed";
+        find_cmd gm4 M4 "GNU m4";
+        maybe_cme clang CC "LLVM/clang" "$CC";
+        # NB: not used actually:
+        maybe_cme clang++ CXX "LLVM/clang++" "$CXX";;
     *)
-	warn "Unknown system: ${system}!";;
+        warn "Unknown system: ${system}!";;
 esac;
+
 
 overs=$(ocamlc -version);
 case "${overs}" in
@@ -88,6 +103,7 @@ case "${overs}" in
 esac
 
 test_cmd awk && {
+    find_cmd awk;
     echo "OCAMLPACK = ./ocamlpack";
 } || warn "awk not found: documentation will not be built";
 
