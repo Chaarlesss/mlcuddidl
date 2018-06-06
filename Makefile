@@ -141,8 +141,8 @@ define cudddir
 	  cd $(2) && CPPFLAGS="$(CPPFLAGS_$(1))" CFLAGS="$(CFLAGS_$(1))"	\
 	  "$${srcdir}/configure" DOXYGEN=					\
 		--prefix "$(SRCDIR)/$(call CUDD_BLDDIR,$(1))"			\
-	 	--srcdir="$${srcdir}" --disable-dependency-tracking		\
-		--disable-shared --enable-static $(3) 2>&1 >/dev/null; ) ||	\
+		--srcdir="$${srcdir}" --disable-dependency-tracking		\
+		--disable-shared --enable-static $(3); ) ||			\
 	  { rm -rf $(2); false; }
 endef
 
@@ -177,10 +177,17 @@ BASEOBJS = $(CCMODULES:%=%.o) cuddall-base.o
 DEBGOBJS = $(CCMODULES:%=%.d.o) cuddall-dbug.o
 PROFOBJS = $(CCMODULES:%=%.p.o) cuddall-prof.o
 
+OCAMLCc := $(OCAMLC) $(OCAMLFLAGS) 
+OCAMLCd := $(OCAMLCc) -g
+
+OCAMLOPTc := $(OCAMLOPT) $(OCAMLOPTFLAGS)
+OCAMLOPTd := $(OCAMLOPTc) -g -runtime-variant d
+OCAMLOPTp := $(OCAMLOPTc) -p
+
 OCAMLMKLIB := $(OCAMLMKLIB) -verbose
-OCAMLMKLIBo := $(OCAMLMKLIB) -ocamlopt "$(OCAMLOPT)"
-OCAMLMKLIBd := $(OCAMLMKLIBo) -g -ccopt -g
-OCAMLMKLIBp := $(OCAMLMKLIB) -ocamlopt "$(OCAMLOPT) -p" -ccopt -p
+OCAMLMKLIBo := $(OCAMLMKLIB) -ocamlopt "$(OCAMLOPTc)"
+OCAMLMKLIBd := $(OCAMLMKLIB) -ocamlopt "$(OCAMLOPTd)" -g -ccopt -g
+OCAMLMKLIBp := $(OCAMLMKLIB) -ocamlopt "$(OCAMLOPTp)" -ccopt -p
 
 cudd.a: cudd.cmxa
 cudd.cmxa: cudd.cma
@@ -188,25 +195,26 @@ cudd.d.a: cudd.d.cmxa
 cudd.d.cmxa: cudd.d.cma
 cudd.p.a: cudd.p.cmxa
 
-.SUFFIXES: .cma .cmo .cmx .d.cma .d.cmo .d.cmx .p.cmxa .p.cmx
+.SUFFIXES: .cma .cmo .cmx .d.cma .d.cmo .d.cmx .d.cmxa .p.cmx .p.cmxa
 
 cudd.cma: %.cma: %.cmo %.cmx $(BASEOBJS)
 	$(OCAMLMKLIBo) -o $* -oc $*_caml $^ $(LDFLAGS)
+# cudd.d.cma: %.d.cma: %.d.cmo %.cmx $(DEBGOBJS)
 cudd.d.cma: %.d.cma: %.d.cmo %.d.cmx $(DEBGOBJS)
 	$(OCAMLMKLIBd) -o $*.d -oc $*_caml.d $^ $(LDFLAGS)
 cudd.p.cmxa: %.p.cmxa: %.p.cmx $(PROFOBJS)
 	$(OCAMLMKLIBp) -o $*.p -oc $*_caml.p $^ $(LDFLAGS)
 
 cudd.cmo cudd.cmi: $(MLMODULES:%=%.cmo)
-	$(OCAMLC) $(OCAMLFLAGS) $(OCAMLINC) -pack -o $@ $^
+	$(OCAMLCc) -pack -o $@ $^
 cudd.d.cmo: $(MLMODULES:%=%.d.cmo)
-	$(OCAMLC) $(OCAMLFLAGS) $(OCAMLINC) -g -pack -o $@ $^
+	$(OCAMLCd) -g -pack -o $@ $^
 cudd.cmx: $(MLMODULES:%=%.cmx)
-	$(OCAMLOPT) $(OCAMLOPTFLAGS) -pack -o $@ $^
-cudd.d.cmx: $(MLMODULES:%=%.d.cmx)
-	$(OCAMLOPT) $(OCAMLOPTFLAGS) -g -pack -o $@ $^
+	$(OCAMLOPTc) -pack -o $@ $^
+cudd.d.cmx: $(MLMODULES:%=%.cmx)
+	$(OCAMLOPTd) -pack -o $@ $^
 cudd.p.cmx: $(MLMODULES:%=%.p.cmx)
-	$(OCAMLOPT) $(OCAMLOPTFLAGS_PROF) -p -pack -o $@ $^
+	$(OCAMLOPTp) -pack -o $@ $^
 
 # HTML and LATEX rules
 .PHONY: html
@@ -222,7 +230,7 @@ mlcuddidl.pdf: mlcuddidl.dvi
 mlcuddidl.dvi: cudd_ocamldoc.mli
 	mkdir -p tmp
 	cp cudd_ocamldoc.mli tmp/cudd.mli
-	(cd tmp; $(OCAMLC) $(OCAMLINC) -c cudd.mli)
+	(cd tmp; $(OCAMLCc) -c cudd.mli)
 	$(OCAMLDOC) $(OCAMLINC) -I tmp \
 -t "MLCUDDIDL: OCaml interface for CUDD library, version $(PKGVERS), 01/02/11" \
 -latextitle 1,part -latextitle 2,chapter -latextitle 3,section -latextitle 4,subsection -latextitle 5,subsubsection -latextitle 6,paragraph -latextitle 7,subparagraph \
@@ -294,22 +302,22 @@ $(CCMODULES:%=%.d.o): %.d.o: %.c cudd_caml.h cuddaux.h $(call CUDD_SRCDIR,dbug)/
 #-----------------------------------
 
 $(MLMODULES:%=%.cmi): %.cmi: %.mli
-	$(OCAMLC) $(OCAMLFLAGS) $(OCAMLINC) -c $<
+	$(OCAMLCc) -c $<
 
 $(MLMODULES:%=%.cmo): %.cmo: %.ml %.cmi
-	$(OCAMLC) $(OCAMLFLAGS) $(OCAMLINC) -c $<
+	$(OCAMLCc) -c $<
 
 $(MLMODULES:%=%.d.cmo): %.d.cmo: %.ml %.cmi %.cmo
-	$(OCAMLC) $(OCAMLFLAGS) $(OCAMLINC) -o $@ -g -c $<
+	$(OCAMLCd) -o $@ -c $<
 
 $(MLMODULES:%=%.cmx): %.cmx: %.ml %.cmi
-	$(OCAMLOPT) $(OCAMLOPTFLAGS) $(OCAMLINC) -for-pack Cudd -c $<
+	$(OCAMLOPTc) -for-pack Cudd -c $<
 
-$(MLMODULES:%=%.d.cmx): %.d.cmx: %.ml %.cmi
-	$(OCAMLOPT) $(OCAMLOPTFLAGS) $(OCAMLINC) -for-pack Cudd -c -g -o $@ $<
+# $(MLMODULES:%=%.d.cmx): %.d.cmx: %.ml %.cmi %.cmx
+# 	$(OCAMLOPTd) -for-pack Cudd -c -o $@ $<
 
-$(MLMODULES:%=%.p.cmx): %.p.cmx: %.ml %.cmi
-	$(OCAMLOPT) $(OCAMLOPTFLAGS) $(OCAMLINC) -for-pack Cudd -c -p -o $@ $<
+$(MLMODULES:%=%.p.cmx): %.p.cmx: %.ml %.cmi %.cmx
+	$(OCAMLOPTp) -for-pack Cudd -c -o $@ $<
 
 #-----------------------------------
 # Dependencies
@@ -319,7 +327,10 @@ $(MLMODULES:%=%.p.cmx): %.p.cmx: %.ml %.cmi
 depend: Makefile.depend
 Makefile.depend: $(MLMODULES:%=%.mli) $(MLMODULES:%=%.ml)
 	$(OCAMLDEP) -one-line $+ |						\
-	  $(SED) -e '/\.cm[ox]/ { p; s/\.cmo/.d.cmo/; s/\.cmx/.p.cmx/; p; s/\.p\.cmx/.d.cmx/; }' > $@
+	  $(SED) -e '/\.cmo/    { p; s/\.cmo/.d.cmo/; }'			\
+		 -e '/\.cmx/    { p; s/\.cmx/.p.cmx/; }'			\
+		 -e '#/\.p\.cmx/ { p; s/\.p\./.d./; }'				\
+	  > $@
 
 ifeq ($(findstring distclean,$(MAKECMDGOALS))$(findstring mostlyclean,$(MAKECMDGOALS)),)
   -include Makefile.depend
