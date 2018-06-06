@@ -227,10 +227,6 @@ Cuddaux_addEvalConst(
   DdNode *F,*Fv,*Fnv,*Gv,*Gnv,*r,*t,*e;
   unsigned int topf,topg;
 
-#ifdef DD_DEBUG
-  assert(!Cudd_IsComplement(f));
-#endif
-
   /* Trivial cases. */
   one = DD_ONE(dd);
   zero = Cudd_Not(one);
