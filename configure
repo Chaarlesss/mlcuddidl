@@ -67,25 +67,22 @@ find_cmd () {
 	test "x$3" != "x" && err "$3 not found" || err "$1 not found";
     fi
 }
+find_cmdx () {
+    v="$1"; shift;
+    if test_cmd $1; then
+	cmd=$(command -v $1);
+	test "x$v" != "x_" && assign "$v" "$cmd";
+	info "$1 found: $cmd";
+    else
+	shift;
+	find_cmdx "$v" "$@";
+    fi;
+}
 maybe_cmd () { find_cmd "$@" || warn "$3 seems unavailable"; }
 maybe_cme () { test "x$4" = "x" && maybe_cmd "$@" || find_cmd "$4" "$2"; }
 
 # Basic test to guess architecture:
 test_cmd uname || err "Unable to guess ISA!";
-
-check_compile_args () {
-    tmpdir=$(mktemp -d);
-    trap "rm -rf ${tmpdir};" EXIT QUIT INT;
-    (
-	cd ${tmpdir};
-	echo "int main() { return 1; }" > tmp.c;
-	${OCAMLFIND} ocamlopt -ccopt "$*" -c tmp.c 2&>1 >/dev/null && \
-	    err "not working!";
-	${CC} tmp.o -o a.out 2&>1 >/dev/null || \
-	    err "not working!";
-	info "working";
-    )
-}
 
 # Note we always assume a decent version of gcc here:
 exec 1>"Makefile.config";
@@ -99,16 +96,9 @@ info "Detected System: ${system}";
 find_cmd mktemp;
 find_cmd ar AR;
 find_cmd ranlib RANLIB;
-case "${system}" in
-    Linux)
-        find_cmd sed SED;
-        find_cmd m4 M4;;
-    Darwin|FreeBSD)
-        find_cmd gsed SED "GNU sed";
-        find_cmd gm4 M4 "GNU m4";;
-    *)
-        warn "Unknown system: ${system}!";;
-esac;
+find_cmdx SED gsed sed;
+find_cmdx M4 gm4 m4;
+
 if test_cmd awk; then
     find_cmd awk;
     info "awk found: documentation will be built";
@@ -132,6 +122,20 @@ find_cmd camlidl CAMLIDL;
 
 # C
 
+check_compile_args () {
+    tmpdir=$(mktemp -d);
+    trap "rm -rf ${tmpdir};" EXIT QUIT INT;
+    (
+	cd "${tmpdir}";
+	echo "int main() { return 1; }" > tmp.c;
+	${OCAMLFIND} ocamlopt -ccopt "$*" -c tmp.c 2>&1 >/dev/null || \
+	    err "not working!";
+	${CC} tmp.o -o a.out 2>&1 >/dev/null || \
+	    err "not working!";
+	info "working";
+    )
+}
+
 case "${system}" in
     Linux|Darwin)
 	maybe_cme gcc CC gcc "$CC";
@@ -141,8 +145,8 @@ case "${system}" in
         # NB: not used actually:
         maybe_cme clang++ CXX "LLVM/clang++" "$CXX";;
     *)
-	:;;
-esac;
+        warn "Unknown system: ${system}!";;
+esac
 
 info -n "Checking compilation of C file with ocamlopt: "
 check_compile_args;
