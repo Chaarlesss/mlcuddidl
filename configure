@@ -124,7 +124,7 @@ find_xcmd CAMLIDL camlidl;
 
 check_compile_args () {
     tmpdir=$(mktemp -d tmp.XXXXXX);
-    trap "rm -r -f ${tmpdir};" EXIT QUIT INT;
+    trap "cd $(pwd); rm -r -f \"${tmpdir}\";" EXIT QUIT INT TERM;
     (
 	cd "${tmpdir}";
 	echo "int main() { return 1; }" > tmp.c;
@@ -133,8 +133,7 @@ check_compile_args () {
 	${CC} tmp.o -o a.out >/dev/null 2>&1 || \
 	    err "not working!";
 	info "working";
-    );
-    rm -r -f ${tmpdir};
+    ) && rm -r -f "${tmpdir}";
 }
 
 find_xcmd CC "$CC" gcc clang;
