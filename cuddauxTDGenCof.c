@@ -213,6 +213,14 @@ DdNode* Cuddaux_addTDRestrict(DdManager* dd, DdNode* f, DdNode* c)
   DdNode *cplus, *phi, *res;
   DdNode *zero,*one;
 
+  if (DD_BACKGROUND(dd) != NULL) {
+#   if defined(DD_DEBUG) && defined(DD_VERBOSE)
+    (void) fprintf(dd->out, "%s: non-null background values\n", __func__);
+    (void) fprintf(dd->out, "%s: calling Cuddaux_addRestrict instead\n", __func__);
+#   endif
+    return Cuddaux_addRestrict (dd, f, c);
+  }
+
   one = DD_ONE(dd);
   zero = Cudd_Not(one);
   if (c == one) return f;
@@ -297,6 +305,14 @@ Cuddaux_addTDConstrain(DdManager* dd, DdNode* f, DdNode* c)
 {
   DdNode *zero,*one, *res;
   DdNode *phi;
+
+  if (DD_BACKGROUND(dd) != NULL) {
+#   if defined(DD_DEBUG) && defined(DD_VERBOSE)
+    (void) fprintf(dd->out, "%s: non-null background values\n", __func__);
+    (void) fprintf(dd->out, "%s: calling Cuddaux_addConstrain instead\n", __func__);
+#   endif
+    return Cuddaux_addConstrain (dd, f, c);
+  }
 
   one = DD_ONE(dd);
   zero = Cudd_Not(one);
