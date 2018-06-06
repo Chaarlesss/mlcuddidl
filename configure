@@ -119,6 +119,7 @@ esac
 
 find_cmd ocamlfind OCAMLFIND;
 find_cmd camlidl CAMLIDL;
+find_cmd ocamldep OCAMLDEP;
 
 # C
 

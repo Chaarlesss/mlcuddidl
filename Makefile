@@ -58,18 +58,19 @@ ifneq ($(HAS_SHARED),)
 endif
 CCLIB = $(BASELIBS) $(DEBGLIBS) $(if $(ENABLE_PROF),$(PROFLIBS))
 
-FILES_TOINSTALL = META \
-	$(CUDDDIR)/cudd/cudd.h $(CUDDDIR)/cudd/cuddInt.h \
-	$(CUDDDIR)/mtr/mtr.h \
-	$(CUDDDIR)/epd/epd.h \
-	$(CUDDDIR)/st/st.h \
-	$(CUDDDIR)/util/util.h \
-	cuddaux.h cudd_caml.h \
-	$(IDLMODULES:%=%.idl) \
-	cudd.cmi cudd.cma cudd.d.cma \
-	cudd.cmx cudd.cmxa cudd.a \
-	cudd.d.cmxa cudd.d.a \
-	$(if $(ENABLE_PROF),cudd.p.cmx cudd.p.cmxa cudd.p.a) \
+FILES_TOINSTALL = META						\
+	$(CUDDDIR)/cudd/cudd.h					\
+	$(CUDDDIR)/cudd/cuddInt.h				\
+	$(CUDDDIR)/mtr/mtr.h					\
+	$(CUDDDIR)/epd/epd.h					\
+	$(CUDDDIR)/st/st.h					\
+	$(CUDDDIR)/util/util.h					\
+	cuddaux.h cudd_caml.h					\
+	$(IDLMODULES:%=%.idl)					\
+	cudd.cmi cudd.cma 					\
+	cudd.cmx cudd.cmxa cudd.a				\
+	cudd.d.cma cudd.d.cmxa cudd.d.a				\
+	$(if $(ENABLE_PROF),cudd.p.cmx cudd.p.cmxa cudd.p.a)	\
 	$(CCLIB)
 
 ifneq ($(OCAMLPACK),)
@@ -86,18 +87,18 @@ all: $(FILES_TOINSTALL)
 # Example of compilation command with ocamlfind
 %.byte: %.ml
 	$(OCAMLFIND) ocamlc $(OCAMLFLAGS) $(OCAMLINC) -o $@ $*.ml \
-	-package cudd -linkpkg
+	  -package cudd -linkpkg
 %.opt: %.ml
 	$(OCAMLFIND) ocamlopt -verbose $(OCAMLOPTFLAGS) $(OCAMLINC) -o $@ $*.ml \
-	-package cudd -linkpkg
+	  -package cudd -linkpkg
 
 STRIP_PROFS =
 ifneq ($(ENABLE_PROF),yes)
-  STRIP_PROFS = -e "/gprof/d"
+  STRIP_PROFS = -e "/gprof/ d"
 endif
 
 META: META.in
-	sed -e "s!@VERSION@!$(PKGVERS)!g;" $(STRIP_PROFS) $< > $@;
+	$(SED) -e "s!@VERSION@!$(PKGVERS)!g;" $(STRIP_PROFS) $< > $@;
 
 install: $(FILES_TOINSTALL)
 	$(OCAMLFIND) remove $(PKG-NAME)
@@ -141,7 +142,7 @@ define cudddir
 	  "$${srcdir}/configure" DOXYGEN=					\
 		--prefix "$(SRCDIR)/$(call CUDD_BLDDIR,$(1))"			\
 	 	--srcdir="$${srcdir}" --disable-dependency-tracking		\
-		--disable-shared --enable-static $(3); ) ||			\
+		--disable-shared --enable-static $(3) 2>&1 >/dev/null; ) ||	\
 	  { rm -rf $(2); false; }
 endef
 
@@ -181,16 +182,18 @@ OCAMLMKLIBd := $(OCAMLMKLIBo) -g -ccopt -g
 OCAMLMKLIBp := $(OCAMLMKLIB) -ocamlopt "$(OCAMLOPT) -p" -ccopt -p
 
 cudd.a: cudd.cmxa
-cudd.d.a: cudd.d.cmxa
-cudd.p.a: cudd.p.cmxa
 cudd.cmxa: cudd.cma
+cudd.d.a: cudd.d.cmxa
 cudd.d.cmxa: cudd.d.cma
+cudd.p.a: cudd.p.cmxa
+
+.SUFFIXES: .cma .cmo .cmx .d.cma .d.cmo .d.cmx .p.cmxa .p.cmx
 
 cudd.cma: %.cma: %.cmo %.cmx $(BASEOBJS)
 	$(OCAMLMKLIBo) -o $* -oc $*_caml $^ $(LDFLAGS)
-%.d.cma: %.d.cmo %.d.cmx $(DEBGOBJS)
+cudd.d.cma: %.d.cma: %.d.cmo %.d.cmx $(DEBGOBJS)
 	$(OCAMLMKLIBd) -o $*.d -oc $*_caml.d $^ $(LDFLAGS)
-%.p.cmxa: %.p.cmx $(PROFOBJS)
+cudd.p.cmxa: %.p.cmxa: %.p.cmx $(PROFOBJS)
 	$(OCAMLMKLIBp) -o $*.p -oc $*_caml.p $^ $(LDFLAGS)
 
 cudd.cmo cudd.cmi: $(MLMODULES:%=%.cmo)
@@ -250,15 +253,11 @@ endif
 # IMPLICIT RULES AND DEPENDENCIES
 #--------------------------------------------------------------
 
-.SUFFIXES: .c .h .o .ml .mli .cmi .cmo .d.cmo .cmx .d.cmx .p.cmx .idl .p.o .d.o _caml.c
+.SUFFIXES: .c .h .o .ml .mli .cmi .idl .p.o .d.o _caml.c
 
 #-----------------------------------
 # IDL
 #-----------------------------------
-
-M4 ?= m4
-SED ?= sed
-CAMLIDL ?= camlidl
 
 .PRECIOUS: tmp/%.idl
 tmp/%.idl: %.idl macros.m4 Makefile.config
@@ -306,16 +305,14 @@ $(MLMODULES:%=%.cmx): %.cmx: %.ml %.cmi
 	$(OCAMLOPT) $(OCAMLOPTFLAGS) $(OCAMLINC) -for-pack Cudd -c $<
 
 $(MLMODULES:%=%.d.cmx): %.d.cmx: %.ml %.cmi
-	$(OCAMLOPT) -g $(OCAMLOPTFLAGS) $(OCAMLINC) -for-pack Cudd -c -o $@ $<
+	$(OCAMLOPT) $(OCAMLOPTFLAGS) $(OCAMLINC) -for-pack Cudd -c -g -o $@ $<
 
 $(MLMODULES:%=%.p.cmx): %.p.cmx: %.ml %.cmi
-	$(OCAMLOPT) -p $(OCAMLOPTFLAGS) $(OCAMLINC) -for-pack Cudd -c -o $@ $<
+	$(OCAMLOPT) $(OCAMLOPTFLAGS) $(OCAMLINC) -for-pack Cudd -c -p -o $@ $<
 
 #-----------------------------------
 # Dependencies
 #-----------------------------------
-
-OCAMLDEP ?= ocamldep
 
 .PHONY: depend
 depend: Makefile.depend
