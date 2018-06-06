@@ -57,3 +57,5 @@ LATEX=latex
 DVIPS=dvips
 DVIPDF=dvipdf
 MAKEINDEX=makeindex
+
+CPROF_FLAGS = $(shell $(OCAMLC) -config | $(SED) -e 's/^cc_profile://; t; d')

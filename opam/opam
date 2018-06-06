@@ -18,4 +18,10 @@ depends: [
   "camlidl"    {build}
   "ocamlbuild" {build}
 ]
+depexts: [
+  [["linux"] ["sed"]] # always GNU sed?
+  [["osx" "macports"] ["gsed"]]
+  [["osx" "homebrew"] ["gnu-sed"]]
+  [["freebsd"] ["gsed"]]
+]
 available: [ ocaml-version >= "4.02" ]
