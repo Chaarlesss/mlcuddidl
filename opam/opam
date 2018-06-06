@@ -15,7 +15,7 @@ remove: [
 ]
 depends: [
   "ocamlfind"
-  "camlidl"    {build & <= "1.05"}
+  "camlidl"    {build}
   "ocamlbuild" {build}
 ]
-available: [ ocaml-version >= "4.02" & ocaml-version < "4.06" ]
+available: [ ocaml-version >= "4.02" ]

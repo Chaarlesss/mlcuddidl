@@ -795,7 +795,7 @@ let print__minterm fmt bdd =
 	      | Man.True -> '1'
 	      | Man.Top -> '-'))
 	  cube;
-	pp_print_string fmt str
+	pp_print_string fmt (Bytes.unsafe_to_string str)
       end)
       bdd;
     fprintf fmt \"@]\"
