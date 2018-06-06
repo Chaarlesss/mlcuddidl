@@ -156,8 +156,9 @@ $(call CUDD_LIB,%): $(call CUDD_SRCDIR,%)/config.h
 
 define cuddall
 	tmpdir=$$(mktemp -d tmp.XXXXXX);					\
-	trap "rm -rf $${tmpdir};" EXIT QUIT INT;				\
-	( cd "$${tmpdir}"; $(AR) x $(SRCDIR)/$<; $(LD) -r -o $(2) *.o; )
+	trap "rm -r -f $${tmpdir};" EXIT QUIT INT;				\
+	( cd "$${tmpdir}"; $(AR) x $(SRCDIR)/$<; $(LD) -r -o $(2) *.o; );	\
+	rm -r -f $${tmpdir};
 endef
 
 .PRECIOUS: cuddall-%.o
