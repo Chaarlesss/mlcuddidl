@@ -291,11 +291,11 @@ CUDDINC = -I $(CUDDDIR) -I $(CUDDDIR)/st -I $(CUDDDIR)/mtr -I $(CUDDDIR)/epd \
 CUDDAUX_INC = $(CUDDINC) $(IDLINC)
 
 $(CCMODULES:%=%.o): %.o: %.c cudd_caml.h cuddaux.h $(call CUDD_SRCDIR,base)/config.h
-	$(OCAMLOPT) $(call CUDDAUX_INC,base) -ccopt "$(CFLAGS_base) -o $@"  -c $<
+	$(OCAMLOPT) $(call CUDDAUX_INC,base) -ccopt "$(CFLAGS_base) $(CPPFLAGS_base) -o $@"  -c $<
 $(CCMODULES:%=%.p.o): %.p.o: %.c cudd_caml.h cuddaux.h $(call CUDD_SRCDIR,prof)/config.h
-	$(OCAMLOPT) $(call CUDDAUX_INC,prof) -p -ccopt "$(CFLAGS_prof) -w -o $@" -c $<
+	$(OCAMLOPT) $(call CUDDAUX_INC,prof) -p -ccopt "$(CFLAGS_prof) $(CPPFLAGS_prof) -w -o $@" -c $<
 $(CCMODULES:%=%.d.o): %.d.o: %.c cudd_caml.h cuddaux.h $(call CUDD_SRCDIR,dbug)/config.h
-	$(OCAMLOPT) $(call CUDDAUX_INC,dbug) -g -ccopt "$(CFLAGS_dbug) -w -o $@" -c $<
+	$(OCAMLOPT) $(call CUDDAUX_INC,dbug) -g -ccopt "$(CFLAGS_dbug) $(CPPFLAGS_dbug) -w -o $@" -c $<
 
 #-----------------------------------
 # CAML
