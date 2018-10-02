@@ -275,7 +275,11 @@ void shuffle_heap(man__t man, int permut[])
 
 quote(MLI,"(** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddAllDet.html#cuddGarbageCollect}[cuddGarbageCollect]}. Force a garbage collection (with cache clearing) *)")
 int garbage_collect(man__t man)
-  quote(call,"_res = cuddGarbageCollect(man->man,1);");
+  quote(call,"
+Begin_root(_v_man);
+_res = cuddGarbageCollect(man->man,1);
+End_roots();
+");
 
 quote(MLI,"(** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddAllDet.html#cuddCacheFlush}[cuddCacheFlush]}. Clear the global cache *)")
 void cache_flush(man__t man)
