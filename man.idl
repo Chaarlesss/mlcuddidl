@@ -277,7 +277,9 @@ quote(MLI,"(** {{:http://vlsi.colorado.edu/~fabio/CUDD/cuddAllDet.html#cuddGarba
 int garbage_collect(man__t man)
   quote(call,"
 Begin_root(_v_man);
+cuddauxManRef (man);
 _res = cuddGarbageCollect(man->man,1);
+cuddauxManFree (man);
 End_roots();
 ");
 
