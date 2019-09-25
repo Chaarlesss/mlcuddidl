@@ -8,7 +8,7 @@ cudddir="cudd-3.0.0";
 # defaults
 
 prefix="/usr/local";
-enable_prof=yes;
+enable_prof=no;
 force_prof=no;
 
 # usage
