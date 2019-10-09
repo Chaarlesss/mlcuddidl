@@ -148,9 +148,9 @@ if test "x${enable_prof}" = "xyes"; then
     # TEMPORARY: Always disable profiling when compiling with
     # Apple LLVM >= 10.0.0 (see
     # `https://stackoverflow.com/a/52883957/1928149')
-    if "$CC" --version | grep 'clang-[1-9][0-9][0-9][0-9]' && \
-	    "${OCAMLC}" -config | grep '-apple-darwin18.7.[0-9]'; then
-	warn "Profiling is (temporarily) disabled with these versions of Apple LLVM/Darwin."
+    if "$CC" --version | grep -q 'clang-[1-9][0-9][0-9][0-9]' && \
+	    "${OCAMLC}" -config | grep -q '-apple-darwin18.7.'; then
+	warn "Profiling is (temporarily) disabled with these versions of Apple LLVM/Darwin.";
     else
 	cprof_flags="$(${OCAMLC} -config | ${SED} -e '/^cc_profile:/!d; s/^[^:]*: *//;')";
 	if test "x${cprof_flags}" != "x" -o "x${force_prof}" = "xyes"; then
