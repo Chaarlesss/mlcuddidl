@@ -344,7 +344,7 @@ endif
 ifneq ($(OPAM_DIST_DIR),)
 
   OPAM_DIR = opam
-  OPAM_FILES = descr opam files
+  OPAM_FILES = descr opam
 
   MLSRCS = $(filter-out $(IDLMODULES),$(MLMODULES))
   DIST_FILES = *.idl *.c *.h *.itarget *.odoci *.mlpack *.mlpacki	\
