@@ -137,10 +137,10 @@ DdNode* Cuddaux_bddTDRestrict(DdManager* dd, DdNode* f, DdNode* c)
   Cudd_IterDerefBdd(dd,cplus);
 
   res = Cuddaux_bddTDSimplify(dd,inf,sup);
-  cuddRef(res);
+  if (res != NULL) cuddRef(res);
   Cudd_IterDerefBdd(dd,inf);
   Cudd_IterDerefBdd(dd,sup);
-  cuddDeref(res);
+  if (res != NULL) cuddDeref(res);
   return(res);
 }
 
@@ -185,10 +185,10 @@ DdNode* Cuddaux_bddTDConstrain(DdManager* dd, DdNode* f, DdNode* c)
   }
   cuddRef(sup);
   res = Cuddaux_bddTDSimplify(dd,inf,sup);
-  cuddRef(res);
+  if (res != NULL) cuddRef(res);
   Cudd_IterDerefBdd(dd,inf);
   Cudd_IterDerefBdd(dd,sup);
-  cuddDeref(res);
+  if (res != NULL) cuddDeref(res);
   return(res);
 }
 
@@ -280,9 +280,9 @@ DdNode* Cuddaux_addTDRestrict(DdManager* dd, DdNode* f, DdNode* c)
   cuddRef(phi);
   Cudd_IterDerefBdd(dd,cplus);
   res = Cuddaux_addTDSimplify(dd,phi);
-  cuddRef(res);
+  if (res != NULL) cuddRef(res);
   Cudd_RecursiveDeref(dd,phi);
-  cuddDeref(res);
+  if (res != NULL) cuddDeref(res);
   return(res);
 }
 
@@ -329,9 +329,9 @@ Cuddaux_addTDConstrain(DdManager* dd, DdNode* f, DdNode* c)
   }
   cuddRef(phi);
   res = Cuddaux_addTDSimplify(dd,phi);
-  cuddRef(res);
+  if (res != NULL) cuddRef(res);
   Cudd_RecursiveDeref(dd,phi);
-  cuddDeref(res);
+  if (res != NULL) cuddDeref(res);
   return res;
 }
 
