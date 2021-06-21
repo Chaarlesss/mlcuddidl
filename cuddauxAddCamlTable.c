@@ -35,7 +35,10 @@
 #include "cuddaux.h"
 #include "caml/memory.h"
 
-extern intnat caml_stat_compactions;
+#define CAML_INTERNALS
+#include "caml/gc_ctrl.h"      /* appropriately declare caml_stat_compactions */
+#undef CAML_INTERNALS
+
 static intnat old_compactions = -1;
 
 typedef union myhack {
