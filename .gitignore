@@ -3,7 +3,7 @@ tmp
 *.a
 *.so
 *.cm[oiax]
-*.cmxa
+*.cmx[as]
 *.annot
 cudd_ocamldoc.mli
 META
