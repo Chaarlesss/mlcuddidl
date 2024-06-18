@@ -73,8 +73,12 @@ FILES_TOINSTALL = META						\
 	$(if $(ENABLE_PROF),cudd.p.cmx cudd.p.cmxa cudd.p.a)	\
 	$(CCLIB)
 
+ifeq ($(HAS_NATIVE_PLUGINS),yes)
+  FILES_TOINSTALL += cudd.cmxs
+endif
+
 ifneq ($(OCAMLPACK),)
-FILES_TOINSTALL += cudd_ocamldoc.mli
+  FILES_TOINSTALL += cudd_ocamldoc.mli
 endif
 
 #---------------------------------------
@@ -99,6 +103,11 @@ endif
 
 META: META.in
 	$(SED) -e "s!@VERSION@!$(PKGVERS)!g;" $(STRIP_PROFS) $< > $@;
+  ifeq ($(HAS_NATIVE_PLUGINS),yes)
+	echo "archive(native,plugin) = \"cudd.cmxs\"" >>$@
+	echo "plugin(native) = \"cudd.cmxs\"" >>$@
+  endif
+
 
 install: $(FILES_TOINSTALL)
 	$(OCAMLFIND) remove $(PKG-NAME)
@@ -129,7 +138,7 @@ distclean: mostlyclean
 clean:
 	/bin/rm -f cuddtop *.byte *.opt
 	/bin/rm -f cuddaux.?? cuddaux.??? cuddaux.info
-	/bin/rm -f *.[ao] *.so *.cm[ioxat] *.cmti *.cmxa *.opt *.opt2 *.annot cudd_ocamldoc.mli
+	/bin/rm -f *.[ao] *.so *.cm[ioxat] *.cmti *.cmx[as] *.opt *.opt2 *.annot cudd_ocamldoc.mli
 	/bin/rm -f cmttb*
 	/bin/rm -fr html
 
@@ -195,12 +204,11 @@ cudd.d.a: cudd.d.cmxa
 cudd.d.cmxa: cudd.d.cma
 cudd.p.a: cudd.p.cmxa
 
-.SUFFIXES: .cma .cmo .cmx .d.cma .d.cmo .d.cmx .d.cmxa .p.cmx .p.cmxa
+.SUFFIXES: .cma .cmo .cmx .d.cma .d.cmo .d.cmx .d.cmxa .p.cmx .p.cmxa .cmxs
 
 cudd.cma: %.cma: %.cmo %.cmx $(BASEOBJS)
 	$(OCAMLMKLIBo) -o $* -oc $*_caml $^ $(LDFLAGS)
-# cudd.d.cma: %.d.cma: %.d.cmo %.cmx $(DEBGOBJS)
-cudd.d.cma: %.d.cma: %.d.cmo %.d.cmx $(DEBGOBJS)
+cudd.d.cma: %.d.cma: %.d.cmo $(DEBGOBJS)
 	$(OCAMLMKLIBd) -o $*.d -oc $*_caml.d $^ $(LDFLAGS)
 cudd.p.cmxa: %.p.cmxa: %.p.cmx $(PROFOBJS)
 	$(OCAMLMKLIBp) -o $*.p -oc $*_caml.p $^ $(LDFLAGS)
@@ -211,10 +219,13 @@ cudd.d.cmo: $(MLMODULES:%=%.d.cmo)
 	$(OCAMLCd) -g -pack -o $@ $^
 cudd.cmx: $(MLMODULES:%=%.cmx)
 	$(OCAMLOPTc) -pack -o $@ $^
-cudd.d.cmx: $(MLMODULES:%=%.cmx)
+cudd.d.cmx: $(MLMODULES:%=%.d.cmx)
 	$(OCAMLOPTd) -pack -o $@ $^
 cudd.p.cmx: $(MLMODULES:%=%.p.cmx)
 	$(OCAMLOPTp) -pack -o $@ $^
+
+cudd.cmxs: cudd.cmxa
+	$(OCAMLOPT) $(OCAMLOPTFLAGS) -linkall -shared -o $@ -I . $<
 
 # HTML and LATEX rules
 .PHONY: html
@@ -290,12 +301,18 @@ CUDDINC = -I $(CUDDDIR) -I $(CUDDDIR)/st -I $(CUDDDIR)/mtr -I $(CUDDDIR)/epd \
 	  -I $(CUDDDIR)/util -I $(CUDDDIR)/cudd -I $(call CUDD_SRCDIR,$(1))
 CUDDAUX_INC = $(CUDDINC) $(IDLINC)
 
-$(CCMODULES:%=%.o): %.o: %.c cudd_caml.h cuddaux.h $(call CUDD_SRCDIR,base)/config.h
-	$(OCAMLOPT) $(call CUDDAUX_INC,base) -ccopt "$(CFLAGS_base) $(CPPFLAGS_base) -o $@"  -c $<
-$(CCMODULES:%=%.p.o): %.p.o: %.c cudd_caml.h cuddaux.h $(call CUDD_SRCDIR,prof)/config.h
-	$(OCAMLOPT) $(call CUDDAUX_INC,prof) -p -ccopt "$(CFLAGS_prof) $(CPPFLAGS_prof) -w -o $@" -c $<
-$(CCMODULES:%=%.d.o): %.d.o: %.c cudd_caml.h cuddaux.h $(call CUDD_SRCDIR,dbug)/config.h
-	$(OCAMLOPT) $(call CUDDAUX_INC,dbug) -g -ccopt "$(CFLAGS_dbug) $(CPPFLAGS_dbug) -w -o $@" -c $<
+$(CCMODULES:%=%.o): %.o: %.c cudd_caml.h cuddaux.h		\
+			 $(call CUDD_SRCDIR,base)/config.h
+	$(OCAMLOPT) $(call CUDDAUX_INC,base)			\
+	  -ccopt "$(CFLAGS_base) $(CPPFLAGS_base) -o $@" -c $<
+$(CCMODULES:%=%.p.o): %.p.o: %.c cudd_caml.h cuddaux.h		\
+			     $(call CUDD_SRCDIR,prof)/config.h
+	$(OCAMLOPT) $(call CUDDAUX_INC,prof) -p			\
+	  -ccopt "$(CFLAGS_prof) $(CPPFLAGS_prof) -w -o $@" -c $<
+$(CCMODULES:%=%.d.o): %.d.o: %.c cudd_caml.h cuddaux.h		\
+			     $(call CUDD_SRCDIR,dbug)/config.h
+	$(OCAMLOPT) $(call CUDDAUX_INC,dbug) -g			\
+	  -ccopt "$(CFLAGS_dbug) $(CPPFLAGS_dbug) -w -o $@" -c $<
 
 #-----------------------------------
 # CAML
@@ -313,8 +330,8 @@ $(MLMODULES:%=%.d.cmo): %.d.cmo: %.ml %.cmi %.cmo
 $(MLMODULES:%=%.cmx): %.cmx: %.ml %.cmi
 	$(OCAMLOPTc) -for-pack Cudd -c $<
 
-# $(MLMODULES:%=%.d.cmx): %.d.cmx: %.ml %.cmi %.cmx
-# 	$(OCAMLOPTd) -for-pack Cudd -c -o $@ $<
+$(MLMODULES:%=%.d.cmx): %.d.cmx: %.ml %.cmi %.cmx
+	$(OCAMLOPTd) -for-pack Cudd -c -o $@ $<
 
 $(MLMODULES:%=%.p.cmx): %.p.cmx: %.ml %.cmi %.cmx
 	$(OCAMLOPTp) -for-pack Cudd -c -o $@ $<

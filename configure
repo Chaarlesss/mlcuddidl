@@ -10,6 +10,7 @@ cudddir="cudd-3.0.0";
 prefix="/usr/local";
 enable_prof=yes;
 force_prof=no;
+enable_native_plugins=yes;
 
 # usage
 
@@ -24,6 +25,9 @@ where available options are:
   --{enable|disable}-profiling
                      Enable/disable compilation of profiling version
                      (enabled by default, when OCaml supports it)
+  --{enable|disable}-native-plugins
+                     Enable/disable compilation of native plugins
+                     (enabled by default)
   --help             Display this help and exit
 EOF
     exit 0
@@ -51,6 +55,8 @@ drg () { d="$(arg "$@")"; test -d "$d" && echo "$d" || \
 while test $# '>' 0; do
     case "$1" in
 	--prefix) prefix="$(arg "$1" "$2")"; shift; shift;;
+        --enable-native-plugins) enable_native_plugins=yes; shift;;
+        --disable-native-plugins) enable_native_plugins=no; shift;;
 	--enable-profiling) enable_prof=yes; force_prof=yes; shift;;
 	--disable-profiling) enable_prof=no; force_prof=no;  shift;;
 	-h | --help) usage;;
@@ -171,6 +177,8 @@ else
     info "Profiling-enabled version will not be built (as requested)";
 fi;
 echo "ENABLE_PROF = ${_enable_prof}";	# in case...
+
+echo "HAS_NATIVE_PLUGINS = ${enable_native_plugins}";
 
 if test "x${AWK}" != "x"; then
     info "awk found: documentation will be built";
