@@ -21,3 +21,4 @@ depends: [
   "conf-m4"    {build}
 ]
 synopsis: "OCaml interface to the CUDD BDD library"
+available: [ os != "win32" & os != "cygwin" ]
