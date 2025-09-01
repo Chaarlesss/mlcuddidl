@@ -208,7 +208,7 @@ cudd.p.a: cudd.p.cmxa
 
 cudd.cma: %.cma: %.cmo %.cmx $(BASEOBJS)
 	$(OCAMLMKLIBo) -o $* -oc $*_caml $^ $(LDFLAGS)
-cudd.d.cma: %.d.cma: %.d.cmo $(DEBGOBJS)
+cudd.d.cma: %.d.cma: %.d.cmo %.d.cmx $(DEBGOBJS)
 	$(OCAMLMKLIBd) -o $*.d -oc $*_caml.d $^ $(LDFLAGS)
 cudd.p.cmxa: %.p.cmxa: %.p.cmx $(PROFOBJS)
 	$(OCAMLMKLIBp) -o $*.p -oc $*_caml.p $^ $(LDFLAGS)
