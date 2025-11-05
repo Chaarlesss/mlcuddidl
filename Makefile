@@ -40,9 +40,9 @@ LDFLAGS = -L$(CAMLIDL_DIR) -lcamlidl
 # Files
 #---------------------------------------
 
-IDLMODULES = hash cache memo man bdd vdd custom add
+IDLMODULES = hash cache memo man bdd
 
-MLMODULES = hash cache memo man bdd vdd custom weakke pWeakke mtbdd mtbddc user mapleaf add
+MLMODULES = hash cache memo man bdd
 
 CUDDAUX_C = $(wildcard cuddaux*.c)
 CCMODULES = $(CUDDAUX_C:%.c=%) $(IDLMODULES:%=%_caml) cudd_caml
@@ -208,7 +208,7 @@ cudd.p.a: cudd.p.cmxa
 
 cudd.cma: %.cma: %.cmo %.cmx $(BASEOBJS)
 	$(OCAMLMKLIBo) -o $* -oc $*_caml $^ $(LDFLAGS)
-cudd.d.cma: %.d.cma: %.d.cmo $(DEBGOBJS)
+cudd.d.cma: %.d.cma: %.d.cmo %.d.cmx $(DEBGOBJS)
 	$(OCAMLMKLIBd) -o $*.d -oc $*_caml.d $^ $(LDFLAGS)
 cudd.p.cmxa: %.p.cmxa: %.p.cmx $(PROFOBJS)
 	$(OCAMLMKLIBp) -o $*.p -oc $*_caml.p $^ $(LDFLAGS)

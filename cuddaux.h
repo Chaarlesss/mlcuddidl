@@ -323,7 +323,7 @@ static inline DdNode* cuddauxUniqueType(struct CuddauxMan* man, CuddauxType* typ
 }
 static inline value Val_type(bool caml, CuddauxType* type)
 {
-  return caml ? type->value : copy_double(type->dbl);
+  return caml ? type->value : caml_copy_double(type->dbl);
 }
 static inline value Val_DdNode(bool caml, DdNode* node)
 {
