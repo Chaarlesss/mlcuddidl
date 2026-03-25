@@ -7,14 +7,14 @@ dev-repo: "git+https://framagit.org/nberth/mlcuddidl.git"
 license: "LGPL-2.1"
 build: [
   ["./configure"
-     "--disable-profiling" { arch = "arm64" | ( os = "macos" & os-version >= "10.14" ) } ]
+     "--disable-profiling" { arch = "arm64" | ( os = "macos" ) } ]
   [make "-j%{jobs}%"]
 ]
 install: [
   [make "install"]
 ]
 depends: [
-  "ocaml" {>= "4.02"}
+  "ocaml" {>= "5"}
   "ocamlfind"  {build}
   "camlidl"
   "ocamlbuild" {build}

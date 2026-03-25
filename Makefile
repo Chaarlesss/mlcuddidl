@@ -26,9 +26,9 @@ CUDD_LIB = $(call CUDD_LIBDIR,$(1))/libcudd.a
 #---------------------------------------
 
 # Various flags for building CUDD itself with multiple flavors
-CFLAGS_base = -fPIC -O3
-CFLAGS_dbug = -fPIC -O0 -g
-CFLAGS_prof = -fPIC -O3 $(CPROF_FLAGS)
+CFLAGS_base = -fPIC -O3 -Wno-int-conversion
+CFLAGS_dbug = -fPIC -O0 -g -Wno-int-conversion
+CFLAGS_prof = -fPIC -O3 -Wno-int-conversion $(CPROF_FLAGS)
 CPPFLAGS_base =
 CPPFLAGS_dbug = -DDD_CACHE_PROFILE -DDD_UNIQUE_PROFILE -DDD_VERBOSE	\
 		-DDD_DEBUG -DDD_STATS -DDD_COUNT -DMTR_DEBUG
@@ -208,7 +208,7 @@ cudd.p.a: cudd.p.cmxa
 
 cudd.cma: %.cma: %.cmo %.cmx $(BASEOBJS)
 	$(OCAMLMKLIBo) -o $* -oc $*_caml $^ $(LDFLAGS)
-cudd.d.cma: %.d.cma: %.d.cmo $(DEBGOBJS)
+cudd.d.cma: %.d.cma: %.d.cmo %.d.cmx $(DEBGOBJS)
 	$(OCAMLMKLIBd) -o $*.d -oc $*_caml.d $^ $(LDFLAGS)
 cudd.p.cmxa: %.p.cmxa: %.p.cmx $(PROFOBJS)
 	$(OCAMLMKLIBp) -o $*.p -oc $*_caml.p $^ $(LDFLAGS)

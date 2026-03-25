@@ -1080,7 +1080,7 @@ value camlidl_cudd_avdd_iter_cube(value _v_closure, value _v_no)
 	_v_val = type.value;
       }
       else {
-	_v_val = copy_double(val);
+	_v_val = caml_copy_double(val);
       }
       caml_callback2(_v_closure,_v_array,_v_val);
     }
@@ -1604,8 +1604,8 @@ DdNode* camlidl_cudd_custom_op2(DdManager* dd, struct op2* op,
 	  _v_G = cuddauxCamlV(G);
 	}
 	else {
-	  _v_F = copy_double(cuddV(F));
-	  _v_G = copy_double(cuddV(G));
+	  _v_F = caml_copy_double(cuddV(F));
+	  _v_G = caml_copy_double(cuddV(G));
 	}
 	_v_val = caml_callback2_exn(op->closure2, _v_F, _v_G);
 	res = camlidl_cudd_custom_result(&op->common2,_v_val);
@@ -1654,9 +1654,9 @@ DdNode* camlidl_cudd_custom_op3(DdManager* dd, struct op3* op, DdNode* F, DdNode
 	  _v_H = cuddauxCamlV(H);
 	}
 	else {
-	  _v_F = copy_double(cuddV(F));
-	  _v_G = copy_double(cuddV(G));
-	  _v_H = copy_double(cuddV(H));
+	  _v_F = caml_copy_double(cuddV(F));
+	  _v_G = caml_copy_double(cuddV(G));
+	  _v_H = caml_copy_double(cuddV(H));
 	}
 	_v_val = caml_callback3_exn(op->closure3,_v_F,_v_G,_v_H);
 	res = camlidl_cudd_custom_result(&op->common3,_v_val);
@@ -1707,8 +1707,8 @@ DdNode* camlidl_cudd_custom_test2(DdManager* dd, struct test2* op, DdNode* F, Dd
 	  _v_G = cuddauxCamlV(G);
 	}
 	else {
-	  _v_F = copy_double(cuddV(F));
-	  _v_G = copy_double(cuddV(G));
+	  _v_F = caml_copy_double(cuddV(F));
+	  _v_G = caml_copy_double(cuddV(G));
 	}
 	_v_val = caml_callback2_exn(op->closure2t, _v_F, _v_G);
 	res = camlidl_cudd_custom_resultbool(&op->common2t,_v_val);
